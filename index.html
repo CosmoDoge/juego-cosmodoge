@@ -1,211 +1,212 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Juego CosmoDoge</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juego CosmoDoge 🚀</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: black;
       overflow: hidden;
-      background-color: black;
+      font-family: Arial, sans-serif;
     }
     canvas {
       display: block;
-      margin: 0 auto;
+      margin: auto;
+      background: url('fondo-espacial-juego.png') repeat-x center;
+      background-size: cover;
     }
-    #startBtn {
+    #scoreDisplay, #highScoreDisplay {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 20px 40px;
+      top: 10px;
+      left: 10px;
+      color: white;
       font-size: 24px;
-      background: #00ffff;
-      color: #000;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      z-index: 10;
+      font-weight: bold;
+      text-shadow: 2px 2px 5px #000;
     }
-    #gameOverScreen {
+    #highScoreDisplay {
+      top: 40px;
+    }
+    #startScreen {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.85);
-      color: #fff;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.85);
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      font-family: Arial, sans-serif;
-      font-size: 24px;
-      display: none;
+      justify-content: center;
+      color: white;
       z-index: 10;
     }
-    #restartBtn {
-      margin-top: 20px;
-      padding: 15px 30px;
-      font-size: 20px;
-      background: #00ffff;
-      color: black;
+    #startScreen h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    #startButton {
+      padding: 1rem 2rem;
+      background-color: #00ffff;
       border: none;
       border-radius: 10px;
+      color: black;
+      font-size: 1.2rem;
+      font-weight: bold;
       cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #startButton:hover {
+      background-color: #00e7f5;
     }
   </style>
 </head>
 <body>
-  <button id="startBtn">🎮 JUGAR</button>
-  <div id="gameOverScreen">
-    <div id="scoreText">Puntaje: 0</div>
-    <div id="recordText">Récord: 0</div>
-    <button id="restartBtn">🔁 Intentar de nuevo</button>
-  </div>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <div id="scoreDisplay">🚀 x 0</div>
+  <div id="highScoreDisplay">🔝 Máx: 0</div>
+  <div id="startScreen">
+    <h1>🚀 Bienvenido al juego de CosmoDoge</h1>
+    <button id="startButton">Jugar</button>
+  </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
 
-    const fondos = ["fondo-v1.png", "fondo-v2.png", "fondo-v3.png"];
-    const obstaculos = ["obstaculo1.png", "obstaculo2.png", "obstaculo3.png", "obstaculo4.png", "obstaculo5.png", "obstaculo6.png"];
-    const perrita = new Image();
-    perrita.src = "cosmodoge-cohete-juego.png";
+    const gravity = 0.5;
+    const jump = -10;
+    const gap = 140;
+    const pipeWidth = 60;
+    let frame = 0;
 
-    let fondoActual = new Image();
-    let fondoIndex = 0;
+    let doge = {
+      x: 80,
+      y: 200,
+      width: 50,
+      height: 50,
+      velocity: 0,
+      img: new Image()
+    };
+    doge.img.src = "cosmodoge-cohete-juego.png";
 
-    const startBtn = document.getElementById("startBtn");
-    const gameOverScreen = document.getElementById("gameOverScreen");
-    const scoreText = document.getElementById("scoreText");
-    const recordText = document.getElementById("recordText");
-    const restartBtn = document.getElementById("restartBtn");
+    const obstacleImg = new Image();
+    obstacleImg.src = "obstaculos-espaciales.png";
 
-    let frames = 0;
-    let player = { x: 50, y: 150, width: 40, height: 40, gravity: 2, velocity: 0 };
-    let pipes = [];
+    let obstacles = [];
     let score = 0;
-    let gameLoop;
+    let highScore = parseInt(localStorage.getItem("cdogeHighScore")) || 0;
+    let isGameOver = false;
     let gameStarted = false;
 
-    function drawBackground() {
-      ctx.drawImage(fondoActual, 0, 0, canvas.width, canvas.height);
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const highScoreDisplay = document.getElementById("highScoreDisplay");
+    const startScreen = document.getElementById("startScreen");
+    const startButton = document.getElementById("startButton");
+
+    highScoreDisplay.textContent = "🔝 Máx: " + highScore;
+
+    function drawDoge() {
+      ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
     }
 
-    function drawPlayer() {
-      ctx.drawImage(perrita, player.x, player.y, player.width, player.height);
+    function drawObstacles() {
+      obstacles.forEach((obs) => {
+        ctx.drawImage(obstacleImg, obs.x, obs.y, pipeWidth, obs.height);
+        ctx.drawImage(obstacleImg, obs.x, obs.y + obs.height + gap, pipeWidth, canvas.height);
+      });
     }
 
-    function drawPipes() {
-      for (let p of pipes) {
-        ctx.drawImage(p.image, p.x, 0, p.width, p.top);
-        ctx.drawImage(p.image, p.x, p.top + p.gap, p.width, canvas.height - p.top - p.gap);
+    function updateObstacles() {
+      if (frame % 100 === 0) {
+        const height = Math.floor(Math.random() * 250) + 50;
+        obstacles.push({
+          x: canvas.width,
+          y: 0,
+          height: height
+        });
       }
-    }
 
-    function updatePlayer() {
-      player.velocity += player.gravity * 0.2;
-      player.y += player.velocity;
-
-      if (player.y + player.height > canvas.height || player.y < 0) {
-        endGame();
-      }
-    }
-
-    function updatePipes() {
-      for (let p of pipes) {
-        p.x -= 2;
-
-        if (p.x + p.width < 0) {
-          pipes.shift();
-          score++;
-          if (score > (localStorage.getItem("recordCDOGE") || 0)) {
-            localStorage.setItem("recordCDOGE", score);
-          }
-        }
-
+      obstacles.forEach((obs) => {
+        obs.x -= 2;
         if (
-          player.x < p.x + p.width &&
-          player.x + player.width > p.x &&
-          (player.y < p.top || player.y + player.height > p.top + p.gap)
+          doge.x < obs.x + pipeWidth &&
+          doge.x + doge.width > obs.x &&
+          (doge.y < obs.height || doge.y + doge.height > obs.height + gap)
         ) {
-          endGame();
+          isGameOver = true;
+        }
+        if (!obs.passed && obs.x + pipeWidth < doge.x) {
+          score++;
+          obs.passed = true;
+          scoreDisplay.textContent = "🚀 x " + score;
+        }
+      });
+
+      obstacles = obstacles.filter((obs) => obs.x + pipeWidth > 0);
+    }
+
+    function update() {
+      if (!gameStarted) return;
+
+      if (isGameOver) {
+        if (score > highScore) {
+          localStorage.setItem("cdogeHighScore", score);
+        }
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "32px Arial";
+        ctx.fillText("¡Juego terminado!", 90, 300);
+        ctx.font = "20px Arial";
+        ctx.fillText("Presiona ESPACIO para reiniciar", 75, 340);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      doge.velocity += gravity;
+      doge.y += doge.velocity;
+
+      if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
+        isGameOver = true;
+      }
+
+      drawDoge();
+      drawObstacles();
+      updateObstacles();
+
+      frame++;
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.code === "Space") {
+        if (!gameStarted) return;
+        if (isGameOver) {
+          location.reload();
+        } else {
+          doge.velocity = jump;
         }
       }
+    });
 
-      if (frames % 100 === 0) {
-        const top = Math.floor(Math.random() * 200) + 50;
-        const gap = 120;
-        const pipeImg = new Image();
-        pipeImg.src = obstaculos[Math.floor(Math.random() * obstaculos.length)];
-
-        pipes.push({ x: canvas.width, width: 60, top: top, gap: gap, image: pipeImg });
-      }
+    if (isMobile) {
+      document.addEventListener("touchstart", () => {
+        if (isGameOver) location.reload();
+        doge.velocity = jump;
+      });
     }
 
-    function drawScore() {
-      ctx.fillStyle = "white";
-      ctx.font = "24px Arial";
-      ctx.fillText("Puntaje: " + score, 20, 40);
-    }
-
-    function resetGame() {
-      score = 0;
-      player.y = 150;
-      player.velocity = 0;
-      pipes = [];
-      frames = 0;
-      fondoIndex = Math.floor(Math.random() * fondos.length);
-      fondoActual.src = fondos[fondoIndex];
-    }
-
-    function gameLoopFn() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground();
-      updatePlayer();
-      updatePipes();
-      drawPipes();
-      drawPlayer();
-      drawScore();
-      frames++;
-      gameLoop = requestAnimationFrame(gameLoopFn);
-    }
-
-    function startGame() {
+    startButton.onclick = () => {
+      startScreen.style.display = "none";
       gameStarted = true;
-      startBtn.style.display = "none";
-      resetGame();
-      gameLoopFn();
-    }
-
-    function endGame() {
-      cancelAnimationFrame(gameLoop);
-      gameOverScreen.style.display = "flex";
-      scoreText.textContent = "Puntaje: " + score;
-      recordText.textContent = "Récord: " + (localStorage.getItem("recordCDOGE") || 0);
-    }
-
-    startBtn.onclick = startGame;
-    restartBtn.onclick = () => {
-      gameOverScreen.style.display = "none";
-      resetGame();
-      gameLoopFn();
+      update();
     };
-
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Space" || e.code === "ArrowUp") {
-        player.velocity = -6;
-      }
-    });
-
-    window.addEventListener("touchstart", () => {
-      if (gameStarted) {
-        player.velocity = -6;
-      }
-    });
   </script>
 </body>
 </html>
