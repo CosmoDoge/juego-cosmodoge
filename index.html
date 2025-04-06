@@ -3,140 +3,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Juego CosmoDoge 🚀</title>
+  <title>CosmoDoge - Juego Espacial</title>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
-      background: black;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
+
+    #game-container {
+      position: relative;
+    }
+
     canvas {
+      border: 2px solid #fff;
+      background: black;
       display: block;
-      background: url("fondo-espacial-juego.png") repeat-x center center;
-      background-size: cover;
+    }
+
+    #start-screen, #game-over-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 360px;
+      height: 640px;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #00d9ff;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <div id="game-container">
+    <canvas id="gameCanvas" width="360" height="640"></canvas>
+    
+    <div id="start-screen">
+      <h1>🚀 CosmoDoge</h1>
+      <button id="startBtn">¡Jugar!</button>
+    </div>
+    
+    <div id="game-over-screen" class="hidden">
+      <h2>💥 Game Over</h2>
+      <p>Puntaje: <span id="final-score">0</span></p>
+      <button id="restartBtn">Reintentar</button>
+    </div>
+  </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
     const gravity = 0.5;
-    const jump = -10;
-    const gap = 160;
-
-    const doge = {
-      x: 80,
-      y: 200,
-      width: 50,
-      height: 50,
-      velocity: 0,
-      img: new Image()
-    };
-    doge.img.src = "cosmodoge-cohete-juego.png";
-
-    let obstacles = [];
+    let cosmoY = 150;
+    let velocity = 0;
+    let pipes = [];
     let score = 0;
-    let isGameOver = false;
+    let gameRunning = false;
+    let gameOver = false;
 
-    const obstacleImg = new Image();
-    obstacleImg.src = "obstaculos-espaciales.png";
+    // Cargar imágenes con tus nombres
+    const bg = new Image();
+    bg.src = "fondo-espacial-juego.png";
 
-    document.addEventListener("keydown", () => {
-      if (!isGameOver) {
-        doge.velocity = jump;
-      } else {
-        location.reload(); // Reiniciar
-      }
-    });
+    const cosmodoge = new Image();
+    cosmodoge.src = "cosmodoge-cohete-juego.png";
 
-    function drawDoge() {
-      ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
+    const pipeImg = new Image();
+    pipeImg.src = "obstaculos-espaciales.png";
+
+    // Eventos
+    document.addEventListener("keydown", jump);
+    canvas.addEventListener("click", jump);
+    document.getElementById("startBtn").addEventListener("click", startGame);
+    document.getElementById("restartBtn").addEventListener("click", resetGame);
+
+    function startGame() {
+      document.getElementById("start-screen").classList.add("hidden");
+      gameRunning = true;
+      pipes = [];
+      score = 0;
+      cosmoY = 150;
+      velocity = 0;
+      generatePipe();
+      update();
     }
 
-    function drawObstacles() {
-      obstacles.forEach(ob => {
-        ctx.drawImage(obstacleImg, ob.x, ob.y, ob.width, ob.height);
-        ctx.drawImage(obstacleImg, ob.x, ob.y + ob.height + gap, ob.width, canvas.height - ob.y - gap);
+    function resetGame() {
+      document.getElementById("game-over-screen").classList.add("hidden");
+      startGame();
+    }
+
+    function jump() {
+      if (!gameRunning) return;
+      velocity = -8;
+    }
+
+    function generatePipe() {
+      const gap = 140;
+      const topHeight = Math.floor(Math.random() * 250) + 50;
+      pipes.push({
+        x: canvas.width,
+        top: topHeight,
+        bottom: canvas.height - topHeight - gap,
       });
+    }
+
+    function checkCollision(pipe) {
+      const cosmoWidth = 40;
+      const cosmoHeight = 40;
+      const cosmoX = 50;
+
+      if (
+        cosmoX + cosmoWidth > pipe.x &&
+        cosmoX < pipe.x + 60 &&
+        (cosmoY < pipe.top || cosmoY + cosmoHeight > pipe.top + 140)
+      ) {
+        return true;
+      }
+
+      if (cosmoY + cosmoHeight > canvas.height || cosmoY < 0) {
+        return true;
+      }
+
+      return false;
     }
 
     function update() {
-      doge.velocity += gravity;
-      doge.y += doge.velocity;
+      if (!gameRunning) return;
 
-      if (doge.y > canvas.height || doge.y < 0) {
-        gameOver();
-      }
+      ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-      obstacles.forEach((ob, index) => {
-        ob.x -= 2;
+      velocity += gravity;
+      cosmoY += velocity;
+      ctx.drawImage(cosmodoge, 50, cosmoY, 40, 40);
 
-        // Detectar colisión
-        if (
-          doge.x < ob.x + ob.width &&
-          doge.x + doge.width > ob.x &&
-          (doge.y < ob.y + ob.height || doge.y + doge.height > ob.y + ob.height + gap)
-        ) {
-          gameOver();
+      for (let i = 0; i < pipes.length; i++) {
+        let pipe = pipes[i];
+        pipe.x -= 2;
+
+        // Dibujo de tubo superior
+        ctx.save();
+        ctx.translate(pipe.x + 30, pipe.top);
+        ctx.rotate(Math.PI); // rotar 180° para el tubo superior
+        ctx.drawImage(pipeImg, -30, -pipe.top, 60, pipe.top);
+        ctx.restore();
+
+        // Dibujo de tubo inferior
+        ctx.drawImage(pipeImg, pipe.x, pipe.top + 140, 60, pipe.bottom);
+
+        if (checkCollision(pipe)) {
+          endGame();
+          return;
         }
 
-        // Puntos
-        if (ob.x === doge.x) {
+        if (pipe.x + 60 === 50) {
           score++;
         }
-
-        // Eliminar obstáculos pasados
-        if (ob.x + ob.width < 0) {
-          obstacles.splice(index, 1);
-        }
-      });
-
-      // Generar nuevos obstáculos
-      if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 200) {
-        const height = Math.floor(Math.random() * 200) + 100;
-        obstacles.push({
-          x: canvas.width,
-          y: 0,
-          width: 60,
-          height: height
-        });
       }
-    }
 
-    function drawScore() {
-      const tokenIcon = new Image();
-      tokenIcon.src = "token-cdoge-puntos.png";
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "20px Segoe UI";
-      ctx.drawImage(tokenIcon, 10, 10, 24, 24);
-      ctx.fillText("x " + score, 40, 30);
-    }
-
-    function gameOver() {
-      isGameOver = true;
-      ctx.fillStyle = "white";
-      ctx.font = "32px Segoe UI";
-      ctx.fillText("¡Game Over!", 150, 300);
-      ctx.font = "20px Segoe UI";
-      ctx.fillText("Presiona cualquier tecla para reiniciar", 90, 340);
-    }
-
-    function loop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawObstacles();
-      drawDoge();
-      drawScore();
-      if (!isGameOver) {
-        update();
-        requestAnimationFrame(loop);
+      if (pipes.length && pipes[pipes.length - 1].x < canvas.width - 200) {
+        generatePipe();
       }
+
+      pipes = pipes.filter(pipe => pipe.x + 60 > 0);
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "24px Arial";
+      ctx.fillText("Puntos: " + score, 20, 40);
+
+      requestAnimationFrame(update);
     }
 
-    loop();
+    function endGame() {
+      gameRunning = false;
+      gameOver = true;
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("game-over-screen").classList.remove("hidden");
+    }
   </script>
 </body>
 </html>
