@@ -5,208 +5,189 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Juego CosmoDoge 🚀</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      background: black;
       overflow: hidden;
-      font-family: Arial, sans-serif;
+      background: black;
     }
     canvas {
       display: block;
       margin: auto;
-      background: url('fondo-espacial-juego.png') repeat-x center;
-      background-size: cover;
+      background: black;
     }
-    #scoreDisplay, #highScoreDisplay {
+    #startButton {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      background: #00ffff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      z-index: 2;
+    }
+    #score {
       position: absolute;
       top: 10px;
       left: 10px;
       color: white;
       font-size: 24px;
-      font-weight: bold;
-      text-shadow: 2px 2px 5px #000;
-    }
-    #highScoreDisplay {
-      top: 40px;
-    }
-    #startScreen {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.85);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      z-index: 10;
-    }
-    #startScreen h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-    #startButton {
-      padding: 1rem 2rem;
-      background-color: #00ffff;
-      border: none;
-      border-radius: 10px;
-      color: black;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #startButton:hover {
-      background-color: #00e7f5;
+      font-family: Arial, sans-serif;
+      z-index: 1;
     }
   </style>
 </head>
 <body>
+  <div id="score">🚀 x 0</div>
+  <button id="startButton">Jugar</button>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
-  <div id="scoreDisplay">🚀 x 0</div>
-  <div id="highScoreDisplay">🔝 Máx: 0</div>
-  <div id="startScreen">
-    <h1>🚀 Bienvenido al juego de CosmoDoge</h1>
-    <button id="startButton">Jugar</button>
-  </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
+    const startButton = document.getElementById("startButton");
+    const scoreDisplay = document.getElementById("score");
 
     const gravity = 0.5;
     const jump = -10;
     const gap = 140;
-    const pipeWidth = 60;
-    let frame = 0;
 
-    let doge = {
-      x: 80,
-      y: 200,
-      width: 50,
-      height: 50,
-      velocity: 0,
-      img: new Image()
-    };
-    doge.img.src = "cosmodoge-cohete-juego.png";
+    let doge, obstacles, score, isGameOver, gameStarted;
+    let backgroundImages = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
+    let backgroundIndex = 0;
+    let backgroundX = 0;
+    let backgroundSpeed = 1;
 
-    const obstacleImg = new Image();
-    obstacleImg.src = "obstaculos-espaciales.png";
+    const obstacleImages = [
+      "obstaculo1.png",
+      "obstaculo2.png",
+      "obstaculo3.png",
+      "obstaculo4.png",
+      "obstaculo5.png",
+      "obstaculo6.png"
+    ];
 
-    let obstacles = [];
-    let score = 0;
-    let highScore = parseInt(localStorage.getItem("cdogeHighScore")) || 0;
-    let isGameOver = false;
-    let gameStarted = false;
+    const dogeImg = new Image();
+    dogeImg.src = "cosmodoge-cohete-juego.png";
 
-    const scoreDisplay = document.getElementById("scoreDisplay");
-    const highScoreDisplay = document.getElementById("highScoreDisplay");
-    const startScreen = document.getElementById("startScreen");
-    const startButton = document.getElementById("startButton");
+    function resetGame() {
+      doge = {
+        x: 80,
+        y: canvas.height / 2,
+        width: 50,
+        height: 50,
+        velocity: 0
+      };
+      obstacles = [];
+      score = 0;
+      isGameOver = false;
+      backgroundIndex = 0;
+      backgroundX = 0;
+    }
 
-    highScoreDisplay.textContent = "🔝 Máx: " + highScore;
+    function drawBackground() {
+      let bg = new Image();
+      bg.src = backgroundImages[backgroundIndex];
+      ctx.drawImage(bg, backgroundX, 0, canvas.width, canvas.height);
+      ctx.drawImage(bg, backgroundX + canvas.width, 0, canvas.width, canvas.height);
+
+      backgroundX -= backgroundSpeed;
+      if (backgroundX <= -canvas.width) {
+        backgroundX = 0;
+        backgroundIndex = (backgroundIndex + 1) % backgroundImages.length;
+      }
+    }
 
     function drawDoge() {
-      ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
+      ctx.drawImage(dogeImg, doge.x, doge.y, doge.width, doge.height);
     }
 
     function drawObstacles() {
-      obstacles.forEach((obs) => {
-        ctx.drawImage(obstacleImg, obs.x, obs.y, pipeWidth, obs.height);
-        ctx.drawImage(obstacleImg, obs.x, obs.y + obs.height + gap, pipeWidth, canvas.height);
-      });
-    }
-
-    function updateObstacles() {
-      if (frame % 100 === 0) {
-        const height = Math.floor(Math.random() * 250) + 50;
-        obstacles.push({
-          x: canvas.width,
-          y: 0,
-          height: height
-        });
-      }
-
-      obstacles.forEach((obs) => {
+      for (let i = 0; i < obstacles.length; i++) {
+        let obs = obstacles[i];
+        ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
         obs.x -= 2;
+
+        // Verifica colisión
         if (
-          doge.x < obs.x + pipeWidth &&
+          doge.x < obs.x + obs.width &&
           doge.x + doge.width > obs.x &&
-          (doge.y < obs.height || doge.y + doge.height > obs.height + gap)
+          doge.y < obs.y + obs.height &&
+          doge.y + doge.height > obs.y
         ) {
           isGameOver = true;
         }
-        if (!obs.passed && obs.x + pipeWidth < doge.x) {
-          score++;
-          obs.passed = true;
-          scoreDisplay.textContent = "🚀 x " + score;
-        }
-      });
+      }
 
-      obstacles = obstacles.filter((obs) => obs.x + pipeWidth > 0);
+      // Agregar nuevo obstáculo
+      if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 200) {
+        const height = Math.floor(Math.random() * 250) + 50;
+        const yPos = Math.random() > 0.5 ? 0 : canvas.height - height;
+        const img = new Image();
+        img.src = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+
+        obstacles.push({
+          x: canvas.width,
+          y: yPos,
+          width: 50,
+          height: height,
+          img: img
+        });
+      }
+
+      // Eliminar obstáculos pasados
+      if (obstacles.length > 0 && obstacles[0].x + obstacles[0].width < 0) {
+        obstacles.shift();
+        score++;
+      }
     }
 
     function update() {
-      if (!gameStarted) return;
-
       if (isGameOver) {
-        if (score > highScore) {
-          localStorage.setItem("cdogeHighScore", score);
-        }
-        ctx.fillStyle = "rgba(0,0,0,0.7)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "white";
-        ctx.font = "32px Arial";
-        ctx.fillText("¡Juego terminado!", 90, 300);
-        ctx.font = "20px Arial";
-        ctx.fillText("Presiona ESPACIO para reiniciar", 75, 340);
+        startButton.style.display = "block";
+        scoreDisplay.textContent = `🚀 x ${score}`;
         return;
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBackground();
       doge.velocity += gravity;
       doge.y += doge.velocity;
 
-      if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
-        isGameOver = true;
-      }
-
       drawDoge();
       drawObstacles();
-      updateObstacles();
 
-      frame++;
+      if (doge.y + doge.height > canvas.height || doge.y < 0) {
+        isGameOver = true;
+        startButton.style.display = "block";
+      }
+
+      scoreDisplay.textContent = `🚀 x ${score}`;
       requestAnimationFrame(update);
     }
 
-    document.addEventListener("keydown", function (e) {
-      if (e.code === "Space") {
-        if (!gameStarted) return;
-        if (isGameOver) {
-          location.reload();
-        } else {
-          doge.velocity = jump;
-        }
+    document.addEventListener("keydown", () => {
+      if (!gameStarted) return;
+      if (!isGameOver) {
+        doge.velocity = jump;
+      } else {
+        startButton.style.display = "block";
       }
     });
 
-    if (isMobile) {
-      document.addEventListener("touchstart", () => {
-        if (isGameOver) location.reload();
-        doge.velocity = jump;
-      });
-    }
-
-    startButton.onclick = () => {
-      startScreen.style.display = "none";
+    startButton.addEventListener("click", () => {
       gameStarted = true;
+      startButton.style.display = "none";
+      resetGame();
       update();
-    };
+    });
   </script>
 </body>
 </html>
