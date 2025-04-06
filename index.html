@@ -120,6 +120,10 @@
     let timeElapsed = 0;
     let lastScoreTime = 0;
 
+    const obstacleImgs = ["obstaculo-explosion.png", "obstaculo-explosion-aire.png", "obstaculo-estelar.png"];
+    let specialObstacles = [];
+    let lastSpecialObstacleTime = Date.now();
+
     const scoreDisplay = document.getElementById("scoreDisplay");
     const highScoreDisplay = document.getElementById("highScoreDisplay");
     const startScreen = document.getElementById("startScreen");
@@ -137,6 +141,38 @@
       ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
     }
 
+    function spawnSpecialObstacle() {
+      const img = new Image();
+      const index = Math.floor(Math.random() * obstacleImgs.length);
+      img.src = obstacleImgs[index];
+
+      specialObstacles.push({
+        x: canvas.width,
+        y: Math.random() * (canvas.height - 50),
+        width: 50,
+        height: 50,
+        speed: 3 + Math.random() * 2,
+        img: img
+      });
+    }
+
+    function drawSpecialObstacles() {
+      specialObstacles.forEach((obs, index) => {
+        obs.x -= obs.speed;
+        ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
+
+        if (
+          doge.x < obs.x + obs.width &&
+          doge.x + doge.width > obs.x &&
+          doge.y < obs.y + obs.height &&
+          doge.y + doge.height > obs.y
+        ) {
+          isGameOver = true;
+        }
+      });
+      specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
+    }
+
     function updateDifficulty(seconds) {
       if (seconds >= 75) gravity = gravityLevels[3];
       else if (seconds >= 60) {
@@ -147,7 +183,17 @@
     }
 
     function updateGame() {
-      if (!gameStarted || isGameOver) return;
+      if (!gameStarted || isGameOver) {
+        if (isGameOver) {
+          if (score > highScore) {
+            localStorage.setItem("cdogeFloatHighScore", score);
+          }
+          finalScore.textContent = score;
+          gameOverScreen.style.display = "flex";
+          document.body.classList.remove("shake");
+        }
+        return;
+      }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
@@ -155,31 +201,29 @@
       doge.velocity += gravity;
       doge.y += doge.velocity;
 
-      // Verificar límites del canvas para Game Over
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
         isGameOver = true;
-        if (score > highScore) {
-          localStorage.setItem("cdogeFloatHighScore", score);
-        }
-        finalScore.textContent = score;
-        gameOverScreen.style.display = "flex";
-        document.body.classList.remove("shake");
-        return;
       }
 
       drawDoge();
+      drawSpecialObstacles();
 
       timeElapsed++;
       if (timeElapsed % 60 === 0) {
         const seconds = timeElapsed / 60;
         updateDifficulty(seconds);
 
-        // Puntaje cada 5 segundos
         if (seconds - lastScoreTime >= 5) {
           score++;
           lastScoreTime = seconds;
           scoreDisplay.textContent = "🚀 x " + score;
         }
+      }
+
+      const now = Date.now();
+      if (now - lastSpecialObstacleTime >= 20000) {
+        spawnSpecialObstacle();
+        lastSpecialObstacleTime = now;
       }
 
       requestAnimationFrame(updateGame);
