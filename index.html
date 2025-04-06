@@ -1,192 +1,210 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Juego CosmoDoge 🚀</title>
+  <meta charset="UTF-8">
+  <title>Juego CosmoDoge</title>
   <style>
-    * {
+    html, body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-    body {
       overflow: hidden;
-      background: black;
+      background-color: black;
     }
     canvas {
       display: block;
-      margin: auto;
-      background: black;
+      margin: 0 auto;
     }
-    #startButton {
+    #startBtn {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
+      padding: 20px 40px;
+      font-size: 24px;
       background: #00ffff;
+      color: #000;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      z-index: 2;
+      z-index: 10;
     }
-    #score {
+    #gameOverScreen {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-size: 24px;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       font-family: Arial, sans-serif;
-      z-index: 1;
+      font-size: 24px;
+      display: none;
+      z-index: 10;
+    }
+    #restartBtn {
+      margin-top: 20px;
+      padding: 15px 30px;
+      font-size: 20px;
+      background: #00ffff;
+      color: black;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="score">🚀 x 0</div>
-  <button id="startButton">Jugar</button>
+  <button id="startBtn">🎮 JUGAR</button>
+  <div id="gameOverScreen">
+    <div id="scoreText">Puntaje: 0</div>
+    <div id="recordText">Récord: 0</div>
+    <button id="restartBtn">🔁 Intentar de nuevo</button>
+  </div>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const startButton = document.getElementById("startButton");
-    const scoreDisplay = document.getElementById("score");
 
-    const gravity = 0.5;
-    const jump = -10;
-    const gap = 140;
+    const fondos = ["fondo-v1.png", "fondo-v2.png", "fondo-v3.png"];
+    const obstaculos = ["obstaculo1.png", "obstaculo2.png", "obstaculo3.png", "obstaculo4.png", "obstaculo5.png", "obstaculo6.png"];
+    const perrita = new Image();
+    perrita.src = "cosmodoge-cohete-juego.png";
 
-    let doge, obstacles, score, isGameOver, gameStarted;
-    let backgroundImages = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
-    let backgroundIndex = 0;
-    let backgroundX = 0;
-    let backgroundSpeed = 1;
+    let fondoActual = new Image();
+    let fondoIndex = 0;
 
-    const obstacleImages = [
-      "obstaculo1.png",
-      "obstaculo2.png",
-      "obstaculo3.png",
-      "obstaculo4.png",
-      "obstaculo5.png",
-      "obstaculo6.png"
-    ];
+    const startBtn = document.getElementById("startBtn");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const scoreText = document.getElementById("scoreText");
+    const recordText = document.getElementById("recordText");
+    const restartBtn = document.getElementById("restartBtn");
 
-    const dogeImg = new Image();
-    dogeImg.src = "cosmodoge-cohete-juego.png";
-
-    function resetGame() {
-      doge = {
-        x: 80,
-        y: canvas.height / 2,
-        width: 50,
-        height: 50,
-        velocity: 0
-      };
-      obstacles = [];
-      score = 0;
-      isGameOver = false;
-      backgroundIndex = 0;
-      backgroundX = 0;
-    }
+    let frames = 0;
+    let player = { x: 50, y: 150, width: 40, height: 40, gravity: 2, velocity: 0 };
+    let pipes = [];
+    let score = 0;
+    let gameLoop;
+    let gameStarted = false;
 
     function drawBackground() {
-      let bg = new Image();
-      bg.src = backgroundImages[backgroundIndex];
-      ctx.drawImage(bg, backgroundX, 0, canvas.width, canvas.height);
-      ctx.drawImage(bg, backgroundX + canvas.width, 0, canvas.width, canvas.height);
+      ctx.drawImage(fondoActual, 0, 0, canvas.width, canvas.height);
+    }
 
-      backgroundX -= backgroundSpeed;
-      if (backgroundX <= -canvas.width) {
-        backgroundX = 0;
-        backgroundIndex = (backgroundIndex + 1) % backgroundImages.length;
+    function drawPlayer() {
+      ctx.drawImage(perrita, player.x, player.y, player.width, player.height);
+    }
+
+    function drawPipes() {
+      for (let p of pipes) {
+        ctx.drawImage(p.image, p.x, 0, p.width, p.top);
+        ctx.drawImage(p.image, p.x, p.top + p.gap, p.width, canvas.height - p.top - p.gap);
       }
     }
 
-    function drawDoge() {
-      ctx.drawImage(dogeImg, doge.x, doge.y, doge.width, doge.height);
+    function updatePlayer() {
+      player.velocity += player.gravity * 0.2;
+      player.y += player.velocity;
+
+      if (player.y + player.height > canvas.height || player.y < 0) {
+        endGame();
+      }
     }
 
-    function drawObstacles() {
-      for (let i = 0; i < obstacles.length; i++) {
-        let obs = obstacles[i];
-        ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
-        obs.x -= 2;
+    function updatePipes() {
+      for (let p of pipes) {
+        p.x -= 2;
 
-        // Verifica colisión
+        if (p.x + p.width < 0) {
+          pipes.shift();
+          score++;
+          if (score > (localStorage.getItem("recordCDOGE") || 0)) {
+            localStorage.setItem("recordCDOGE", score);
+          }
+        }
+
         if (
-          doge.x < obs.x + obs.width &&
-          doge.x + doge.width > obs.x &&
-          doge.y < obs.y + obs.height &&
-          doge.y + doge.height > obs.y
+          player.x < p.x + p.width &&
+          player.x + player.width > p.x &&
+          (player.y < p.top || player.y + player.height > p.top + p.gap)
         ) {
-          isGameOver = true;
+          endGame();
         }
       }
 
-      // Agregar nuevo obstáculo
-      if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 200) {
-        const height = Math.floor(Math.random() * 250) + 50;
-        const yPos = Math.random() > 0.5 ? 0 : canvas.height - height;
-        const img = new Image();
-        img.src = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+      if (frames % 100 === 0) {
+        const top = Math.floor(Math.random() * 200) + 50;
+        const gap = 120;
+        const pipeImg = new Image();
+        pipeImg.src = obstaculos[Math.floor(Math.random() * obstaculos.length)];
 
-        obstacles.push({
-          x: canvas.width,
-          y: yPos,
-          width: 50,
-          height: height,
-          img: img
-        });
-      }
-
-      // Eliminar obstáculos pasados
-      if (obstacles.length > 0 && obstacles[0].x + obstacles[0].width < 0) {
-        obstacles.shift();
-        score++;
+        pipes.push({ x: canvas.width, width: 60, top: top, gap: gap, image: pipeImg });
       }
     }
 
-    function update() {
-      if (isGameOver) {
-        startButton.style.display = "block";
-        scoreDisplay.textContent = `🚀 x ${score}`;
-        return;
-      }
+    function drawScore() {
+      ctx.fillStyle = "white";
+      ctx.font = "24px Arial";
+      ctx.fillText("Puntaje: " + score, 20, 40);
+    }
 
+    function resetGame() {
+      score = 0;
+      player.y = 150;
+      player.velocity = 0;
+      pipes = [];
+      frames = 0;
+      fondoIndex = Math.floor(Math.random() * fondos.length);
+      fondoActual.src = fondos[fondoIndex];
+    }
+
+    function gameLoopFn() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       drawBackground();
-      doge.velocity += gravity;
-      doge.y += doge.velocity;
-
-      drawDoge();
-      drawObstacles();
-
-      if (doge.y + doge.height > canvas.height || doge.y < 0) {
-        isGameOver = true;
-        startButton.style.display = "block";
-      }
-
-      scoreDisplay.textContent = `🚀 x ${score}`;
-      requestAnimationFrame(update);
+      updatePlayer();
+      updatePipes();
+      drawPipes();
+      drawPlayer();
+      drawScore();
+      frames++;
+      gameLoop = requestAnimationFrame(gameLoopFn);
     }
 
-    document.addEventListener("keydown", () => {
-      if (!gameStarted) return;
-      if (!isGameOver) {
-        doge.velocity = jump;
-      } else {
-        startButton.style.display = "block";
+    function startGame() {
+      gameStarted = true;
+      startBtn.style.display = "none";
+      resetGame();
+      gameLoopFn();
+    }
+
+    function endGame() {
+      cancelAnimationFrame(gameLoop);
+      gameOverScreen.style.display = "flex";
+      scoreText.textContent = "Puntaje: " + score;
+      recordText.textContent = "Récord: " + (localStorage.getItem("recordCDOGE") || 0);
+    }
+
+    startBtn.onclick = startGame;
+    restartBtn.onclick = () => {
+      gameOverScreen.style.display = "none";
+      resetGame();
+      gameLoopFn();
+    };
+
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        player.velocity = -6;
       }
     });
 
-    startButton.addEventListener("click", () => {
-      gameStarted = true;
-      startButton.style.display = "none";
-      resetGame();
-      update();
+    window.addEventListener("touchstart", () => {
+      if (gameStarted) {
+        player.velocity = -6;
+      }
     });
   </script>
 </body>
