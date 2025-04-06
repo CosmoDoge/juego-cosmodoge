@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Juego CosmoDoge 🚀</title>
+  <title>CosmoDoge Flotante 🚀</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -57,6 +57,16 @@
     .btn:hover {
       background-color: #00e7f5;
     }
+    .shake {
+      animation: shake 0.5s infinite;
+    }
+    @keyframes shake {
+      0% { transform: translate(0px, 0px); }
+      25% { transform: translate(2px, -2px); }
+      50% { transform: translate(-2px, 2px); }
+      75% { transform: translate(2px, 2px); }
+      100% { transform: translate(0px, 0px); }
+    }
   </style>
 </head>
 <body>
@@ -65,8 +75,8 @@
   <div id="highScoreDisplay">🔝 Máx: 0</div>
 
   <div id="startScreen">
-    <h1>🚀 Bienvenido al juego de CosmoDoge</h1>
-    <button class="btn" id="startButton">Jugar</button>
+    <h1>🚀 Mantén a CosmoDoge flotando</h1>
+    <button class="btn" id="startButton">¡Comenzar!</button>
   </div>
 
   <div id="gameOverScreen" style="display:none;">
@@ -85,18 +95,7 @@
       canvas.height = window.innerHeight;
     }
 
-    const gravity = 0.5;
-    const jump = -10;
-    const gap = 160;
-    const pipeWidth = 60;
-    let frame = 0;
-
     const fondos = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
-    const obstaculosImgs = [
-      "obstaculo1.png", "obstaculo2.png", "obstaculo3.png",
-      "obstaculo4.png", "obstaculo5.png", "obstaculo6.png"
-    ];
-
     const fondo = new Image();
     fondo.src = fondos[Math.floor(Math.random() * fondos.length)];
 
@@ -110,14 +109,16 @@
     };
     doge.img.src = "cosmodoge-cohete-juego.png";
 
-    let obstacles = [];
-    let currentObstacleImg = new Image();
-    currentObstacleImg.src = obstaculosImgs[Math.floor(Math.random() * obstaculosImgs.length)];
+    const gravityLevels = [0.5, 0.6, 0.8, 1.0];
+    let gravity = gravityLevels[0];
+    const jump = -10;
 
     let score = 0;
-    let highScore = parseInt(localStorage.getItem("cdogeHighScore")) || 0;
-    let isGameOver = false;
+    let highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
     let gameStarted = false;
+    let isGameOver = false;
+    let timeElapsed = 0;
+    let lastScoreTime = 0;
 
     const scoreDisplay = document.getElementById("scoreDisplay");
     const highScoreDisplay = document.getElementById("highScoreDisplay");
@@ -136,60 +137,17 @@
       ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
     }
 
-    function drawObstacles() {
-      obstacles.forEach((obs) => {
-        ctx.drawImage(currentObstacleImg, obs.x, obs.y, pipeWidth, obs.height);
-        ctx.drawImage(currentObstacleImg, obs.x, obs.y + obs.height + gap, pipeWidth, canvas.height);
-      });
+    function updateDifficulty(seconds) {
+      if (seconds >= 75) gravity = gravityLevels[3];
+      else if (seconds >= 60) {
+        gravity = gravityLevels[2];
+        document.body.classList.add("shake");
+      } else if (seconds >= 45) gravity = gravityLevels[2];
+      else if (seconds >= 30) gravity = gravityLevels[1];
     }
 
-    function updateObstacles() {
-      if (frame % 100 === 0) {
-        const height = Math.floor(Math.random() * 250) + 50;
-        obstacles.push({
-          x: canvas.width,
-          y: 0,
-          height: height,
-          passed: false
-        });
-
-        // Cambiar imagen de obstáculo cada nueva pareja
-        currentObstacleImg = new Image();
-        currentObstacleImg.src = obstaculosImgs[Math.floor(Math.random() * obstaculosImgs.length)];
-      }
-
-      obstacles.forEach((obs) => {
-        obs.x -= 2;
-
-        if (
-          doge.x < obs.x + pipeWidth &&
-          doge.x + doge.width > obs.x &&
-          (doge.y < obs.height || doge.y + doge.height > obs.height + gap)
-        ) {
-          isGameOver = true;
-        }
-
-        if (!obs.passed && obs.x + pipeWidth < doge.x) {
-          score++;
-          obs.passed = true;
-          scoreDisplay.textContent = "🚀 x " + score;
-        }
-      });
-
-      obstacles = obstacles.filter((obs) => obs.x + pipeWidth > 0);
-    }
-
-    function update() {
-      if (!gameStarted) return;
-
-      if (isGameOver) {
-        if (score > highScore) {
-          localStorage.setItem("cdogeHighScore", score);
-        }
-        finalScore.textContent = score;
-        gameOverScreen.style.display = "flex";
-        return;
-      }
+    function updateGame() {
+      if (!gameStarted || isGameOver) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
@@ -199,20 +157,35 @@
 
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
         isGameOver = true;
+        if (score > highScore) {
+          localStorage.setItem("cdogeFloatHighScore", score);
+        }
+        finalScore.textContent = score;
+        gameOverScreen.style.display = "flex";
+        document.body.classList.remove("shake");
+        return;
       }
 
       drawDoge();
-      drawObstacles();
-      updateObstacles();
 
-      frame++;
-      requestAnimationFrame(update);
+      timeElapsed++;
+      if (timeElapsed % 60 === 0) {
+        const seconds = timeElapsed / 60;
+        updateDifficulty(seconds);
+
+        // Puntaje cada 5 segundos
+        if (seconds - lastScoreTime >= 5) {
+          score++;
+          lastScoreTime = seconds;
+          scoreDisplay.textContent = "🚀 x " + score;
+        }
+      }
+
+      requestAnimationFrame(updateGame);
     }
 
-    document.addEventListener("keydown", function (e) {
-      if (e.code === "Space") {
-        if (!gameStarted) return;
-        if (isGameOver) return;
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && gameStarted && !isGameOver) {
         doge.velocity = jump;
       }
     });
@@ -227,7 +200,7 @@
     startButton.onclick = () => {
       startScreen.style.display = "none";
       gameStarted = true;
-      update();
+      updateGame();
     };
   </script>
 </body>
