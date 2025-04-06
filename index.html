@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Juego CosmoDoge 🚀</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+      background: url("fondo-espacial-juego.png") repeat-x center center;
+      background-size: cover;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const gravity = 0.5;
+    const jump = -10;
+    const gap = 160;
+
+    const doge = {
+      x: 80,
+      y: 200,
+      width: 50,
+      height: 50,
+      velocity: 0,
+      img: new Image()
+    };
+    doge.img.src = "cosmodoge-cohete-juego.png";
+
+    let obstacles = [];
+    let score = 0;
+    let isGameOver = false;
+
+    const obstacleImg = new Image();
+    obstacleImg.src = "obstaculos-espaciales.png";
+
+    document.addEventListener("keydown", () => {
+      if (!isGameOver) {
+        doge.velocity = jump;
+      } else {
+        location.reload(); // Reiniciar
+      }
+    });
+
+    function drawDoge() {
+      ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
+    }
+
+    function drawObstacles() {
+      obstacles.forEach(ob => {
+        ctx.drawImage(obstacleImg, ob.x, ob.y, ob.width, ob.height);
+        ctx.drawImage(obstacleImg, ob.x, ob.y + ob.height + gap, ob.width, canvas.height - ob.y - gap);
+      });
+    }
+
+    function update() {
+      doge.velocity += gravity;
+      doge.y += doge.velocity;
+
+      if (doge.y > canvas.height || doge.y < 0) {
+        gameOver();
+      }
+
+      obstacles.forEach((ob, index) => {
+        ob.x -= 2;
+
+        // Detectar colisión
+        if (
+          doge.x < ob.x + ob.width &&
+          doge.x + doge.width > ob.x &&
+          (doge.y < ob.y + ob.height || doge.y + doge.height > ob.y + ob.height + gap)
+        ) {
+          gameOver();
+        }
+
+        // Puntos
+        if (ob.x === doge.x) {
+          score++;
+        }
+
+        // Eliminar obstáculos pasados
+        if (ob.x + ob.width < 0) {
+          obstacles.splice(index, 1);
+        }
+      });
+
+      // Generar nuevos obstáculos
+      if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 200) {
+        const height = Math.floor(Math.random() * 200) + 100;
+        obstacles.push({
+          x: canvas.width,
+          y: 0,
+          width: 60,
+          height: height
+        });
+      }
+    }
+
+    function drawScore() {
+      const tokenIcon = new Image();
+      tokenIcon.src = "token-cdoge-puntos.png";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "20px Segoe UI";
+      ctx.drawImage(tokenIcon, 10, 10, 24, 24);
+      ctx.fillText("x " + score, 40, 30);
+    }
+
+    function gameOver() {
+      isGameOver = true;
+      ctx.fillStyle = "white";
+      ctx.font = "32px Segoe UI";
+      ctx.fillText("¡Game Over!", 150, 300);
+      ctx.font = "20px Segoe UI";
+      ctx.fillText("Presiona cualquier tecla para reiniciar", 90, 340);
+    }
+
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawObstacles();
+      drawDoge();
+      drawScore();
+      if (!isGameOver) {
+        update();
+        requestAnimationFrame(loop);
+      }
+    }
+
+    loop();
+  </script>
+</body>
+</html>
