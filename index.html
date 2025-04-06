@@ -155,6 +155,7 @@
       doge.velocity += gravity;
       doge.y += doge.velocity;
 
+      // Verificar límites del canvas para Game Over
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
         isGameOver = true;
         if (score > highScore) {
