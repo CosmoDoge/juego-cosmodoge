@@ -6,19 +6,11 @@
   <title>CosmoDoge Flotante 🚀</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: black;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-    }
+    body { background: black; overflow: hidden; font-family: Arial, sans-serif; }
+    canvas { display: block; margin: auto; }
     #scoreDisplay, #coinDisplay, #highScoreDisplay {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 10px; left: 10px;
       color: white;
       font-size: 20px;
       font-weight: bold;
@@ -27,8 +19,7 @@
     #coinDisplay { top: 40px; }
     #highScoreDisplay { top: 70px; }
     #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
-      position: absolute;
-      top: 0; left: 0;
+      position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.85);
       display: flex;
@@ -37,10 +28,6 @@
       justify-content: center;
       color: white;
       z-index: 10;
-    }
-    #startScreen h1, #gameOverScreen h1, #loadingScreen h1, #newRecordMessage h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
     }
     .btn {
       padding: 1rem 2rem;
@@ -51,19 +38,8 @@
       font-size: 1.2rem;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
     .btn:hover { background-color: #00e7f5; }
-    .shake {
-      animation: shake 0.5s infinite;
-    }
-    @keyframes shake {
-      0% { transform: translate(0px, 0px); }
-      25% { transform: translate(2px, -2px); }
-      50% { transform: translate(-2px, 2px); }
-      75% { transform: translate(2px, 2px); }
-      100% { transform: translate(0px, 0px); }
-    }
   </style>
 </head>
 <body>
@@ -72,60 +48,38 @@
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
 
-  <div id="loadingScreen">
-    <h1>🌌 Cargando universo...</h1>
-  </div>
-
+  <div id="loadingScreen"><h1>🌌 Cargando universo...</h1></div>
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
     <button class="btn" id="startButton">¡Comenzar!</button>
   </div>
-
   <div id="gameOverScreen" style="display:none;">
     <h1>💥 ¡Game Over!</h1>
     <p>Puntaje: <span id="finalScore">0</span></p>
     <button class="btn" onclick="location.reload()">Reiniciar</button>
   </div>
-
   <div id="newRecordMessage" style="display:none;">
     <h1>🌟 ¡Nuevo récord galáctico!</h1>
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
   <script>
-    const sndJump = new Audio("jump.mp3");
-    const sndCoin = new Audio("coin.mp3");
-    const sndBoom = new Audio("boom.mp3");
-    const sndRecord = new Audio("record.mp3");
-    const music = new Audio("music.mp3");
-    music.loop = true;
-    music.volume = 0.3;
-
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
 
     const fondos = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
-    let fondoIndex = 0;
     const fondo = new Image();
+    let fondoIndex = 0;
     fondo.src = fondos[fondoIndex];
 
     const doge = {
-      x: 80,
-      y: 200,
-      width: 50,
-      height: 50,
-      velocity: 0,
+      x: 80, y: 200, width: 50, height: 50, velocity: 0,
       img: new Image()
     };
     doge.img.src = "cosmodoge-cohete-juego.png";
 
-    let gravity = 0.5;
     const gravityLevels = [0.5, 0.6, 0.8, 1.0];
+    let gravity = gravityLevels[0];
     const jump = -10;
 
     let score = 0;
@@ -142,8 +96,15 @@
     let coinsArray = [];
 
     const obstacleImgs = ["obstaculo-estelar.png", "obstaculo-explosion.png", "obstaculo-explosion-aire.png"];
-    let specialObstacles = [];
-    let lastObstacleSpawn = Date.now();
+    let obstacles = [];
+
+    const sndJump = new Audio("jump.mp3");
+    const sndCoin = new Audio("coin.mp3");
+    const sndBoom = new Audio("boom.mp3");
+    const sndRecord = new Audio("record.mp3");
+    const music = new Audio("music-cosmodoge-theme.mp3");
+    music.loop = true;
+    music.volume = 0.3;
 
     const scoreDisplay = document.getElementById("scoreDisplay");
     const coinDisplay = document.getElementById("coinDisplay");
@@ -152,8 +113,8 @@
     const loadingScreen = document.getElementById("loadingScreen");
     const gameOverScreen = document.getElementById("gameOverScreen");
     const finalScore = document.getElementById("finalScore");
-    const startButton = document.getElementById("startButton");
     const newRecordMessage = document.getElementById("newRecordMessage");
+    const startButton = document.getElementById("startButton");
 
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
@@ -171,15 +132,13 @@
       ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
     }
 
-    function spawnCoinGroup() {
-      const amount = Math.floor(Math.random() * 6) + 5; // 5 a 10 monedas
-      for (let i = 0; i < amount; i++) {
+    function spawnCoins() {
+      const count = 5 + Math.floor(Math.random() * 6);
+      for (let i = 0; i < count; i++) {
         coinsArray.push({
           x: canvas.width + i * 40,
           y: Math.random() * (canvas.height - 100),
-          width: 30,
-          height: 30,
-          speed: 2
+          width: 30, height: 30, speed: 2
         });
       }
     }
@@ -188,7 +147,6 @@
       coinsArray.forEach((coin, i) => {
         coin.x -= coin.speed;
         ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
-
         if (
           doge.x < coin.x + coin.width &&
           doge.x + doge.width > coin.x &&
@@ -196,9 +154,9 @@
           doge.y + doge.height > coin.y
         ) {
           coins++;
-          localStorage.setItem("cdogeCoins", coins);
+          sndCoin.play();
           coinDisplay.textContent = "💰 x " + coins;
-          playCoinSound();
+          localStorage.setItem("cdogeCoins", coins);
           coinsArray.splice(i, 1);
         }
       });
@@ -207,11 +165,10 @@
     function spawnObstacle() {
       const img = new Image();
       img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-      specialObstacles.push({
+      obstacles.push({
         x: canvas.width,
         y: Math.random() * canvas.height,
-        width: 50,
-        height: 50,
+        width: 50, height: 50,
         speedX: 2 + Math.random() * 2,
         speedY: 0.5 + Math.random() * 1.5,
         img: img
@@ -219,11 +176,10 @@
     }
 
     function drawObstacles() {
-      specialObstacles.forEach((obs, index) => {
+      obstacles.forEach((obs, i) => {
         obs.x -= obs.speedX;
         if (obs.y < doge.y) obs.y += obs.speedY;
         else obs.y -= obs.speedY;
-
         ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
 
         if (
@@ -233,10 +189,12 @@
           doge.y + doge.height > obs.y
         ) {
           isGameOver = true;
-          playBoomSound();
+          music.pause();
+          music.currentTime = 0;
+          sndBoom.play();
         }
       });
-      specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
+      obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
     }
 
     function updateDifficulty(seconds) {
@@ -251,7 +209,7 @@
         if (isGameOver) {
           if (score > highScore) {
             localStorage.setItem("cdogeFloatHighScore", score);
-            playRecordSound();
+            sndRecord.play();
             newRecordMessage.style.display = "flex";
             setTimeout(() => {
               newRecordMessage.style.display = "none";
@@ -261,7 +219,6 @@
             gameOverScreen.style.display = "flex";
           }
           finalScore.textContent = score;
-          document.body.classList.remove("shake");
         }
         return;
       }
@@ -271,9 +228,12 @@
 
       doge.velocity += gravity;
       doge.y += doge.velocity;
+
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
         isGameOver = true;
-        playBoomSound();
+        music.pause();
+        music.currentTime = 0;
+        sndBoom.play();
       }
 
       drawDoge();
@@ -296,16 +256,8 @@
         }
       }
 
-      if (timeElapsed % 150 === 0) {
-        spawnCoinGroup();
-      }
-
-      const now = Date.now();
-      const spawnInterval = timeElapsed >= 3600 ? 1000 : timeElapsed >= 1800 ? 2000 : 3000;
-      if (now - lastObstacleSpawn >= spawnInterval) {
-        spawnObstacle();
-        lastObstacleSpawn = now;
-      }
+      if (timeElapsed % 150 === 0) spawnCoins();
+      if (timeElapsed % 120 === 0) spawnObstacle();
 
       requestAnimationFrame(updateGame);
     }
@@ -317,13 +269,11 @@
       }
     });
 
-    if (isMobile) {
-      document.addEventListener("touchstart", () => {
-        if (!gameStarted || isGameOver) return;
-        doge.velocity = jump;
-        sndJump.play();
-      });
-    }
+    document.addEventListener("touchstart", () => {
+      if (!gameStarted || isGameOver) return;
+      doge.velocity = jump;
+      sndJump.play();
+    });
 
     startButton.onclick = () => {
       startScreen.style.display = "none";
@@ -331,21 +281,6 @@
       music.play();
       updateGame();
     };
-
-    function playCoinSound() {
-      sndCoin.currentTime = 0;
-      sndCoin.play();
-    }
-
-    function playBoomSound() {
-      sndBoom.currentTime = 0;
-      sndBoom.play();
-    }
-
-    function playRecordSound() {
-      sndRecord.currentTime = 0;
-      sndRecord.play();
-    }
   </script>
 </body>
 </html>
