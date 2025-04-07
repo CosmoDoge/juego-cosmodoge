@@ -147,18 +147,20 @@
       img.src = obstacleImgs[index];
 
       specialObstacles.push({
-        x: Math.random() * (canvas.width - 50),
-        y: -50,
+        x: canvas.width + 50,
+        y: Math.random() * (canvas.height / 2),
         width: 50,
         height: 50,
-        speed: 2 + Math.random() * 2,
+        speedX: 2 + Math.random() * 2,
+        speedY: 1 + Math.random() * 2,
         img: img
       });
     }
 
     function drawSpecialObstacles() {
-      specialObstacles.forEach((obs, index) => {
-        obs.y += obs.speed;
+      specialObstacles.forEach((obs) => {
+        obs.x -= obs.speedX;
+        obs.y += obs.speedY;
         ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
 
         if (
@@ -170,7 +172,10 @@
           isGameOver = true;
         }
       });
-      specialObstacles = specialObstacles.filter(obs => obs.y < canvas.height);
+
+      specialObstacles = specialObstacles.filter(
+        (obs) => obs.x + obs.width > 0 && obs.y < canvas.height
+      );
     }
 
     function updateDifficulty(seconds) {
