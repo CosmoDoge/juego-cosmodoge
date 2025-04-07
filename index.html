@@ -93,9 +93,16 @@
   </div>
 
   <script>
+    const sndJump = new Audio("jump.mp3");
+    const sndCoin = new Audio("coin.mp3");
+    const sndBoom = new Audio("boom.mp3");
+    const sndRecord = new Audio("record.mp3");
+    const music = new Audio("music.mp3");
+    music.loop = true;
+    music.volume = 0.3;
+
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {
       canvas.width = window.innerWidth;
@@ -107,8 +114,6 @@
     const fondo = new Image();
     fondo.src = fondos[fondoIndex];
 
-    let fondoCambioIntervalo = 30 * 60;
-
     const doge = {
       x: 80,
       y: 200,
@@ -119,21 +124,26 @@
     };
     doge.img.src = "cosmodoge-cohete-juego.png";
 
+    let gravity = 0.5;
     const gravityLevels = [0.5, 0.6, 0.8, 1.0];
-    let gravity = gravityLevels[0];
     const jump = -10;
 
     let score = 0;
-    let coins = parseInt(localStorage.getItem("cdogeTotalCoins")) || 0;
+    let coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
     let highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
     let gameStarted = false;
     let isGameOver = false;
     let timeElapsed = 0;
     let lastScoreTime = 0;
+    let lastFondoChange = 0;
 
     const coinImg = new Image();
     coinImg.src = "coin-cosmodoge.png";
     let coinsArray = [];
+
+    const obstacleImgs = ["obstaculo-estelar.png", "obstaculo-explosion.png", "obstaculo-explosion-aire.png"];
+    let specialObstacles = [];
+    let lastObstacleSpawn = Date.now();
 
     const scoreDisplay = document.getElementById("scoreDisplay");
     const coinDisplay = document.getElementById("coinDisplay");
@@ -145,28 +155,16 @@
     const startButton = document.getElementById("startButton");
     const newRecordMessage = document.getElementById("newRecordMessage");
 
-    highScoreDisplay.textContent = "🔝 Máx: " + highScore;
     coinDisplay.textContent = "💰 x " + coins;
-
-    let bgY = 0;
+    highScoreDisplay.textContent = "🔝 Máx: " + highScore;
 
     setTimeout(() => {
       loadingScreen.style.display = "none";
       startScreen.style.display = "flex";
-    }, 2500);
+    }, 2000);
 
     function drawBackground() {
-      bgY += 1;
-      if (bgY >= canvas.height) bgY = 0;
-      ctx.drawImage(fondo, 0, bgY - canvas.height, canvas.width, canvas.height);
-      ctx.drawImage(fondo, 0, bgY, canvas.width, canvas.height);
-    }
-
-    function changeBackgroundIfNeeded() {
-      if (timeElapsed % fondoCambioIntervalo === 0) {
-        fondoIndex = (fondoIndex + 1) % fondos.length;
-        fondo.src = fondos[fondoIndex];
-      }
+      ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
     }
 
     function drawDoge() {
@@ -174,11 +172,11 @@
     }
 
     function spawnCoinGroup() {
-      const groupSize = Math.floor(Math.random() * 6) + 5;
-      for (let i = 0; i < groupSize; i++) {
+      const amount = Math.floor(Math.random() * 6) + 5; // 5 a 10 monedas
+      for (let i = 0; i < amount; i++) {
         coinsArray.push({
-          x: canvas.width + i * 40 + Math.random() * 20,
-          y: 50 + Math.random() * (canvas.height - 150),
+          x: canvas.width + i * 40,
+          y: Math.random() * (canvas.height - 100),
           width: 30,
           height: 30,
           speed: 2
@@ -190,6 +188,7 @@
       coinsArray.forEach((coin, i) => {
         coin.x -= coin.speed;
         ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
+
         if (
           doge.x < coin.x + coin.width &&
           doge.x + doge.width > coin.x &&
@@ -197,19 +196,53 @@
           doge.y + doge.height > coin.y
         ) {
           coins++;
-          localStorage.setItem("cdogeTotalCoins", coins);
+          localStorage.setItem("cdogeCoins", coins);
           coinDisplay.textContent = "💰 x " + coins;
+          playCoinSound();
           coinsArray.splice(i, 1);
         }
       });
     }
 
+    function spawnObstacle() {
+      const img = new Image();
+      img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
+      specialObstacles.push({
+        x: canvas.width,
+        y: Math.random() * canvas.height,
+        width: 50,
+        height: 50,
+        speedX: 2 + Math.random() * 2,
+        speedY: 0.5 + Math.random() * 1.5,
+        img: img
+      });
+    }
+
+    function drawObstacles() {
+      specialObstacles.forEach((obs, index) => {
+        obs.x -= obs.speedX;
+        if (obs.y < doge.y) obs.y += obs.speedY;
+        else obs.y -= obs.speedY;
+
+        ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
+
+        if (
+          doge.x < obs.x + obs.width &&
+          doge.x + doge.width > obs.x &&
+          doge.y < obs.y + obs.height &&
+          doge.y + doge.height > obs.y
+        ) {
+          isGameOver = true;
+          playBoomSound();
+        }
+      });
+      specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
+    }
+
     function updateDifficulty(seconds) {
       if (seconds >= 75) gravity = gravityLevels[3];
-      else if (seconds >= 60) {
-        gravity = gravityLevels[2];
-        document.body.classList.add("shake");
-      } else if (seconds >= 45) gravity = gravityLevels[2];
+      else if (seconds >= 60) gravity = gravityLevels[2];
+      else if (seconds >= 45) gravity = gravityLevels[2];
       else if (seconds >= 30) gravity = gravityLevels[1];
     }
 
@@ -218,6 +251,7 @@
         if (isGameOver) {
           if (score > highScore) {
             localStorage.setItem("cdogeFloatHighScore", score);
+            playRecordSound();
             newRecordMessage.style.display = "flex";
             setTimeout(() => {
               newRecordMessage.style.display = "none";
@@ -234,17 +268,17 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
-      changeBackgroundIfNeeded();
 
       doge.velocity += gravity;
       doge.y += doge.velocity;
-
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
         isGameOver = true;
+        playBoomSound();
       }
 
       drawDoge();
       drawCoins();
+      drawObstacles();
 
       timeElapsed++;
       if (timeElapsed % 60 === 0) {
@@ -255,10 +289,22 @@
           lastScoreTime = seconds;
           scoreDisplay.textContent = "🚀 x " + score;
         }
+        if (seconds - lastFondoChange >= 30) {
+          fondoIndex = (fondoIndex + 1) % fondos.length;
+          fondo.src = fondos[fondoIndex];
+          lastFondoChange = seconds;
+        }
       }
 
       if (timeElapsed % 150 === 0) {
         spawnCoinGroup();
+      }
+
+      const now = Date.now();
+      const spawnInterval = timeElapsed >= 3600 ? 1000 : timeElapsed >= 1800 ? 2000 : 3000;
+      if (now - lastObstacleSpawn >= spawnInterval) {
+        spawnObstacle();
+        lastObstacleSpawn = now;
       }
 
       requestAnimationFrame(updateGame);
@@ -267,6 +313,7 @@
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" && gameStarted && !isGameOver) {
         doge.velocity = jump;
+        sndJump.play();
       }
     });
 
@@ -274,14 +321,31 @@
       document.addEventListener("touchstart", () => {
         if (!gameStarted || isGameOver) return;
         doge.velocity = jump;
+        sndJump.play();
       });
     }
 
     startButton.onclick = () => {
       startScreen.style.display = "none";
       gameStarted = true;
+      music.play();
       updateGame();
     };
+
+    function playCoinSound() {
+      sndCoin.currentTime = 0;
+      sndCoin.play();
+    }
+
+    function playBoomSound() {
+      sndBoom.currentTime = 0;
+      sndBoom.play();
+    }
+
+    function playRecordSound() {
+      sndRecord.currentTime = 0;
+      sndRecord.play();
+    }
   </script>
 </body>
 </html>
