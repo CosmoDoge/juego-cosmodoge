@@ -146,15 +146,26 @@
       const index = Math.floor(Math.random() * obstacleImgs.length);
       img.src = obstacleImgs[index];
 
-      specialObstacles.push({
+      const speedFactor = timeElapsed / 600;
+      const baseObstacle = {
         x: canvas.width + 50,
         y: Math.random() * (canvas.height / 2),
         width: 50,
         height: 50,
-        speedX: 2 + Math.random() * 2,
-        speedY: 1 + Math.random() * 2,
+        speedX: 2 + Math.random() * (2 + speedFactor),
+        speedY: 1 + Math.random() * (2 + speedFactor),
         img: img
-      });
+      };
+
+      specialObstacles.push({ ...baseObstacle });
+
+      // 30% de probabilidad de crear un segundo obstáculo más abajo
+      if (Math.random() < 0.3) {
+        specialObstacles.push({
+          ...baseObstacle,
+          y: baseObstacle.y + 100 + Math.random() * 100
+        });
+      }
     }
 
     function drawSpecialObstacles() {
@@ -226,7 +237,7 @@
       }
 
       const now = Date.now();
-      if (now - lastSpecialObstacleTime >= 20000) {
+      if (now - lastSpecialObstacleTime >= 10000) {
         spawnSpecialObstacle();
         lastSpecialObstacleTime = now;
       }
