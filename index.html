@@ -61,7 +61,7 @@
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
       projectId: "cosmodogelive",
-      storageBucket: "cosmodogelive.firebasestorage.app",
+      storageBucket: "cosmodogelive.appspot.com",
       messagingSenderId: "648227069914",
       appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3",
       measurementId: "G-MDTQSCERF6"
@@ -96,12 +96,13 @@
         html += "</ul>";
         lista.innerHTML = html;
       } catch (error) {
-        lista.innerHTML = "<p style='color:red;'>No se pudo cargar el ranking.</p>";
+        lista.innerHTML = "<p style='color:red;'>No se pudo conectar al ranking.</p>";
       }
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
     }
 
+    // ✅ Corrección clave para que funcionen desde el script principal
     window.guardarJugador = guardarJugador;
     window.mostrarTopRanking = mostrarTopRanking;
   </script>
@@ -135,7 +136,7 @@
   <div id="playerNameForm" style="display:none; flex-direction: column; align-items: center; margin-top: 20px;">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
-  </div><script>
+  </div<script>
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
     const sndBoom = new Audio("boom.mp3");
@@ -376,7 +377,7 @@
     });
   
     document.getElementById("restartButton").addEventListener("click", () => {
-      window.location.reload(); // Reinicia el juego
+      window.location.reload();
     });
   
     function playCoinSound() {
@@ -394,7 +395,8 @@
       sndRecord.play();
     }
   
+    // ⬇️ Ejecutar automáticamente al cargar para salir de "Cargando universo..."
     mostrarTopRanking();
   </script>
   </body>
-  </html>
+  </html>>
