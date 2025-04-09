@@ -58,14 +58,15 @@
     import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBTjGJn6S8bz6PSaMUT8YuYKEfMJB_xZW8",
-      authDomain: "cosmodogegame.firebaseapp.com",
-      projectId: "cosmodogegame",
-      storageBucket: "cosmodogegame.firebasestorage.app",
-      messagingSenderId: "269767748803",
-      appId: "1:269767748803:web:e5cfa79835bb2c68024676",
-      measurementId: "G-ZMQ0NV69PH"
-    };
+  apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
+  authDomain: "cosmodogelive.firebaseapp.com",
+  projectId: "cosmodogelive",
+  storageBucket: "cosmodogelive.firebasestorage.app",
+  messagingSenderId: "648227069914",
+  appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3",
+  measurementId: "G-MDTQSCERF6"
+};
+
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -287,22 +288,21 @@
   }
 
   function updateGame() {
-    if (score > highScore) {
-  localStorage.setItem("cdogeFloatHighScore", score);
-  playRecordSound();
-  newRecordMessage.style.display = "flex";
-  playerNameForm.style.display = "flex"; // 👈 muestra el formulario
-  setTimeout(() => {
-    newRecordMessage.style.display = "none";
-  }, 2500);
+  if (score > highScore) {
+    localStorage.setItem("cdogeFloatHighScore", score);
+    playRecordSound();
+    newRecordMessage.style.display = "flex";
+    playerNameForm.style.display = "flex"; // Solo muestra el formulario
+    finalScore.textContent = score;
+    return;
+  } else {
+    gameOverScreen.style.display = "flex";
+    finalScore.textContent = score;
+    document.body.classList.remove("shake");
+    return;
+  }
 }
- else {
-          gameOverScreen.style.display = "flex";
-        }
-        finalScore.textContent = score;
-        document.body.classList.remove("shake");
-      }
-      return;
+
     
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -390,7 +390,18 @@
     playerNameForm.style.display = "none";
     gameOverScreen.style.display = "flex";
   }
+});playerNameForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const nombre = playerNameInput.value.trim();
+  if (nombre === "") return;
+
+  guardarJugador(nombre, score, monedas); // Se guarda en Firestore
+
+  playerNameForm.style.display = "none";
+  playerNameInput.value = "";
 });
+
 </script>
 </body>
 </html>
