@@ -6,11 +6,16 @@
   <title>CosmoDoge Flotante 🚀</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: black; overflow: hidden; font-family: Arial, sans-serif; }
+    body {
+      background: black;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
     canvas { display: block; margin: auto; }
     #scoreDisplay, #coinDisplay, #highScoreDisplay {
       position: absolute;
-      top: 10px; left: 10px;
+      top: 10px;
+      left: 10px;
       color: white;
       font-size: 20px;
       font-weight: bold;
@@ -19,7 +24,8 @@
     #coinDisplay { top: 40px; }
     #highScoreDisplay { top: 70px; }
     #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
-      position: absolute; top: 0; left: 0;
+      position: absolute;
+      top: 0; left: 0;
       width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.85);
       display: flex;
@@ -28,6 +34,10 @@
       justify-content: center;
       color: white;
       z-index: 10;
+    }
+    #startScreen h1, #gameOverScreen h1, #loadingScreen h1, #newRecordMessage h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
     }
     .btn {
       padding: 1rem 2rem;
@@ -38,9 +48,63 @@
       font-size: 1.2rem;
       font-weight: bold;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
     .btn:hover { background-color: #00e7f5; }
   </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTjGJn6S8bz6PSaMUT8YuYKEfMJB_xZW8",
+      authDomain: "cosmodogegame.firebaseapp.com",
+      projectId: "cosmodogegame",
+      storageBucket: "cosmodogegame.firebasestorage.app",
+      messagingSenderId: "269767748803",
+      appId: "1:269767748803:web:e5cfa79835bb2c68024676",
+      measurementId: "G-ZMQ0NV69PH"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function guardarJugador(nombre, puntaje, monedas) {
+      try {
+        await addDoc(collection(db, "jugadores"), {
+          nombre,
+          puntaje,
+          monedas,
+          fecha: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Error al guardar jugador:", error);
+      }
+    }
+
+    async function mostrarTopRanking() {
+      const lista = document.getElementById("topRanking");
+      try {
+        const q = query(collection(db, "jugadores"), orderBy("puntaje", "desc"), limit(5));
+        const querySnapshot = await getDocs(q);
+        let html = "<h2>🏆 Top 5 CosmoDoge</h2><ul style='list-style:none;padding:0;'>";
+        querySnapshot.forEach((doc, index) => {
+          const data = doc.data();
+          html += `<li>#${index + 1} <strong>${data.nombre}</strong> - ${data.puntaje} pts - ${data.monedas} 🪙</li>`;
+        });
+        html += "</ul>";
+        lista.innerHTML = html;
+      } catch (error) {
+        lista.innerHTML = "<p style='color:red;'>No se pudo cargar el ranking.</p>";
+      }
+      document.getElementById("loadingScreen").style.display = "none";
+      document.getElementById("startScreen").style.display = "flex";
+    }
+
+    window.guardarJugador = guardarJugador;
+    window.mostrarTopRanking = mostrarTopRanking;
+  </script>
 </head>
 <body>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
@@ -48,239 +112,285 @@
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
 
-  <div id="loadingScreen"><h1>🌌 Cargando universo...</h1></div>
+  <div id="loadingScreen">
+    <h1>🌌 Cargando universo...</h1>
+    <div id="topRanking" style="margin-top: 20px; text-align:center;"></div>
+  </div>
+
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
     <button class="btn" id="startButton">¡Comenzar!</button>
   </div>
+
   <div id="gameOverScreen" style="display:none;">
     <h1>💥 ¡Game Over!</h1>
     <p>Puntaje: <span id="finalScore">0</span></p>
     <button class="btn" onclick="location.reload()">Reiniciar</button>
   </div>
+
   <div id="newRecordMessage" style="display:none;">
     <h1>🌟 ¡Nuevo récord galáctico!</h1>
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
-
+  <div id="playerNameForm" style="display:none; flex-direction: column; align-items: center; margin-top: 20px;">
+    <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
+    <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
+  </div>  
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+      const sndJump = new Audio("jump.mp3");
+  const sndCoin = new Audio("coin.mp3");
+  const sndBoom = new Audio("boom.mp3");
+  const sndRecord = new Audio("record.mp3");
+  const music = new Audio("music-cosmodoge-theme.mp3");
+  music.loop = true;
+  music.volume = 0.3;
 
-    const fondos = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
-    const fondo = new Image();
-    let fondoIndex = 0;
-    fondo.src = fondos[fondoIndex];
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
 
-    const doge = {
-      x: 80, y: 200, width: 50, height: 50, velocity: 0,
-      img: new Image()
-    };
-    doge.img.src = "cosmodoge-cohete-juego.png";
+  const fondos = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
+  let fondoIndex = 0;
+  const fondo = new Image();
+  fondo.src = fondos[fondoIndex];
 
-    const gravityLevels = [0.5, 0.6, 0.8, 1.0];
-    let gravity = gravityLevels[0];
-    const jump = -10;
+  const doge = {
+    x: 80,
+    y: 200,
+    width: 50,
+    height: 50,
+    velocity: 0,
+    img: new Image()
+  };
+  doge.img.src = "cosmodoge-cohete-juego.png";
 
-    let score = 0;
-    let coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
-    let highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
-    let gameStarted = false;
-    let isGameOver = false;
-    let timeElapsed = 0;
-    let lastScoreTime = 0;
-    let lastFondoChange = 0;
+  let gravity = 0.5;
+  const gravityLevels = [0.5, 0.6, 0.8, 1.0];
+  const jump = -10;
 
-    const coinImg = new Image();
-    coinImg.src = "coin-cosmodoge.png";
-    let coinsArray = [];
+  let score = 0;
+  let coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
+  let highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
+  let gameStarted = false;
+  let isGameOver = false;
+  let timeElapsed = 0;
+  let lastScoreTime = 0;
+  let lastFondoChange = 0;
 
-    const obstacleImgs = ["obstaculo-estelar.png", "obstaculo-explosion.png", "obstaculo-explosion-aire.png"];
-    let obstacles = [];
+  const coinImg = new Image();
+  coinImg.src = "coin-cosmodoge.png";
+  let coinsArray = [];
 
-    const sndJump = new Audio("jump.mp3");
-    const sndCoin = new Audio("coin.mp3");
-    const sndBoom = new Audio("boom.mp3");
-    const sndRecord = new Audio("record.mp3");
-    const music = new Audio("music-cosmodoge-theme.mp3");
-    music.loop = true;
-    music.volume = 0.3;
+  const obstacleImgs = [
+    "obstaculo-estelar.png", "obstaculo-explosion.png", "obstaculo-explosion-aire.png",
+   
+  ];
+  let specialObstacles = [];
+  let lastObstacleSpawn = Date.now();
 
-    const scoreDisplay = document.getElementById("scoreDisplay");
-    const coinDisplay = document.getElementById("coinDisplay");
-    const highScoreDisplay = document.getElementById("highScoreDisplay");
-    const startScreen = document.getElementById("startScreen");
-    const loadingScreen = document.getElementById("loadingScreen");
-    const gameOverScreen = document.getElementById("gameOverScreen");
-    const finalScore = document.getElementById("finalScore");
-    const newRecordMessage = document.getElementById("newRecordMessage");
-    const startButton = document.getElementById("startButton");
+  const scoreDisplay = document.getElementById("scoreDisplay");
+  const coinDisplay = document.getElementById("coinDisplay");
+  const highScoreDisplay = document.getElementById("highScoreDisplay");
+  const startScreen = document.getElementById("startScreen");
+  const loadingScreen = document.getElementById("loadingScreen");
+  const gameOverScreen = document.getElementById("gameOverScreen");
+  const finalScore = document.getElementById("finalScore");
+  const startButton = document.getElementById("startButton");
+  const newRecordMessage = document.getElementById("newRecordMessage");
 
-    coinDisplay.textContent = "💰 x " + coins;
-    highScoreDisplay.textContent = "🔝 Máx: " + highScore;
+  coinDisplay.textContent = "💰 x " + coins;
+  highScoreDisplay.textContent = "🔝 Máx: " + highScore;
 
-    setTimeout(() => {
-      loadingScreen.style.display = "none";
-      startScreen.style.display = "flex";
-    }, 2000);
+  function drawBackground() {
+    ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
+  }
 
-    function drawBackground() {
-      ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
-    }
+  function drawDoge() {
+    ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
+  }
 
-    function drawDoge() {
-      ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
-    }
-
-    function spawnCoins() {
-      const count = 5 + Math.floor(Math.random() * 6);
-      for (let i = 0; i < count; i++) {
-        coinsArray.push({
-          x: canvas.width + i * 40,
-          y: Math.random() * (canvas.height - 100),
-          width: 30, height: 30, speed: 2
-        });
-      }
-    }
-
-    function drawCoins() {
-      coinsArray.forEach((coin, i) => {
-        coin.x -= coin.speed;
-        ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
-        if (
-          doge.x < coin.x + coin.width &&
-          doge.x + doge.width > coin.x &&
-          doge.y < coin.y + coin.height &&
-          doge.y + doge.height > coin.y
-        ) {
-          coins++;
-          sndCoin.play();
-          coinDisplay.textContent = "💰 x " + coins;
-          localStorage.setItem("cdogeCoins", coins);
-          coinsArray.splice(i, 1);
-        }
+  function spawnCoinGroup() {
+    const amount = Math.floor(Math.random() * 6) + 5;
+    for (let i = 0; i < amount; i++) {
+      coinsArray.push({
+        x: canvas.width + i * 40,
+        y: Math.random() * (canvas.height - 100),
+        width: 30,
+        height: 30,
+        speed: 2
       });
     }
+  }
 
-    function spawnObstacle() {
-      const img = new Image();
-      img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
-      obstacles.push({
-        x: canvas.width,
-        y: Math.random() * canvas.height,
-        width: 50, height: 50,
-        speedX: 2 + Math.random() * 2,
-        speedY: 0.5 + Math.random() * 1.5,
-        img: img
-      });
-    }
-
-    function drawObstacles() {
-      obstacles.forEach((obs, i) => {
-        obs.x -= obs.speedX;
-        if (obs.y < doge.y) obs.y += obs.speedY;
-        else obs.y -= obs.speedY;
-        ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
-
-        if (
-          doge.x < obs.x + obs.width &&
-          doge.x + doge.width > obs.x &&
-          doge.y < obs.y + obs.height &&
-          doge.y + doge.height > obs.y
-        ) {
-          isGameOver = true;
-          music.pause();
-          music.currentTime = 0;
-          sndBoom.play();
-        }
-      });
-      obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
-    }
-
-    function updateDifficulty(seconds) {
-      if (seconds >= 75) gravity = gravityLevels[3];
-      else if (seconds >= 60) gravity = gravityLevels[2];
-      else if (seconds >= 45) gravity = gravityLevels[2];
-      else if (seconds >= 30) gravity = gravityLevels[1];
-    }
-
-    function updateGame() {
-      if (!gameStarted || isGameOver) {
-        if (isGameOver) {
-          if (score > highScore) {
-            localStorage.setItem("cdogeFloatHighScore", score);
-            sndRecord.play();
-            newRecordMessage.style.display = "flex";
-            setTimeout(() => {
-              newRecordMessage.style.display = "none";
-              gameOverScreen.style.display = "flex";
-            }, 2500);
-          } else {
-            gameOverScreen.style.display = "flex";
-          }
-          finalScore.textContent = score;
-        }
-        return;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground();
-
-      doge.velocity += gravity;
-      doge.y += doge.velocity;
-
-      if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
-        isGameOver = true;
-        music.pause();
-        music.currentTime = 0;
-        sndBoom.play();
-      }
-
-      drawDoge();
-      drawCoins();
-      drawObstacles();
-
-      timeElapsed++;
-      if (timeElapsed % 60 === 0) {
-        const seconds = timeElapsed / 60;
-        updateDifficulty(seconds);
-        if (seconds - lastScoreTime >= 5) {
-          score++;
-          lastScoreTime = seconds;
-          scoreDisplay.textContent = "🚀 x " + score;
-        }
-        if (seconds - lastFondoChange >= 30) {
-          fondoIndex = (fondoIndex + 1) % fondos.length;
-          fondo.src = fondos[fondoIndex];
-          lastFondoChange = seconds;
-        }
-      }
-
-      if (timeElapsed % 150 === 0) spawnCoins();
-      if (timeElapsed % 120 === 0) spawnObstacle();
-
-      requestAnimationFrame(updateGame);
-    }
-
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" && gameStarted && !isGameOver) {
-        doge.velocity = jump;
-        sndJump.play();
+  function drawCoins() {
+    coinsArray.forEach((coin, i) => {
+      coin.x -= coin.speed;
+      ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
+      if (
+        doge.x < coin.x + coin.width &&
+        doge.x + doge.width > coin.x &&
+        doge.y < coin.y + coin.height &&
+        doge.y + doge.height > coin.y
+      ) {
+        coins++;
+        localStorage.setItem("cdogeCoins", coins);
+        coinDisplay.textContent = "💰 x " + coins;
+        playCoinSound();
+        coinsArray.splice(i, 1);
       }
     });
+  }
 
+  function spawnObstacle() {
+    const img = new Image();
+    img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
+    specialObstacles.push({
+      x: canvas.width,
+      y: Math.random() * canvas.height,
+      width: 50,
+      height: 50,
+      speedX: 2 + Math.random() * 2,
+      speedY: 0.5 + Math.random() * 1.5,
+      img: img
+    });
+  }
+
+  function drawObstacles() {
+    specialObstacles.forEach((obs, index) => {
+      obs.x -= obs.speedX;
+      if (obs.y < doge.y) obs.y += obs.speedY;
+      else obs.y -= obs.speedY;
+      ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
+
+      if (
+        doge.x < obs.x + obs.width &&
+        doge.x + doge.width > obs.x &&
+        doge.y < obs.y + obs.height &&
+        doge.y + doge.height > obs.y
+      ) {
+        isGameOver = true;
+        playBoomSound();
+      }
+    });
+    specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
+  }
+
+  function updateDifficulty(seconds) {
+    if (seconds >= 75) gravity = gravityLevels[3];
+    else if (seconds >= 60) gravity = gravityLevels[2];
+    else if (seconds >= 45) gravity = gravityLevels[2];
+    else if (seconds >= 30) gravity = gravityLevels[1];
+  }
+
+  function updateGame() {
+    if (score > highScore) {
+  localStorage.setItem("cdogeFloatHighScore", score);
+  playRecordSound();
+  newRecordMessage.style.display = "flex";
+  playerNameForm.style.display = "flex"; // 👈 muestra el formulario
+  setTimeout(() => {
+    newRecordMessage.style.display = "none";
+  }, 2500);
+}
+ else {
+          gameOverScreen.style.display = "flex";
+        }
+        finalScore.textContent = score;
+        document.body.classList.remove("shake");
+      }
+      return;
+    
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
+
+    doge.velocity += gravity;
+    doge.y += doge.velocity;
+    if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
+      isGameOver = true;
+      playBoomSound();
+    }
+
+    drawDoge();
+    drawCoins();
+    drawObstacles();
+
+    timeElapsed++;
+    if (timeElapsed % 60 === 0) {
+      const seconds = timeElapsed / 60;
+      updateDifficulty(seconds);
+      if (seconds - lastScoreTime >= 5) {
+        score++;
+        lastScoreTime = seconds;
+        scoreDisplay.textContent = "🚀 x " + score;
+      }
+      if (seconds - lastFondoChange >= 30) {
+        fondoIndex = (fondoIndex + 1) % fondos.length;
+        fondo.src = fondos[fondoIndex];
+        lastFondoChange = seconds;
+      }
+    }
+
+    if (timeElapsed % 150 === 0) spawnCoinGroup();
+    const now = Date.now();
+    const spawnInterval = timeElapsed >= 3600 ? 1000 : timeElapsed >= 1800 ? 2000 : 3000;
+    if (now - lastObstacleSpawn >= spawnInterval) {
+      spawnObstacle();
+      lastObstacleSpawn = now;
+    }
+
+    requestAnimationFrame(updateGame);
+  
+
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && gameStarted && !isGameOver) {
+      doge.velocity = jump;
+      sndJump.play();
+    }
+  });
+
+  if (isMobile) {
     document.addEventListener("touchstart", () => {
       if (!gameStarted || isGameOver) return;
       doge.velocity = jump;
       sndJump.play();
     });
+  }
 
-    startButton.onclick = () => {
-      startScreen.style.display = "none";
-      gameStarted = true;
-      music.play();
-      updateGame();
-    };
-  </script>
+  startButton.onclick = () => {
+    startScreen.style.display = "none";
+    gameStarted = true;
+    music.play();
+    updateGame();
+  };
+
+  function playCoinSound() {
+    sndCoin.currentTime = 0;
+    sndCoin.play();
+  }
+
+  function playBoomSound() {
+    sndBoom.currentTime = 0;
+    sndBoom.play();
+  }
+
+  function playRecordSound() {
+    sndRecord.currentTime = 0;
+    sndRecord.play();
+  }
+    mostrarTopRanking();  
+    document.getElementById("saveScoreButton").addEventListener("click", () => {
+  const nombre = document.getElementById("playerName").value.trim();
+  if (nombre) {
+    guardarJugador(nombre, score, coins);
+    playerNameForm.style.display = "none";
+    gameOverScreen.style.display = "flex";
+  }
+});
+</script>
 </body>
-</html
+</html>
