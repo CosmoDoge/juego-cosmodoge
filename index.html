@@ -299,7 +299,9 @@
     gameOverScreen.style.display = "flex";
     finalScore.textContent = score;
     document.body.classList.remove("shake");
-    return;
+    isGameOver = true;
+  return;
+
   }
 }
 
@@ -390,18 +392,7 @@
     playerNameForm.style.display = "none";
     gameOverScreen.style.display = "flex";
   }
-});playerNameForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const nombre = playerNameInput.value.trim();
-  if (nombre === "") return;
-
-  guardarJugador(nombre, score, monedas); // Se guarda en Firestore
-
-  playerNameForm.style.display = "none";
-  playerNameInput.value = "";
 });
-
 </script>
 </body>
 </html>
