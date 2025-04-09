@@ -124,11 +124,14 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
   <script>
-    if (typeof mostrarTopRanking === "function") {
-  mostrarTopRanking().finally(() => {
-    loadingScreen.style.display = "none";
-    startScreen.style.display = "flex";
-  });
+    mostrarTopRanking()
+  .catch(() => {
+    console.warn("Error cargando el ranking, mostrando pantalla de inicio igualmente.");
+  })
+  .finally(() => {
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("startScreen").style.display = "flex";
+  }););
 } else {
   console.warn("Ranking no cargado. Continuando sin ranking.");
   loadingScreen.style.display = "none";
@@ -350,4 +353,4 @@
       gameStarted = true;
       music.play();
       updateGame();
-    };
+    }; 
