@@ -23,7 +23,6 @@
     }
     #coinDisplay { top: 40px; }
     #highScoreDisplay { top: 70px; }
-
     #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
       position: absolute;
       top: 0; left: 0;
@@ -40,7 +39,6 @@
       font-size: 2rem;
       margin-bottom: 1rem;
     }
-
     .btn {
       padding: 1rem 2rem;
       background-color: #00ffff;
@@ -58,17 +56,13 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background-color: #00ffff;
-      color: black;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 9999;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
     }
+    #rankingButton .btn { font-size: 1rem; padding: 0.5rem 1rem; }
   </style>
 
   <script type="module">
@@ -88,12 +82,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function guardarJugador(nombre, puntaje, coins) {
+    async function guardarJugador(nombre, puntaje, coin) {
       try {
         await addDoc(collection(db, "jugadores"), {
           nombre,
           puntaje,
-          monedas: coins,
+          monedas: coin,
           fecha: new Date().toISOString()
         });
       } catch (error) {
@@ -120,12 +114,6 @@
 
     window.guardarJugador = guardarJugador;
     window.mostrarTopRanking = mostrarTopRanking;
-
-    window.toggleRanking = function () {
-      const panel = document.getElementById("topRankingPanel");
-      panel.style.display = panel.style.display === "none" ? "block" : "none";
-      if (panel.style.display === "block") mostrarTopRanking();
-    };
   </script>
 </head>
 <body>
@@ -136,6 +124,7 @@
 
   <div id="loadingScreen">
     <h1>🌌 Cargando universo...</h1>
+    <div id="topRanking" style="margin-top: 20px; text-align:center;"></div>
   </div>
 
   <div id="startScreen" style="display:none;">
@@ -159,9 +148,9 @@
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
   </div>
 
-  <button id="rankingButton" onclick="toggleRanking()">🏆 Ver Ranking</button>
-  <div id="topRankingPanel" style="display:none; position: fixed; bottom: 70px; right: 20px; background: #111; color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); z-index: 9999; max-width: 300px;">
-    <div id="topRanking">Cargando...</div>
+  <div id="rankingButton">
+    <div style="color: white; font-size: 14px; font-weight: bold;">🏆 Top 5 CosmoDoge</div>
+    <button class="btn" onclick="mostrarTopRanking()">🔎 Ver Ranking</button>
   </div><script>
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
@@ -173,6 +162,7 @@
   
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+  
     let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {
       canvas.width = window.innerWidth;
@@ -197,7 +187,6 @@
     let gravity = 0.5;
     const gravityLevels = [0.5, 0.6, 0.8, 1.0];
     const jump = -10;
-  
     let score = 0;
     let coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
     let highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
@@ -222,11 +211,9 @@
     const highScoreDisplay = document.getElementById("highScoreDisplay");
     const finalScore = document.getElementById("finalScore");
     const startButton = document.getElementById("startButton");
+    const gameOverScreen = document.getElementById("gameOverScreen");
     const newRecordMessage = document.getElementById("newRecordMessage");
     const playerNameForm = document.getElementById("playerNameForm");
-    const gameOverScreen = document.getElementById("gameOverScreen");
-    const startScreen = document.getElementById("startScreen");
-    const loadingScreen = document.getElementById("loadingScreen");
   
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
@@ -362,6 +349,9 @@
     function endGame(isRecord) {
       isGameOver = true;
       finalScore.textContent = score;
+      music.pause();
+      music.currentTime = 0;
+  
       if (isRecord) {
         localStorage.setItem("cdogeFloatHighScore", score);
         newRecordMessage.style.display = "flex";
@@ -372,6 +362,9 @@
         document.body.classList.remove("shake");
         playBoomSound();
       }
+  
+      // Mostrar botón de reinicio aunque haya récord
+      document.getElementById("restartButton").style.display = "inline-block";
     }
   
     document.addEventListener("keydown", (e) => {
@@ -391,7 +384,6 @@
   
     startButton.onclick = () => {
       startScreen.style.display = "none";
-      loadingScreen.style.display = "none";
       gameStarted = true;
       music.play();
       updateGame();
@@ -425,10 +417,15 @@
       sndRecord.play();
     }
   
-    // Ocultar loading al inicio si todo carga bien
+    // ✅ Ver ranking al hacer clic
+    document.getElementById("verRankingBtn").addEventListener("click", () => {
+      const panel = document.getElementById("rankingPanel");
+      panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+    });
+  
+    // ✅ Mostrar top al cargar
     window.addEventListener("DOMContentLoaded", () => {
-      loadingScreen.style.display = "none";
-      startScreen.style.display = "flex";
+      if (window.mostrarTopRanking) window.mostrarTopRanking();
     });
   </script>
   </body>
