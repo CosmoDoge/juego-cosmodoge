@@ -28,7 +28,7 @@
     #coinDisplay { top: 40px; }
     #highScoreDisplay { top: 70px; }
 
-    /* Pantallas superpuestas */
+    /* Pantallas superpuestas (usadas para start, game over, etc.) */
     #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
       position: absolute;
       top: 0; left: 0;
@@ -105,6 +105,19 @@
       border-radius: 5px;
     }
     #closeRankingBtn { margin-top: 10px; }
+    
+    /* Formulario para registrar el puntaje: se forzó un z-index más alto */
+    #playerNameForm {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      position: relative;
+      z-index: 20;  /* Mayor que 10 (pantallas superpuestas) para quedar por encima */
+      background: rgba(0, 0, 0, 0.85);
+      padding: 20px;
+      border-radius: 10px;
+    }
   </style>
 
   <!-- Firebase: Importa los módulos necesarios -->
@@ -193,7 +206,7 @@
   </div>
 
   <!-- Formulario para guardar el nombre (registro para ranking) -->
-  <div id="playerNameForm" style="display:none; flex-direction: column; align-items: center; margin-top: 20px;">
+  <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
   </div>
@@ -428,12 +441,11 @@
       music.pause();
       music.currentTime = 0;
 
-      // Siempre mostrar el formulario de registro para guardar el puntaje.
+      // Siempre mostrar el formulario para registrar el puntaje
       playerNameForm.style.display = "flex";
       gameOverScreen.style.display = "flex";
       restartButton.style.display = "inline-block";
 
-      // Si se superó el récord, muestra el mensaje y reproduce sonido de récord.
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
@@ -525,11 +537,11 @@
       sndRecord.play();
     }
 
-    // Al cargar el DOM, se oculta la pantalla de carga y se muestra la pantalla de inicio.
+    // Al cargar el DOM, oculta la pantalla de carga y muestra la pantalla de inicio.
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
-      // Opcional: cargar ranking inmediatamente si se desea.
+      // Opcional: cargar el ranking desde el inicio.
       // mostrarTopRanking();
     });
   </script>
