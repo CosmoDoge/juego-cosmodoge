@@ -105,15 +105,16 @@
       border-radius: 5px;
     }
     #closeRankingBtn { margin-top: 10px; }
-
-    /* Formulario para registrar el puntaje */
+    
+    /* Formulario para registrar el puntaje.
+       Se posiciona de forma interactiva con un z-index mayor para estar por encima de la pantalla de Game Over. */
     #playerNameForm {
       display: none;
       flex-direction: column;
       align-items: center;
       margin-top: 20px;
       position: relative;
-      z-index: 20; /* Por encima de las demás pantallas */
+      z-index: 20;
       background: rgba(0, 0, 0, 0.85);
       padding: 20px;
       border-radius: 10px;
@@ -174,7 +175,7 @@
       }
     };
 
-    // Se exporta la función para poder usarla desde otros lugares si es necesario.
+    // Se exporta la función para poder usarla desde otros lugares.
     window.guardarJugadorAutomatic = guardarJugadorAutomatic;
   </script>
 </head>
@@ -209,7 +210,7 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
-  <!-- Formulario para registrar el puntaje (solo se muestra si el usuario no está registrado) -->
+  <!-- Formulario para registrar el puntaje (sólo se muestra si el jugador no ha sido registrado previamente) -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -445,27 +446,32 @@
       music.pause();
       music.currentTime = 0;
       
-      // Si se batió el récord
+      // Se muestra la pantalla de Game Over y el botón de reiniciar
+      gameOverScreen.style.display = "flex";
+      restartButton.style.display = "inline-block";
+      
+      // Si se bate el récord
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
         highScoreDisplay.textContent = "🔝 Máx: " + highScore;
         newRecordMessage.style.display = "flex";
         playRecordSound();
-        // Si ya existe un nombre registrado, actualizar automáticamente
+        // Si ya existe un nombre registrado, se actualiza automáticamente.
         const username = localStorage.getItem("cosmodogeUserName");
         if (username) {
           guardarJugadorAutomatic(username, score, coins);
+          // Ocultamos el formulario si estaba visible.
+          playerNameForm.style.display = "none";
         } else {
-          // Si no está registrado, mostrar el formulario para que se ingrese el nombre.
+          // Se muestra el formulario para que se ingrese el nombre.
           playerNameForm.style.display = "flex";
         }
       } else {
         playBoomSound();
+        // Si el puntaje no es récord, ocultamos el formulario (por si acaso).
+        playerNameForm.style.display = "none";
       }
-      
-      gameOverScreen.style.display = "flex";
-      restartButton.style.display = "inline-block";
     }
 
     // Controles para teclado y dispositivos móviles.
@@ -494,17 +500,19 @@
       updateGame();
     };
 
-    // Guarda el puntaje con nombre (registro manual) si aún no se tiene uno.
+    // Guarda el puntaje con nombre (registro manual).
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
       if (nombre) {
-        // Guarda el nombre en localStorage para que no vuelva a pedirlo.
+        // Guarda el nombre en localStorage para evitar pedirlo de nuevo.
         localStorage.setItem("cosmodogeUserName", nombre);
         guardarJugadorAutomatic(nombre, score, coins)
           .then(() => {
             console.log("Registro guardado correctamente");
             playerNameForm.style.display = "none";
+            // Actualiza el ranking para que se muestre la información actualizada.
+            mostrarTopRanking();
           })
           .catch((err) => {
             console.error("Error al registrar jugador:", err);
@@ -550,7 +558,7 @@
       sndRecord.play();
     }
 
-    // Al cargar el DOM, oculta la pantalla de carga y muestra la pantalla de inicio.
+    // Al cargar el DOM, se oculta la pantalla de carga y se muestra la pantalla de inicio.
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
