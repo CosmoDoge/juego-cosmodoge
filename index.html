@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CosmoDoge Flotante 🚀</title>
   <style>
-    /* Estilos generales */
+    /* ======================= */
+    /* Estilos generales       */
+    /* ======================= */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: black;
@@ -28,11 +30,15 @@
     #coinDisplay { top: 40px; }
     #highScoreDisplay { top: 70px; }
 
-    /* Pantallas superpuestas (inicio, game over, loading, etc.) */
+    /* ======================= */
+    /* Pantallas superpuestas  */
+    /* (Inicio, Game Over, Loading, etc.) */
+    /* ======================= */
     #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
       position: absolute;
       top: 0; left: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       background-color: rgba(0,0,0,0.85);
       display: flex;
       flex-direction: column;
@@ -63,7 +69,9 @@
       background-color: #00e7f5;
     }
 
-    /* Botón del Ranking */
+    /* ======================= */
+    /* Botón y Panel de Ranking */
+    /* ======================= */
     #rankingButton {
       position: fixed;
       bottom: 20px;
@@ -78,8 +86,6 @@
       font-size: 1rem;
       padding: 0.5rem 1rem;
     }
-
-    /* Panel de Ranking Independiente */
     #rankingPanel {
       display: none;
       position: fixed;
@@ -95,7 +101,6 @@
       color: white;
       padding: 20px;
     }
-    /* Contenedor para la lista del ranking */
     #topRanking {
       max-height: 200px;
       overflow-y: auto;
@@ -105,28 +110,32 @@
       border-radius: 5px;
     }
     #closeRankingBtn { margin-top: 10px; }
-    
-    /* Formulario para registrar el puntaje.
-       Se posiciona de forma interactiva con un z-index mayor para estar por encima de la pantalla de Game Over. */
+
+    /* ======================= */
+    /* Formulario de Registro  */
+    /* ======================= */
     #playerNameForm {
       display: none;
       flex-direction: column;
       align-items: center;
       margin-top: 20px;
       position: relative;
-      z-index: 20;
+      z-index: 20; /* Por encima de Game Over */
       background: rgba(0, 0, 0, 0.85);
       padding: 20px;
       border-radius: 10px;
     }
   </style>
 
-  <!-- Firebase: Importa los módulos necesarios -->
+  <!-- ======================= -->
+  <!-- Configuración de Firebase y Funciones de Firestore -->
+  <!-- ======================= -->
   <script type="module">
+    // Importamos los módulos necesarios de Firebase.
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, setDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // Configuración de Firebase (usa los datos que compartiste)
+    // Configuración de Firebase (utiliza tus datos).
     const firebaseConfig = {
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
@@ -139,15 +148,17 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Función para actualizar (o crear) el registro del jugador usando su nombre como ID.
+    /* Función para actualizar (o crear) el registro del jugador.
+       Se usa setDoc() con merge:true para que cada usuario (identificado por su nombre)
+       tenga un único documento que se actualice cada vez que rompa un récord. */
     async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
         puntaje: Number(puntaje),
         monedas: Number(monedas),
-        fecha: new Date().toISOString()
+        fecha: serverTimestamp()  // Se utiliza para asignar un timestamp de servidor.
       };
-      console.log("Actualizando documento para:", data);
+      console.log("Datos a enviar a Firestore:", data);
       try {
         await setDoc(doc(db, "jugadores", username), data, { merge: true });
         console.log("Documento actualizado correctamente para:", username);
@@ -156,7 +167,7 @@
       }
     }
 
-    // Función para mostrar el Top 5 Ranking.
+    // Función para cargar el Top 5 Ranking.
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -170,17 +181,18 @@
         html += "</ul>";
         lista.innerHTML = html;
       } catch (error) {
-        lista.innerHTML = "<p style='color:red;'>No se pudo cargar el ranking.</p>";
+        lista.innerHTML = "<p style='color:red;'>No se pudo cargar el ranking. Intenta más tarde.</p>";
         console.error("Error al cargar el ranking:", error);
       }
     };
 
-    // Se exporta la función para poder usarla desde otros lugares.
     window.guardarJugadorAutomatic = guardarJugadorAutomatic;
   </script>
 </head>
 <body>
-  <!-- Canvas del Juego -->
+  <!-- ======================= -->
+  <!-- Interfaz del juego -->
+  <!-- ======================= -->
   <canvas id="gameCanvas" width="480" height="640"></canvas>
   <div id="scoreDisplay">🚀 x 0</div>
   <div id="coinDisplay">💰 x 0</div>
@@ -210,7 +222,7 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
-  <!-- Formulario para registrar el puntaje (sólo se muestra si el jugador no ha sido registrado previamente) -->
+  <!-- Formulario para registrar el puntaje (se muestra solo si no hay nombre registrado) -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -228,9 +240,16 @@
     <button class="btn" id="closeRankingBtn">Cerrar</button>
   </div>
 
+  <!-- ======================= -->
   <!-- Lógica del Juego -->
+  <!-- ======================= -->
   <script>
-    // Sonidos y música del juego.
+    // Función auxiliar para reproducir audio con manejo de errores.
+    function playSound(audioElement) {
+      audioElement.currentTime = 0;
+      audioElement.play().catch(error => console.error("Error al reproducir sonido:", error));
+    }
+
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
     const sndBoom = new Audio("boom.mp3");
@@ -247,7 +266,6 @@
       canvas.height = window.innerHeight;
     }
 
-    // Fondos del juego.
     const fondos = [
       "fondo-cosmodoge-v2.png",
       "fondo-cosmodoge-v3.png",
@@ -257,7 +275,6 @@
     const fondo = new Image();
     fondo.src = fondos[fondoIndex];
 
-    // Configuración del jugador (CosmoDoge).
     const doge = {
       x: 80,
       y: 200,
@@ -268,7 +285,6 @@
     };
     doge.img.src = "cosmodoge-cohete-juego.png";
 
-    // Variables de física y puntaje.
     let gravity = 0.5;
     const gravityLevels = [0.5, 0.6, 0.8, 1.0];
     const jump = -10;
@@ -281,12 +297,10 @@
     let lastScoreTime = 0;
     let lastFondoChange = 0;
 
-    // Monedas.
     const coinImg = new Image();
     coinImg.src = "coin-cosmodoge.png";
     let coinsArray = [];
 
-    // Obstáculos.
     const obstacleImgs = [
       "obstaculo-estelar.png",
       "obstaculo-explosion.png",
@@ -295,7 +309,6 @@
     let specialObstacles = [];
     let lastObstacleSpawn = Date.now();
 
-    // Referencias a elementos del DOM.
     const scoreDisplay = document.getElementById("scoreDisplay");
     const coinDisplay = document.getElementById("coinDisplay");
     const highScoreDisplay = document.getElementById("highScoreDisplay");
@@ -309,17 +322,14 @@
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
 
-    // Función para dibujar el fondo.
     function drawBackground() {
       ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
     }
 
-    // Función para dibujar al jugador.
     function drawDoge() {
       ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
     }
 
-    // Función para generar un grupo de monedas.
     function spawnCoinGroup() {
       const amount = Math.floor(Math.random() * 6) + 5;
       for (let i = 0; i < amount; i++) {
@@ -333,7 +343,6 @@
       }
     }
 
-    // Función para dibujar monedas y detectar colisiones.
     function drawCoins() {
       for (let i = coinsArray.length - 1; i >= 0; i--) {
         const coin = coinsArray[i];
@@ -348,13 +357,12 @@
           coins++;
           localStorage.setItem("cdogeCoins", coins);
           coinDisplay.textContent = "💰 x " + coins;
-          playCoinSound();
+          playSound(sndCoin);
           coinsArray.splice(i, 1);
         }
       }
     }
 
-    // Función para generar obstáculos.
     function spawnObstacle() {
       const img = new Image();
       img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
@@ -369,7 +377,6 @@
       });
     }
 
-    // Función para dibujar obstáculos y detectar colisiones.
     function drawObstacles() {
       specialObstacles.forEach((obs) => {
         obs.x -= obs.speedX;
@@ -387,7 +394,6 @@
       specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
     }
 
-    // Actualiza la dificultad (gravedad) en función del tiempo.
     function updateDifficulty(seconds) {
       if (seconds >= 75) {
         gravity = gravityLevels[3];
@@ -400,7 +406,6 @@
       }
     }
 
-    // Función principal de actualización del juego.
     function updateGame() {
       if (isGameOver) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -446,40 +451,40 @@
       music.pause();
       music.currentTime = 0;
       
-      // Se muestra la pantalla de Game Over y el botón de reiniciar
+      // Muestra la pantalla de Game Over y el botón Reiniciar.
       gameOverScreen.style.display = "flex";
       restartButton.style.display = "inline-block";
       
-      // Si se bate el récord
+      // Si se bate el récord...
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
         highScoreDisplay.textContent = "🔝 Máx: " + highScore;
         newRecordMessage.style.display = "flex";
-        playRecordSound();
-        // Si ya existe un nombre registrado, se actualiza automáticamente.
-        const username = localStorage.getItem("cosmodogeUserName");
+        playSound(sndRecord);
+        // Comprueba si ya existe un nombre registrado.
+        const username = localStorage.getItem("cosmodogeliveUserName");
         if (username) {
+          // Actualiza automáticamente el documento en Firestore.
           guardarJugadorAutomatic(username, score, coins);
-          // Ocultamos el formulario si estaba visible.
+          // Oculta el formulario de registro.
           playerNameForm.style.display = "none";
         } else {
-          // Se muestra el formulario para que se ingrese el nombre.
+          // Si no existe, se muestra el formulario para registrar el nombre.
           playerNameForm.style.display = "flex";
         }
       } else {
-        playBoomSound();
-        // Si el puntaje no es récord, ocultamos el formulario (por si acaso).
+        playSound(sndBoom);
+        // Si el puntaje no es récord, se oculta el formulario.
         playerNameForm.style.display = "none";
       }
     }
 
-    // Controles para teclado y dispositivos móviles.
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" && gameStarted && !isGameOver) {
         doge.velocity = jump;
         sndJump.currentTime = 0;
-        sndJump.play();
+        playSound(sndJump);
       }
     });
     if (isMobile) {
@@ -487,11 +492,10 @@
         if (!gameStarted || isGameOver) return;
         doge.velocity = jump;
         sndJump.currentTime = 0;
-        sndJump.play();
+        playSound(sndJump);
       });
     }
 
-    // Inicia el juego.
     startButton.onclick = () => {
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("loadingScreen").style.display = "none";
@@ -500,18 +504,18 @@
       updateGame();
     };
 
-    // Guarda el puntaje con nombre (registro manual).
+    // Registro manual: si el usuario ingresa su nombre en el formulario.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
       if (nombre) {
-        // Guarda el nombre en localStorage para evitar pedirlo de nuevo.
-        localStorage.setItem("cosmodogeUserName", nombre);
+        // Guarda el nombre en localStorage.
+        localStorage.setItem("cosmodogeliveUserName", nombre);
         guardarJugadorAutomatic(nombre, score, coins)
           .then(() => {
             console.log("Registro guardado correctamente");
             playerNameForm.style.display = "none";
-            // Actualiza el ranking para que se muestre la información actualizada.
+            // Actualiza el ranking.
             mostrarTopRanking();
           })
           .catch((err) => {
@@ -522,12 +526,10 @@
       }
     });
 
-    // Reinicia el juego.
     restartButton.addEventListener("click", () => {
       window.location.reload();
     });
 
-    // Muestra/oculta el panel de ranking.
     const verRankingBtn = document.getElementById("verRankingBtn");
     const rankingPanel = document.getElementById("rankingPanel");
     verRankingBtn.addEventListener("click", () => {
@@ -538,32 +540,33 @@
         rankingPanel.style.display = "none";
       }
     });
-    // Botón para cerrar el panel de ranking.
     const closeRankingBtn = document.getElementById("closeRankingBtn");
     closeRankingBtn.addEventListener("click", () => {
       rankingPanel.style.display = "none";
     });
 
-    // Funciones para reproducir sonidos.
-    function playCoinSound() {
-      sndCoin.currentTime = 0;
-      sndCoin.play();
-    }
-    function playBoomSound() {
-      sndBoom.currentTime = 0;
-      sndBoom.play();
-    }
-    function playRecordSound() {
-      sndRecord.currentTime = 0;
-      sndRecord.play();
+    // Función para guardar (o actualizar) el registro del jugador.
+    function guardarJugadorAutomatic(username, puntaje, monedas) {
+      const data = {
+        nombre: String(username),
+        puntaje: Number(puntaje),
+        monedas: Number(monedas),
+        fecha: serverTimestamp()
+      };
+      console.log("Actualizando documento para:", data);
+      return setDoc(doc(db, "jugadores", username), data, { merge: true })
+        .then(() => {
+          console.log("Documento actualizado correctamente para:", username);
+        })
+        .catch(error => {
+          console.error("Error al actualizar documento:", error);
+          throw error;
+        });
     }
 
-    // Al cargar el DOM, se oculta la pantalla de carga y se muestra la pantalla de inicio.
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
-      // Opcional: cargar el ranking desde el inicio.
-      // mostrarTopRanking();
     });
   </script>
 </body>
