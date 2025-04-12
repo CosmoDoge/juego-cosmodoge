@@ -128,14 +128,13 @@
   </style>
 
   <!-- ======================= -->
-  <!-- Configuración de Firebase y Funciones de Firestore -->
+  <!-- Firebase y Funciones de Firestore -->
   <!-- ======================= -->
   <script type="module">
-    // Importamos los módulos necesarios de Firebase.
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, query, orderBy, limit, getDocs, setDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // Configuración de Firebase (utiliza tus datos).
+    // Datos de configuración de Firebase (usa los tuyos)
     const firebaseConfig = {
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
@@ -148,15 +147,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    /* Función para actualizar (o crear) el registro del jugador.
-       Se usa setDoc() con merge:true para que cada usuario (identificado por su nombre)
-       tenga un único documento que se actualice cada vez que rompa un récord. */
+    /* Función para guardar (o actualizar) los datos del jugador.
+       Usamos setDoc() con { merge: true } para actualizar solo los campos sin sobrescribir todo.
+       Se utiliza serverTimestamp() para el campo "fecha", cumpliendo así con las reglas de Firestore. */
     async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
         puntaje: Number(puntaje),
         monedas: Number(monedas),
-        fecha: serverTimestamp()  // Se utiliza para asignar un timestamp de servidor.
+        fecha: serverTimestamp()
       };
       console.log("Datos a enviar a Firestore:", data);
       try {
@@ -167,7 +166,7 @@
       }
     }
 
-    // Función para cargar el Top 5 Ranking.
+    // Función para mostrar el ranking (Top 5).
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -191,7 +190,7 @@
 </head>
 <body>
   <!-- ======================= -->
-  <!-- Interfaz del juego -->
+  <!-- Interfaz del Juego        -->
   <!-- ======================= -->
   <canvas id="gameCanvas" width="480" height="640"></canvas>
   <div id="scoreDisplay">🚀 x 0</div>
@@ -222,7 +221,7 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
-  <!-- Formulario para registrar el puntaje (se muestra solo si no hay nombre registrado) -->
+  <!-- Formulario para registrar el puntaje (solo se muestra si no hay nombre registrado) -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -241,10 +240,10 @@
   </div>
 
   <!-- ======================= -->
-  <!-- Lógica del Juego -->
+  <!-- Lógica del Juego         -->
   <!-- ======================= -->
   <script>
-    // Función auxiliar para reproducir audio con manejo de errores.
+    // Función auxiliar para reproducir audio.
     function playSound(audioElement) {
       audioElement.currentTime = 0;
       audioElement.play().catch(error => console.error("Error al reproducir sonido:", error));
@@ -450,11 +449,11 @@
       finalScore.textContent = score;
       music.pause();
       music.currentTime = 0;
-      
-      // Muestra la pantalla de Game Over y el botón Reiniciar.
+
+      // Se muestran la pantalla de Game Over y el botón de reiniciar.
       gameOverScreen.style.display = "flex";
       restartButton.style.display = "inline-block";
-      
+
       // Si se bate el récord...
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
@@ -470,7 +469,7 @@
           // Oculta el formulario de registro.
           playerNameForm.style.display = "none";
         } else {
-          // Si no existe, se muestra el formulario para registrar el nombre.
+          // Muestra el formulario para que el jugador se registre.
           playerNameForm.style.display = "flex";
         }
       } else {
@@ -504,18 +503,17 @@
       updateGame();
     };
 
-    // Registro manual: si el usuario ingresa su nombre en el formulario.
+    // Registro manual: cuando el usuario ingresa su nombre.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
       if (nombre) {
-        // Guarda el nombre en localStorage.
         localStorage.setItem("cosmodogeliveUserName", nombre);
         guardarJugadorAutomatic(nombre, score, coins)
           .then(() => {
             console.log("Registro guardado correctamente");
             playerNameForm.style.display = "none";
-            // Actualiza el ranking.
+            // Actualiza el ranking para ver la información más reciente.
             mostrarTopRanking();
           })
           .catch((err) => {
@@ -544,25 +542,6 @@
     closeRankingBtn.addEventListener("click", () => {
       rankingPanel.style.display = "none";
     });
-
-    // Función para guardar (o actualizar) el registro del jugador.
-    function guardarJugadorAutomatic(username, puntaje, monedas) {
-      const data = {
-        nombre: String(username),
-        puntaje: Number(puntaje),
-        monedas: Number(monedas),
-        fecha: serverTimestamp()
-      };
-      console.log("Actualizando documento para:", data);
-      return setDoc(doc(db, "jugadores", username), data, { merge: true })
-        .then(() => {
-          console.log("Documento actualizado correctamente para:", username);
-        })
-        .catch(error => {
-          console.error("Error al actualizar documento:", error);
-          throw error;
-        });
-    }
 
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loadingScreen").style.display = "none";
