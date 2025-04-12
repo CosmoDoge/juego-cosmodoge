@@ -28,7 +28,7 @@
     #coinDisplay { top: 40px; }
     #highScoreDisplay { top: 70px; }
 
-    /* Pantallas superpuestas (inicio, game over, etc.) */
+    /* Pantallas superpuestas (inicio, game over, loading, etc.) */
     #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
       position: absolute;
       top: 0; left: 0;
@@ -105,15 +105,15 @@
       border-radius: 5px;
     }
     #closeRankingBtn { margin-top: 10px; }
-    
-    /* Estilo para el formulario de registro */
+
+    /* Formulario para registrar el puntaje */
     #playerNameForm {
       display: none;
       flex-direction: column;
       align-items: center;
       margin-top: 20px;
       position: relative;
-      z-index: 20;
+      z-index: 20; /* Por encima de las demás pantallas */
       background: rgba(0, 0, 0, 0.85);
       padding: 20px;
       border-radius: 10px;
@@ -123,7 +123,7 @@
   <!-- Firebase: Importa los módulos necesarios -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     // Configuración de Firebase (usa los datos que compartiste)
     const firebaseConfig = {
@@ -138,23 +138,22 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Función para guardar la información del jugador en Firestore.
-    window.guardarJugador = async function(nombre, puntaje, monedas) {
-      // Nos aseguramos que "puntaje" y "monedas" sean números y "nombre" sea una cadena válida.
+    // Función para actualizar (o crear) el registro del jugador usando su nombre como ID.
+    async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
-        nombre: String(nombre),
+        nombre: String(username),
         puntaje: Number(puntaje),
         monedas: Number(monedas),
         fecha: new Date().toISOString()
       };
-      console.log("Guardando datos:", data);
+      console.log("Actualizando documento para:", data);
       try {
-        await addDoc(collection(db, "jugadores"), data);
-        console.log("Registro guardado exitosamente:", data);
+        await setDoc(doc(db, "jugadores", username), data, { merge: true });
+        console.log("Documento actualizado correctamente para:", username);
       } catch (error) {
-        console.error("Error al guardar jugador:", error);
+        console.error("Error al actualizar documento:", error);
       }
-    };
+    }
 
     // Función para mostrar el Top 5 Ranking.
     window.mostrarTopRanking = async function() {
@@ -174,6 +173,9 @@
         console.error("Error al cargar el ranking:", error);
       }
     };
+
+    // Se exporta la función para poder usarla desde otros lugares si es necesario.
+    window.guardarJugadorAutomatic = guardarJugadorAutomatic;
   </script>
 </head>
 <body>
@@ -207,7 +209,7 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
-  <!-- Formulario para registrar el puntaje -->
+  <!-- Formulario para registrar el puntaje (solo se muestra si el usuario no está registrado) -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -442,21 +444,28 @@
       finalScore.textContent = score;
       music.pause();
       music.currentTime = 0;
-
-      // Mostrar siempre el formulario para registrar el puntaje
-      playerNameForm.style.display = "flex";
-      gameOverScreen.style.display = "flex";
-      restartButton.style.display = "inline-block";
-
+      
+      // Si se batió el récord
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
         highScoreDisplay.textContent = "🔝 Máx: " + highScore;
         newRecordMessage.style.display = "flex";
         playRecordSound();
+        // Si ya existe un nombre registrado, actualizar automáticamente
+        const username = localStorage.getItem("cosmodogeUserName");
+        if (username) {
+          guardarJugadorAutomatic(username, score, coins);
+        } else {
+          // Si no está registrado, mostrar el formulario para que se ingrese el nombre.
+          playerNameForm.style.display = "flex";
+        }
       } else {
         playBoomSound();
       }
+      
+      gameOverScreen.style.display = "flex";
+      restartButton.style.display = "inline-block";
     }
 
     // Controles para teclado y dispositivos móviles.
@@ -485,12 +494,14 @@
       updateGame();
     };
 
-    // Guarda el puntaje con nombre.
+    // Guarda el puntaje con nombre (registro manual) si aún no se tiene uno.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
       if (nombre) {
-        guardarJugador(nombre, score, coins)
+        // Guarda el nombre en localStorage para que no vuelva a pedirlo.
+        localStorage.setItem("cosmodogeUserName", nombre);
+        guardarJugadorAutomatic(nombre, score, coins)
           .then(() => {
             console.log("Registro guardado correctamente");
             playerNameForm.style.display = "none";
