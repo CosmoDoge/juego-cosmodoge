@@ -112,7 +112,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // Configuración de Firebase según tus datos
+    // Configuración de Firebase (usa los datos que compartiste)
     const firebaseConfig = {
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
@@ -127,6 +127,7 @@
 
     // Función para guardar la información del jugador en Firestore.
     window.guardarJugador = async function(nombre, puntaje, monedas) {
+      console.log("Guardando información del jugador:", { nombre, puntaje, monedas });
       try {
         await addDoc(collection(db, "jugadores"), {
           nombre,
@@ -155,6 +156,7 @@
         lista.innerHTML = html;
       } catch (error) {
         lista.innerHTML = "<p style='color:red;'>No se pudo cargar el ranking.</p>";
+        console.error("Error al cargar el ranking:", error);
       }
     };
   </script>
@@ -355,8 +357,6 @@
         obs.x -= obs.speedX;
         obs.y += obs.y < doge.y ? obs.speedY : -obs.speedY;
         ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
-
-        // Detecta colisión.
         if (
           doge.x < obs.x + obs.width &&
           doge.x + doge.width > obs.x &&
@@ -369,7 +369,7 @@
       specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
     }
 
-    // Actualiza la dificultad (gravedad) en función del tiempo transcurrido.
+    // Actualiza la dificultad (gravedad) en función del tiempo.
     function updateDifficulty(seconds) {
       if (seconds >= 75) {
         gravity = gravityLevels[3];
@@ -385,64 +385,48 @@
     // Función principal de actualización del juego.
     function updateGame() {
       if (isGameOver) return;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
-
-      // Actualiza la física del jugador.
       doge.velocity += gravity;
       doge.y += doge.velocity;
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
         endGame();
         return;
       }
-
       drawDoge();
       drawCoins();
       drawObstacles();
-
       timeElapsed++;
       if (timeElapsed % 60 === 0) {
         const seconds = timeElapsed / 60;
         updateDifficulty(seconds);
-
-        // Incrementa el puntaje cada 5 segundos.
         if (seconds - lastScoreTime >= 5) {
           score++;
           lastScoreTime = seconds;
           scoreDisplay.textContent = "🚀 x " + score;
         }
-
-        // Cambio de fondo cada 30 segundos.
         if (seconds - lastFondoChange >= 30) {
           fondoIndex = (fondoIndex + 1) % fondos.length;
           fondo.src = fondos[fondoIndex];
           lastFondoChange = seconds;
         }
       }
-
-      // Genera monedas periódicamente.
       if (timeElapsed % 150 === 0) spawnCoinGroup();
-
-      // Genera obstáculos según el tiempo transcurrido.
       const now = Date.now();
       const spawnInterval = timeElapsed >= 3600 ? 1000 : (timeElapsed >= 1800 ? 2000 : 3000);
       if (now - lastObstacleSpawn >= spawnInterval) {
         spawnObstacle();
         lastObstacleSpawn = now;
       }
-
       requestAnimationFrame(updateGame);
     }
 
-    // Finaliza el juego.
+    // Función para finalizar el juego.
     function endGame() {
       isGameOver = true;
       finalScore.textContent = score;
       music.pause();
       music.currentTime = 0;
-
-      // Si se supera el récord, muestra el mensaje y formulario de nuevo récord.
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
@@ -454,8 +438,6 @@
         gameOverScreen.style.display = "flex";
         playBoomSound();
       }
-
-      // Muestra el botón de reinicio.
       restartButton.style.display = "inline-block";
     }
 
@@ -488,10 +470,19 @@
     // Guarda el puntaje con nombre cuando hay nuevo récord.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
+      console.log("Intentando registrar el jugador:", nombre);
       if (nombre) {
-        guardarJugador(nombre, score, coins);
-        playerNameForm.style.display = "none";
-        gameOverScreen.style.display = "flex";
+        guardarJugador(nombre, score, coins)
+          .then(() => {
+            console.log("Registro guardado correctamente");
+            playerNameForm.style.display = "none";
+            gameOverScreen.style.display = "flex";
+          })
+          .catch((err) => {
+            console.error("Error al registrar jugador:", err);
+          });
+      } else {
+        alert("Por favor, ingresa tu nombre galáctico.");
       }
     });
 
@@ -531,11 +522,11 @@
       sndRecord.play();
     }
 
-    // Al cargar el DOM, se oculta la pantalla de carga y muestra la pantalla de inicio.
+    // Al cargar el DOM, se oculta la pantalla de carga y se muestra la pantalla de inicio.
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
-      // Opcional: también puedes cargar el ranking de inmediato, si lo deseas.
+      // Opcional: cargar ranking desde el inicio.
       // mostrarTopRanking();
     });
   </script>
