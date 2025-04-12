@@ -186,13 +186,13 @@
     <button class="btn" id="restartButton">Reiniciar</button>
   </div>
 
-  <!-- Mensaje de Nuevo Récord -->
+  <!-- Mensaje de Nuevo Récord (opcional) -->
   <div id="newRecordMessage" style="display:none;">
     <h1>🌟 ¡Nuevo récord galáctico!</h1>
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
-  <!-- Formulario para guardar el nombre (nuevo récord) -->
+  <!-- Formulario para guardar el nombre (registro para ranking) -->
   <div id="playerNameForm" style="display:none; flex-direction: column; align-items: center; margin-top: 20px;">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -427,18 +427,22 @@
       finalScore.textContent = score;
       music.pause();
       music.currentTime = 0;
+
+      // Siempre mostrar el formulario de registro para guardar el puntaje.
+      playerNameForm.style.display = "flex";
+      gameOverScreen.style.display = "flex";
+      restartButton.style.display = "inline-block";
+
+      // Si se superó el récord, muestra el mensaje y reproduce sonido de récord.
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
         highScoreDisplay.textContent = "🔝 Máx: " + highScore;
         newRecordMessage.style.display = "flex";
-        playerNameForm.style.display = "flex";
         playRecordSound();
       } else {
-        gameOverScreen.style.display = "flex";
         playBoomSound();
       }
-      restartButton.style.display = "inline-block";
     }
 
     // Controles para teclado y dispositivos móviles.
@@ -467,7 +471,7 @@
       updateGame();
     };
 
-    // Guarda el puntaje con nombre cuando hay nuevo récord.
+    // Guarda el puntaje con nombre.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
@@ -476,7 +480,6 @@
           .then(() => {
             console.log("Registro guardado correctamente");
             playerNameForm.style.display = "none";
-            gameOverScreen.style.display = "flex";
           })
           .catch((err) => {
             console.error("Error al registrar jugador:", err);
@@ -526,7 +529,7 @@
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
-      // Opcional: cargar ranking desde el inicio.
+      // Opcional: cargar ranking inmediatamente si se desea.
       // mostrarTopRanking();
     });
   </script>
