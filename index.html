@@ -28,7 +28,7 @@
     #coinDisplay { top: 40px; }
     #highScoreDisplay { top: 70px; }
 
-    /* Pantallas superpuestas (usadas para start, game over, etc.) */
+    /* Pantallas superpuestas (inicio, game over, etc.) */
     #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
       position: absolute;
       top: 0; left: 0;
@@ -106,14 +106,14 @@
     }
     #closeRankingBtn { margin-top: 10px; }
     
-    /* Formulario para registrar el puntaje: se forzó un z-index más alto */
+    /* Estilo para el formulario de registro */
     #playerNameForm {
       display: none;
       flex-direction: column;
       align-items: center;
       margin-top: 20px;
       position: relative;
-      z-index: 20;  /* Mayor que 10 (pantallas superpuestas) para quedar por encima */
+      z-index: 20;
       background: rgba(0, 0, 0, 0.85);
       padding: 20px;
       border-radius: 10px;
@@ -140,15 +140,17 @@
 
     // Función para guardar la información del jugador en Firestore.
     window.guardarJugador = async function(nombre, puntaje, monedas) {
-      console.log("Guardando información del jugador:", { nombre, puntaje, monedas });
+      // Nos aseguramos que "puntaje" y "monedas" sean números y "nombre" sea una cadena válida.
+      const data = {
+        nombre: String(nombre),
+        puntaje: Number(puntaje),
+        monedas: Number(monedas),
+        fecha: new Date().toISOString()
+      };
+      console.log("Guardando datos:", data);
       try {
-        await addDoc(collection(db, "jugadores"), {
-          nombre,
-          puntaje,
-          monedas,
-          fecha: new Date().toISOString()
-        });
-        console.log("Registro guardado exitosamente:", { nombre, puntaje, monedas });
+        await addDoc(collection(db, "jugadores"), data);
+        console.log("Registro guardado exitosamente:", data);
       } catch (error) {
         console.error("Error al guardar jugador:", error);
       }
@@ -205,7 +207,7 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
-  <!-- Formulario para guardar el nombre (registro para ranking) -->
+  <!-- Formulario para registrar el puntaje -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -441,7 +443,7 @@
       music.pause();
       music.currentTime = 0;
 
-      // Siempre mostrar el formulario para registrar el puntaje
+      // Mostrar siempre el formulario para registrar el puntaje
       playerNameForm.style.display = "flex";
       gameOverScreen.style.display = "flex";
       restartButton.style.display = "inline-block";
