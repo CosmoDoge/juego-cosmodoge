@@ -131,9 +131,11 @@
   <!-- Firebase y Funciones de Firestore -->
   <!-- ======================= -->
   <script type="module">
+    // Importamos los módulos necesarios, incluida serverTimestamp
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs, setDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+    // Datos de configuración de Firebase (usa tus datos)
     const firebaseConfig = {
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
@@ -146,24 +148,25 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Función para guardar (o actualizar) el registro del jugador.
+    /* Función para guardar (crear) el registro del jugador usando addDoc.
+       Esto crea un documento único en Firestore con el campo fecha asignado mediante serverTimestamp(). */
     async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
         puntaje: Number(puntaje),
         monedas: Number(monedas),
-        fecha: serverTimestamp()
+        fecha: serverTimestamp()  // CORRECTO: usa serverTimestamp
       };
       console.log("Datos a enviar a Firestore:", data);
       try {
-        await setDoc(doc(db, "jugadores", username), data, { merge: true });
-        console.log("Documento actualizado correctamente para:", username);
+        await addDoc(collection(db, "jugadores"), data);
+        console.log("✅ Documento guardado correctamente para:", username);
       } catch (error) {
-        console.error("Error al actualizar documento:", error);
+        console.error("❌ Error al guardar documento:", error);
       }
     }
 
-    // Función para mostrar el Top 5 Ranking.
+    // Función para cargar y mostrar el Top 5 Ranking.
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -178,7 +181,7 @@
         lista.innerHTML = html;
       } catch (error) {
         lista.innerHTML = "<p style='color:red;'>No se pudo cargar el ranking. Intenta más tarde.</p>";
-        console.error("Error al cargar el ranking:", error);
+        console.error("❌ Error al cargar el ranking:", error);
       }
     };
 
@@ -230,7 +233,7 @@
     <button class="btn" id="verRankingBtn">🔎 Ver Ranking</button>
   </div>
 
-  <!-- Panel de Ranking con fondo -->
+  <!-- Panel de Ranking -->
   <div id="rankingPanel">
     <div id="topRanking"></div>
     <button class="btn" id="closeRankingBtn">Cerrar</button>
@@ -246,7 +249,6 @@
       audioElement.play().catch(error => console.error("Error al reproducir sonido:", error));
     }
 
-    // Variables de audio.
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
     const sndBoom = new Audio("boom.mp3");
@@ -255,7 +257,6 @@
     music.loop = true;
     music.volume = 0.3;
 
-    // Obtención del canvas y contexto.
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -265,31 +266,15 @@
     }
 
     // ==============================
-    // Pre-carga de Imágenes (opcional)
+    // (Opcional) Pre-carga de Imágenes
     // ==============================
-    const imagePaths = {
-      fondos: [
-        "fondo-cosmodoge-v2.png",
-        "fondo-cosmodoge-v3.png",
-        "fondo-cosmodoge-v4.png"
-      ],
-      doge: "cosmodoge-cohete-juego.png",
-      coin: "coin-cosmodoge.png",
-      obstacles: [
-        "obstaculo-estelar.png",
-        "obstaculo-explosion.png",
-        "obstaculo-explosion-aire.png"
-      ],
-      rankingBg: "ranking-cosmodoge.png"
-    };
+    // Se asume que las imágenes se cargarán correctamente en este ejemplo.
 
-    // Para este ejemplo, se asume que las imágenes están correctamente ubicadas.
-    // Podrías implementar una función de pre-carga si deseas mayor robustez.
-
-    // ==============================
-    // Variables y configuraciones del juego
-    // ==============================
-    let fondos = imagePaths.fondos.slice(); // Array de rutas de fondos
+    const fondos = [
+      "fondo-cosmodoge-v2.png",
+      "fondo-cosmodoge-v3.png",
+      "fondo-cosmodoge-v4.png"
+    ];
     let fondoIndex = 0;
     const fondo = new Image();
     fondo.src = fondos[fondoIndex];
@@ -302,7 +287,7 @@
       velocity: 0,
       img: new Image()
     };
-    doge.img.src = imagePaths.doge;
+    doge.img.src = "cosmodoge-cohete-juego.png";
 
     let gravity = 0.5;
     const gravityLevels = [0.5, 0.6, 0.8, 1.0];
@@ -317,16 +302,17 @@
     let lastFondoChange = 0;
 
     const coinImg = new Image();
-    coinImg.src = imagePaths.coin;
+    coinImg.src = "coin-cosmodoge.png";
     let coinsArray = [];
 
-    let obstacleImgs = imagePaths.obstacles.slice(); // Array de rutas para obstáculos
+    const obstacleImgs = [
+      "obstaculo-estelar.png",
+      "obstaculo-explosion.png",
+      "obstaculo-explosion-aire.png"
+    ];
     let specialObstacles = [];
     let lastObstacleSpawn = Date.now();
 
-    // ==============================
-    // Obtención de elementos del DOM
-    // ==============================
     const scoreDisplay = document.getElementById("scoreDisplay");
     const coinDisplay = document.getElementById("coinDisplay");
     const highScoreDisplay = document.getElementById("highScoreDisplay");
@@ -340,9 +326,6 @@
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
 
-    // ==============================
-    // Funciones del juego
-    // ==============================
     function drawBackground() {
       ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
     }
@@ -427,17 +410,16 @@
       }
     }
 
-    // Usamos deltaTime para que el juego se actualice en función del tiempo transcurrido.
+    // Uso de deltaTime para actualizar el juego de forma consistente.
     let lastTime = 0;
     function updateGame(timestamp) {
       if (isGameOver) return;
       if (!lastTime) lastTime = timestamp;
       const deltaTime = timestamp - lastTime;
       lastTime = timestamp;
-      
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
-      // Ajustamos la física proporcional al deltaTime
       doge.velocity += gravity * (deltaTime / 16);
       doge.y += doge.velocity * (deltaTime / 16);
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
@@ -447,19 +429,20 @@
       drawDoge();
       drawCoins();
       drawObstacles();
-      
+
       timeElapsed += deltaTime;
-      if (timeElapsed / 1000 - lastScoreTime >= 5) {
+      const seconds = timeElapsed / 1000;
+      if (seconds - lastScoreTime >= 5) {
         score++;
-        lastScoreTime = timeElapsed / 1000;
+        lastScoreTime = seconds;
         scoreDisplay.textContent = "🚀 x " + score;
       }
-      if (timeElapsed / 1000 - lastFondoChange >= 30) {
+      if (seconds - lastFondoChange >= 30) {
         fondoIndex = (fondoIndex + 1) % fondos.length;
         fondo.src = fondos[fondoIndex];
-        lastFondoChange = timeElapsed / 1000;
+        lastFondoChange = seconds;
       }
-      // Genera monedas cada 150 frames aproximados
+      // Genera monedas aproximadamente cada 150 frames (ajustado para deltaTime)
       if (Math.floor(timeElapsed / 16) % 150 === 0) spawnCoinGroup();
       const now = Date.now();
       const spawnInterval = (timeElapsed / 16) >= 3600 ? 1000 : ((timeElapsed / 16) >= 1800 ? 2000 : 3000);
@@ -491,11 +474,11 @@
         // Comprueba si ya existe un nombre registrado.
         const username = localStorage.getItem("cosmodogeliveUserName");
         if (username) {
-          // Actualiza el registro en Firestore.
+          // Actualiza automáticamente el registro en Firestore.
           guardarJugadorAutomatic(username, score, coins);
           playerNameForm.style.display = "none";
         } else {
-          // Si no, muestra el formulario para que ingrese su nombre.
+          // Muestra el formulario para que el jugador se registre.
           playerNameForm.style.display = "flex";
         }
       } else {
@@ -504,9 +487,6 @@
       }
     }
 
-    // ==============================
-    // Eventos y controles
-    // ==============================
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" && gameStarted && !isGameOver) {
         doge.velocity = jump;
@@ -531,7 +511,7 @@
       requestAnimationFrame(updateGame);
     };
 
-    // Registro manual: si el usuario ingresa su nombre en el formulario.
+    // Registro manual: cuando el usuario ingresa su nombre.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
@@ -571,29 +551,26 @@
     });
 
     // ==============================
-    // Función para actualizar el documento en Firestore.
+    // Función para guardar el registro en Firestore (con addDoc y serverTimestamp)
     // ==============================
     function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
         puntaje: Number(puntaje),
         monedas: Number(monedas),
-        fecha: serverTimestamp()
+        fecha: serverTimestamp()  // CORRECTO: usa serverTimestamp
       };
       console.log("Actualizando documento para:", data);
-      return setDoc(doc(db, "jugadores", username), data, { merge: true })
+      return addDoc(collection(db, "jugadores"), data)
         .then(() => {
-          console.log("Documento actualizado correctamente para:", username);
+          console.log("Documento guardado correctamente para:", username);
         })
         .catch(error => {
-          console.error("Error al actualizar documento:", error);
+          console.error("Error al guardar documento:", error);
           throw error;
         });
     }
 
-    // ==============================
-    // Inicialización al cargar el DOM
-    // ==============================
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("loadingScreen").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
