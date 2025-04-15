@@ -66,6 +66,40 @@
     }
     
     /* ======================= */
+    /* Panel del menú principal (arriba a la derecha) */
+    /* ======================= */
+    #menuPrincipal {
+      position: fixed;
+      top: 80px; /* Se deja un margen para el botón de wallet */
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10000;
+      font-family: Orbitron, sans-serif;
+    }
+    
+    /* ======================= */
+    /* Panel de la tienda (abajo a la izquierda) */
+    /* ======================= */
+    #tiendaCDOGE {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ffff;
+      border-radius: 15px;
+      padding: 15px;
+      z-index: 1000;
+      font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
+      width: 320px;
+      box-shadow: 0 0 15px #00ffff;
+      display: none;
+      backdrop-filter: blur(5px);
+    }
+    
+    /* ======================= */
     /* Pantallas superpuestas (Inicio, Game Over, Nuevo Récord) */
     /* ======================= */
     #startScreen, #newRecordMessage {
@@ -333,6 +367,63 @@
   <div id="balanceCDOGE"></div>
   
   <!-- ======================= -->
+  <!-- Panel del menú principal (botones arriba a la derecha) -->
+  <!-- ======================= -->
+  <div id="menuPrincipal">
+    <button onclick="startGame()" style="
+      background: #00ffcc;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    ">🎮 Comenzar Juego</button>
+
+    <button onclick="mostrarTopRanking()" style="
+      background: #ffaa00;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    ">📈 Ver Ranking</button>
+
+    <button onclick="toggleTienda()" style="
+      background: #00ffff;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    ">🛒 Tienda</button>
+  </div>
+  
+  <!-- ======================= -->
+  <!-- Panel de la Tienda (abajo a la izquierda) -->
+  <!-- ======================= -->
+  <div id="tiendaCDOGE">
+    <h3 style="margin-bottom: 10px; color: #00ffff; font-size: 22px;">🛒 Tienda CosmoDoge</h3>
+    <!-- Producto: Imán Espacial -->
+    <div style="margin-bottom: 15px; padding: 10px; background: #111111; border-radius: 10px; border: 1px solid #00ffcc;">
+      <p style="margin: 0; font-size: 16px; color: #00ffcc;">🧲 Imán Espacial</p>
+      <p style="margin: 5px 0 10px; font-size: 14px; color: #bbbbbb;">Atrae monedas durante 1 hora automáticamente.</p>
+      <button id="comprarIman" style="
+        background: #00ffcc;
+        color: black;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 15px;
+        cursor: pointer;
+        width: 100%;
+      ">Comprar por 5,000 $CDOGE</button>
+    </div>
+  </div>
+  
+  <!-- ======================= -->
   <!-- Interfaz del Juego -->
   <!-- ======================= -->
   <canvas id="gameCanvas" width="480" height="640"></canvas>
@@ -340,16 +431,16 @@
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
   
-  <!-- Nombre del jugador en la parte superior central -->
+  <!-- Nombre del jugador (parte superior central) -->
   <div id="nombreJugador"></div>
   
-  <!-- Contador de CDOGE en la esquina inferior derecha -->
+  <!-- Contador de CDOGE (esquina inferior derecha) -->
   <div id="contadorCDOGE">💰 CDOGE: 0</div>
   
   <!-- Pantalla de Inicio -->
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
-    <button class="btn" id="startButton">¡Comenzar!</button>
+    <button class="btn" id="startButton" onclick="startGame()">¡Comenzar!</button>
   </div>
   
   <!-- Pantalla de Game Over con animación -->
@@ -374,13 +465,13 @@
   <!-- Botón de Ranking (siempre visible) -->
   <div id="rankingButton">
     <div style="color: white; font-size: 14px; font-weight: bold;">🏆 Top 5 CosmoDoge</div>
-    <button class="btn" id="verRankingBtn">🔎 Ver Ranking</button>
+    <button class="btn" id="verRankingBtn" onclick="mostrarTopRanking()">🔎 Ver Ranking</button>
   </div>
   
   <!-- Panel de Ranking -->
   <div id="rankingPanel">
     <div id="topRanking"></div>
-    <button class="btn" id="closeRankingBtn">Cerrar</button>
+    <button class="btn" id="closeRankingBtn" onclick="this.parentNode.style.display='none'">Cerrar</button>
   </div>
   
   <!-- Botón para reanudar el juego (auto-pausa) -->
@@ -576,7 +667,7 @@
     }
     
     // ============================================================
-    // NUEVA CONFIGURACIÓN DE MONEDAS CDOGE (Aparece cada 20 segundos)
+    // CONFIGURACIÓN DE MONEDAS CDOGE (Aparece cada 20 segundos)
     // ============================================================
     let monedasCDOGE = [];
     let totalCDOGERecolectado = 0;
@@ -769,13 +860,17 @@
       });
     }
     
-    startButton.onclick = () => {
+    // Función para iniciar la partida (se usa en el botón del menú y en startScreen)
+    function startGame() {
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("pantallaCarga").style.display = "none";
       gameStarted = true;
       music.play();
       gameLoop = requestAnimationFrame(updateGame);
-    };
+    }
+    
+    // Asignar startGame() también al botón de inicio (si fuera necesario)
+    startButton.onclick = startGame;
     
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
@@ -880,6 +975,14 @@
       }, 3000);
       document.getElementById("startScreen").style.display = "flex";
     });
+    
+    // =====================================================
+    // Función para mostrar/ocultar la Tienda
+    // =====================================================
+    function toggleTienda() {
+      const tienda = document.getElementById("tiendaCDOGE");
+      tienda.style.display = (tienda.style.display === "none" || tienda.style.display === "") ? "block" : "none";
+    }
   </script>
 </body>
 </html>
