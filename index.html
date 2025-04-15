@@ -32,9 +32,9 @@
 
     /* ======================= */
     /* Pantallas superpuestas  */
-    /* (Inicio, Game Over, Loading, etc.) */
+    /* (Inicio, Game Over, Nuevo Récord) */
     /* ======================= */
-    #startScreen, #gameOverScreen, #loadingScreen, #newRecordMessage {
+    #startScreen, #newRecordMessage {
       position: absolute;
       top: 0; left: 0;
       width: 100%;
@@ -47,10 +47,7 @@
       color: white;
       z-index: 10;
     }
-    #startScreen h1, 
-    #gameOverScreen h1, 
-    #loadingScreen h1, 
-    #newRecordMessage h1 {
+    #startScreen h1, #newRecordMessage h1 {
       font-size: 2rem;
       margin-bottom: 1rem;
     }
@@ -67,6 +64,47 @@
     }
     .btn:hover {
       background-color: #00e7f5;
+    }
+
+    /* ======================= */
+    /* Pantalla de Game Over con animación */
+    /* ======================= */
+    #gameOverScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9998;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+    #gameOverScreen.show {
+      display: flex;
+      opacity: 1;
+    }
+    #reiniciarBtn {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: #00ffff;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.3s;
+      display: none;
+    }
+    #reiniciarBtn:hover {
+      background: #00e7f5;
     }
 
     /* ======================= */
@@ -125,17 +163,58 @@
       padding: 20px;
       border-radius: 10px;
     }
+
+    /* ======================= */
+    /* Pantalla de carga preloader */
+    /* ======================= */
+    #pantallaCarga {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid #ffffff22;
+      border-top: 6px solid #00ffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ======================= */
+    /* Mostrar nombre del jugador en pantalla */
+    /* ======================= */
+    #nombreJugador {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 18px;
+      color: #00ffff;
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 1px 1px 3px black;
+      z-index: 10;
+    }
   </style>
 
   <!-- ======================= -->
   <!-- Firebase y Funciones de Firestore -->
   <!-- ======================= -->
   <script type="module">
-    // Importamos los módulos necesarios, incluida serverTimestamp
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // Datos de configuración de Firebase (usa tus datos)
     const firebaseConfig = {
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
@@ -148,14 +227,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    /* Función para guardar (crear) el registro del jugador usando addDoc.
-       Esto crea un documento único en Firestore con el campo fecha asignado mediante serverTimestamp(). */
+    // Función para guardar (crear) el registro del jugador usando addDoc.
     async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
         puntaje: Number(puntaje),
         monedas: Number(monedas),
-        fecha: serverTimestamp()  // CORRECTO: usa serverTimestamp
+        fecha: serverTimestamp()  // Usa serverTimestamp para un timestamp real.
       };
       console.log("Datos a enviar a Firestore:", data);
       try {
@@ -166,7 +244,7 @@
       }
     }
 
-    // Función para cargar y mostrar el Top 5 Ranking.
+    // Función para mostrar el Top 5 Ranking.
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -190,6 +268,16 @@
 </head>
 <body>
   <!-- ======================= -->
+  <!-- Pantalla de carga preloader -->
+  <!-- ======================= -->
+  <div id="pantallaCarga">
+    <div class="spinner"></div>
+    <p style="color: white; font-size: 20px; font-family: 'Orbitron', sans-serif; margin-top: 20px; text-align: center;">
+      Iniciando viaje intergaláctico...
+    </p>
+  </div>
+
+  <!-- ======================= -->
   <!-- Interfaz del Juego        -->
   <!-- ======================= -->
   <canvas id="gameCanvas" width="480" height="640"></canvas>
@@ -197,10 +285,8 @@
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
 
-  <!-- Pantalla de Carga -->
-  <div id="loadingScreen">
-    <h1>🌌 Cargando universo...</h1>
-  </div>
+  <!-- Mostrar nombre del jugador en pantalla -->
+  <div id="nombreJugador"></div>
 
   <!-- Pantalla de Inicio -->
   <div id="startScreen" style="display:none;">
@@ -208,11 +294,10 @@
     <button class="btn" id="startButton">¡Comenzar!</button>
   </div>
 
-  <!-- Pantalla de Game Over -->
-  <div id="gameOverScreen" style="display:none;">
-    <h1>💥 ¡Game Over!</h1>
-    <p>Puntaje: <span id="finalScore">0</span></p>
-    <button class="btn" id="restartButton">Reiniciar</button>
+  <!-- Pantalla de Game Over con animación -->
+  <div id="gameOverScreen">
+    <h1>🚨 GAME OVER 🚨</h1>
+    <button id="reiniciarBtn">Reiniciar</button>
   </div>
 
   <!-- Mensaje de Nuevo Récord (opcional) -->
@@ -221,7 +306,7 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
 
-  <!-- Formulario para registrar el puntaje (solo se muestra si el usuario no está registrado) -->
+  <!-- Formulario para registrar el puntaje (solo si el usuario no está registrado) -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -266,10 +351,8 @@
     }
 
     // ==============================
-    // (Opcional) Pre-carga de Imágenes
+    // Variables y configuraciones del juego
     // ==============================
-    // Se asume que las imágenes se cargarán correctamente en este ejemplo.
-
     const fondos = [
       "fondo-cosmodoge-v2.png",
       "fondo-cosmodoge-v3.png",
@@ -318,13 +401,24 @@
     const highScoreDisplay = document.getElementById("highScoreDisplay");
     const finalScore = document.getElementById("finalScore");
     const startButton = document.getElementById("startButton");
-    const restartButton = document.getElementById("restartButton");
+    const restartButton = document.getElementById("reiniciarBtn"); // Se usa el botón de reiniciar nuevo
     const gameOverScreen = document.getElementById("gameOverScreen");
     const newRecordMessage = document.getElementById("newRecordMessage");
     const playerNameForm = document.getElementById("playerNameForm");
+    const nombreJugadorDiv = document.getElementById("nombreJugador");
 
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
+
+    // Función para mostrar el nombre del jugador en pantalla (arriba a la derecha).
+    function mostrarNombreJugador(nombre) {
+      nombreJugadorDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
+    }
+    // Si ya hay un nombre registrado, lo mostramos.
+    const nombreGuardado = localStorage.getItem("cosmodogeliveUserName");
+    if (nombreGuardado) {
+      mostrarNombreJugador(nombreGuardado);
+    }
 
     function drawBackground() {
       ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
@@ -392,25 +486,20 @@
           doge.y < obs.y + obs.height &&
           doge.y + doge.height > obs.y
         ) {
-          endGame();
+          gameOver();
         }
       });
       specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
     }
 
     function updateDifficulty(seconds) {
-      if (seconds >= 75) {
-        gravity = gravityLevels[3];
-      } else if (seconds >= 45) {
-        gravity = gravityLevels[2];
-      } else if (seconds >= 30) {
-        gravity = gravityLevels[1];
-      } else {
-        gravity = gravityLevels[0];
-      }
+      if (seconds >= 75) gravity = gravityLevels[3];
+      else if (seconds >= 45) gravity = gravityLevels[2];
+      else if (seconds >= 30) gravity = gravityLevels[1];
+      else gravity = gravityLevels[0];
     }
 
-    // Uso de deltaTime para actualizar el juego de forma consistente.
+    // Uso de deltaTime en el bucle principal.
     let lastTime = 0;
     function updateGame(timestamp) {
       if (isGameOver) return;
@@ -423,7 +512,7 @@
       doge.velocity += gravity * (deltaTime / 16);
       doge.y += doge.velocity * (deltaTime / 16);
       if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
-        endGame();
+        gameOver();
         return;
       }
       drawDoge();
@@ -442,7 +531,6 @@
         fondo.src = fondos[fondoIndex];
         lastFondoChange = seconds;
       }
-      // Genera monedas aproximadamente cada 150 frames (ajustado para deltaTime)
       if (Math.floor(timeElapsed / 16) % 150 === 0) spawnCoinGroup();
       const now = Date.now();
       const spawnInterval = (timeElapsed / 16) >= 3600 ? 1000 : ((timeElapsed / 16) >= 1800 ? 2000 : 3000);
@@ -453,17 +541,23 @@
       requestAnimationFrame(updateGame);
     }
 
-    // Función para finalizar el juego.
-    function endGame() {
+    // Función Game Over con animación.
+    function gameOver() {
       isGameOver = true;
       finalScore.textContent = score;
       music.pause();
       music.currentTime = 0;
-
-      // Muestra la pantalla de Game Over y el botón de reiniciar.
-      gameOverScreen.style.display = "flex";
-      restartButton.style.display = "inline-block";
-
+      
+      // Cancelamos la animación (si fuera necesario, guardando el ID de requestAnimationFrame)
+      // Mostramos la pantalla de Game Over con transición
+      const gameOverScreen = document.getElementById("gameOverScreen");
+      gameOverScreen.classList.add("show");
+      
+      // Mostrar el botón de reiniciar luego de 1.5 segundos
+      setTimeout(() => {
+        document.getElementById("reiniciarBtn").style.display = "block";
+      }, 1500);
+      
       // Si se bate el récord...
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
@@ -471,14 +565,15 @@
         highScoreDisplay.textContent = "🔝 Máx: " + highScore;
         newRecordMessage.style.display = "flex";
         playSound(sndRecord);
-        // Comprueba si ya existe un nombre registrado.
         const username = localStorage.getItem("cosmodogeliveUserName");
         if (username) {
           // Actualiza automáticamente el registro en Firestore.
           guardarJugadorAutomatic(username, score, coins);
           playerNameForm.style.display = "none";
+          // Muestra el nombre en pantalla
+          mostrarNombreJugador(username);
         } else {
-          // Muestra el formulario para que el jugador se registre.
+          // Si no, muestra el formulario para que el jugador se registre.
           playerNameForm.style.display = "flex";
         }
       } else {
@@ -505,13 +600,13 @@
 
     startButton.onclick = () => {
       document.getElementById("startScreen").style.display = "none";
-      document.getElementById("loadingScreen").style.display = "none";
+      document.getElementById("pantallaCarga").style.display = "none";
       gameStarted = true;
       music.play();
       requestAnimationFrame(updateGame);
     };
 
-    // Registro manual: cuando el usuario ingresa su nombre.
+    // Registro manual: cuando el usuario ingresa su nombre en el formulario.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
@@ -522,6 +617,7 @@
             console.log("Registro guardado correctamente.");
             playerNameForm.style.display = "none";
             mostrarTopRanking();
+            mostrarNombreJugador(nombre);
           })
           .catch((err) => {
             console.error("Error al registrar jugador:", err);
@@ -531,8 +627,9 @@
       }
     });
 
-    restartButton.addEventListener("click", () => {
-      window.location.reload();
+    // Reinicia el juego al pulsar el botón "Reiniciar"
+    document.getElementById("reiniciarBtn").addEventListener("click", () => {
+      location.reload();
     });
 
     const verRankingBtn = document.getElementById("verRankingBtn");
@@ -551,14 +648,14 @@
     });
 
     // ==============================
-    // Función para guardar el registro en Firestore (con addDoc y serverTimestamp)
+    // Función para actualizar el registro en Firestore (usando addDoc y serverTimestamp)
     // ==============================
     function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
         puntaje: Number(puntaje),
         monedas: Number(monedas),
-        fecha: serverTimestamp()  // CORRECTO: usa serverTimestamp
+        fecha: serverTimestamp()
       };
       console.log("Actualizando documento para:", data);
       return addDoc(collection(db, "jugadores"), data)
@@ -571,8 +668,14 @@
         });
     }
 
+    // Función para mostrar el nombre del jugador en pantalla.
+    function mostrarNombreJugador(nombre) {
+      const nombreDiv = document.getElementById("nombreJugador");
+      nombreDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("loadingScreen").style.display = "none";
+      document.getElementById("pantallaCarga").style.display = "none";
       document.getElementById("startScreen").style.display = "flex";
     });
   </script>
