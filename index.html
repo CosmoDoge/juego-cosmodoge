@@ -41,6 +41,17 @@
     #coinDisplay { top: 40px; left: 10px; }
     #highScoreDisplay { top: 70px; left: 10px; }
     
+    /* Contador de $CDOGE debajo del nivel máximo */
+    #contadorCDOGE {
+      position: absolute;
+      top: 100px;
+      left: 10px;
+      color: #00ffcc;
+      font-family: Orbitron, sans-serif;
+      font-size: 18px;
+      z-index: 1000;
+    }
+    
     /* Nombre del jugador en la parte superior central */
     #nombreJugador {
       position: fixed;
@@ -54,20 +65,10 @@
       z-index: 10;
     }
     
-    /* Contador de CDOGE en la esquina inferior derecha */
-    #contadorCDOGE {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      color: #00ffcc;
-      font-family: Orbitron, sans-serif;
-      font-size: 18px;
-      z-index: 1000;
-    }
-    
     /* ======================= */
     /* Panel del menú principal (arriba a la derecha) */
     /* ======================= */
+    /* Ahora solo se muestra el botón de Tienda */
     #menuPrincipal {
       position: fixed;
       top: 20px;
@@ -80,7 +81,7 @@
     }
     
     /* ======================= */
-    /* Panel de la tienda (abajo a la izquierda) */
+    /* Panel de la tienda (abajo a la izquierda, oculto por defecto) */
     /* ======================= */
     #tiendaCDOGE {
       position: fixed;
@@ -100,7 +101,7 @@
     }
     
     /* ======================= */
-    /* Pantallas superpuestas (Inicio, Game Over, Nuevo Récord) */
+    /* Pantallas superpuestas: Inicio, Game Over, Nuevo Récord */
     /* ======================= */
     #startScreen, #newRecordMessage {
       position: absolute;
@@ -172,7 +173,7 @@
     #reiniciarBtn:hover { background: #00e7f5; }
     
     /* ======================= */
-    /* Formulario de Registro  */
+    /* Formulario de Registro */
     /* ======================= */
     #playerNameForm {
       display: none;
@@ -187,7 +188,7 @@
     }
     
     /* ======================= */
-    /* Pantalla de carga preloader */
+    /* Pantalla de carga Preloader */
     /* ======================= */
     #pantallaCarga {
       position: fixed;
@@ -285,7 +286,7 @@
       }
     }
   
-    // Función para mostrar el Top 5 del ranking.
+    // Función para mostrar el Top 5 del ranking (se mantiene el mismo)
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -309,7 +310,7 @@
 </head>
 <body>
   <!-- ======================= -->
-  <!-- Pantalla de carga preloader -->
+  <!-- Pantalla de carga Preloader -->
   <!-- ======================= -->
   <div id="pantallaCarga">
     <div class="spinner"></div>
@@ -325,29 +326,9 @@
   <div id="balanceCDOGE"></div>
   
   <!-- ======================= -->
-  <!-- Menú Principal: Botones flotantes en la esquina superior derecha -->
+  <!-- Menú Principal: Solo botón de Tienda (arriba a la derecha) -->
   <!-- ======================= -->
   <div id="menuPrincipal">
-    <button onclick="iniciarJuegoLimpio()" style="
-      background: #00ffcc;
-      color: black;
-      border: none;
-      border-radius: 12px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    ">🎮 Iniciar Juego</button>
-
-    <button onclick="mostrarTopRanking()" style="
-      background: #ffaa00;
-      color: black;
-      border: none;
-      border-radius: 12px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    ">📈 Ver Ranking</button>
-
     <button onclick="toggleTienda()" style="
       background: #00ffff;
       color: black;
@@ -392,16 +373,16 @@
   <!-- Nombre del jugador (parte superior central) -->
   <div id="nombreJugador"></div>
   
-  <!-- Contador de CDOGE (esquina inferior derecha) -->
+  <!-- Contador de $CDOGE (ahora debajo del nivel máximo) -->
   <div id="contadorCDOGE">💰 CDOGE: 0</div>
   
-  <!-- Pantalla de Inicio (solo se mostrará cuando aún no se inicie el juego) -->
+  <!-- Pantalla de Inicio (se muestra hasta que se inicie el juego) -->
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
     <button class="btn" id="startButton" onclick="iniciarJuegoLimpio()">¡Comenzar!</button>
   </div>
   
-  <!-- Pantalla de Game Over con animación -->
+  <!-- Pantalla de Game Over -->
   <div id="gameOverScreen">
     <h1>🚨 GAME OVER 🚨</h1>
     <p>Puntaje: <span id="finalScore">0</span></p>
@@ -414,13 +395,13 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
   
-  <!-- Formulario para registrar el puntaje (si el usuario no está registrado) -->
+  <!-- Formulario para registrar puntaje -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
   </div>
   
-  <!-- Panel de Ranking (se mantiene el que ya funcionaba) -->
+  <!-- Panel de Ranking (se mantiene el existente) -->
   <div id="rankingPanel">
     <div id="topRanking"></div>
     <button class="btn" id="closeRankingBtn" onclick="this.parentNode.style.display='none'">Cerrar</button>
@@ -615,7 +596,7 @@
     }
     
     // ============================================================
-    // CONFIGURACIÓN DE MONEDAS CDOGE (Aparece cada 20 segundos)
+    // CONFIGURACIÓN DE MONEDAS $CDOGE (aparece cada 20 segundos)
     // ============================================================
     let monedasCDOGE = [];
     let totalCDOGERecolectado = 0;
@@ -701,13 +682,13 @@
       }, 1600);
     }
     
-    // Actualiza el contador visual de CDOGE
+    // Actualiza el contador visual de $CDOGE
     function actualizarContadorCDOGE() {
       const div = document.getElementById("contadorCDOGE");
       if (div) div.textContent = `💰 CDOGE: ${totalCDOGERecolectado}`;
     }
     // ============================================================
-    // FIN CONFIGURACIÓN DE MONEDAS CDOGE
+    // FIN CONFIGURACIÓN DE MONEDAS $CDOGE
     // ============================================================
     
     let lastTime = 0;
@@ -728,8 +709,8 @@
       drawDoge();
       drawCoins();
       drawObstacles();
-      
-      // Dibuja y verifica colisiones de monedas CDOGE
+    
+      // Dibuja y gestiona colisiones de monedas CDOGE
       dibujarMonedasCDOGE();
       detectarColisionMonedas(doge);
     
@@ -808,15 +789,15 @@
       });
     }
     
-    // Función que oculta el menú y la tienda antes de iniciar el juego
+    // Función que oculta el menú y la tienda para iniciar el juego
     function iniciarJuegoLimpio() {
       document.getElementById("menuPrincipal").style.display = "none";
       document.getElementById("tiendaCDOGE").style.display = "none";
-      // Llamamos a la función principal del juego
+      // Se inicia el juego llamando a startGame()
       startGame();
     }
     
-    // Función para iniciar el juego; se puede llamar directamente o desde iniciarJuegoLimpio()
+    // Función para iniciar el juego (se usa desde la pantalla inicial)
     function startGame() {
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("pantallaCarga").style.display = "none";
@@ -825,7 +806,7 @@
       gameLoop = requestAnimationFrame(updateGame);
     }
     
-    // Asignamos la función iniciarJuegoLimpio al botón de inicio en startScreen (opcional, ya que también se usa en el menú)
+    // Asignamos la función iniciarJuegoLimpio al botón de la pantalla inicial
     document.getElementById("startButton").onclick = iniciarJuegoLimpio;
     
     document.getElementById("saveScoreButton").addEventListener("click", () => {
