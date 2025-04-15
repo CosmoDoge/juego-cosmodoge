@@ -70,7 +70,7 @@
     /* ======================= */
     #menuPrincipal {
       position: fixed;
-      top: 80px; /* Se deja un margen para el botón de wallet */
+      top: 20px;
       right: 20px;
       display: flex;
       flex-direction: column;
@@ -170,48 +170,6 @@
       display: none;
     }
     #reiniciarBtn:hover { background: #00e7f5; }
-    
-    /* ======================= */
-    /* Botón y Panel de Ranking */
-    /* ======================= */
-    #rankingButton {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-    }
-    #rankingButton .btn {
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-    }
-    #rankingPanel {
-      display: none;
-      position: fixed;
-      top: 80px;
-      right: 20px;
-      width: 400px;
-      min-height: 300px;
-      background: url("ranking-cosmodoge.png") no-repeat center center;
-      background-size: cover;
-      border: 2px solid #ffffff;
-      border-radius: 10px;
-      z-index: 9999;
-      color: white;
-      padding: 20px;
-    }
-    #topRanking {
-      max-height: 200px;
-      overflow-y: auto;
-      margin-top: 40px;
-      background-color: rgba(0, 0, 0, 0.6);
-      padding: 10px;
-      border-radius: 5px;
-    }
-    #closeRankingBtn { margin-top: 10px; }
     
     /* ======================= */
     /* Formulario de Registro  */
@@ -367,10 +325,10 @@
   <div id="balanceCDOGE"></div>
   
   <!-- ======================= -->
-  <!-- Panel del menú principal (botones arriba a la derecha) -->
+  <!-- Menú Principal: Botones flotantes en la esquina superior derecha -->
   <!-- ======================= -->
   <div id="menuPrincipal">
-    <button onclick="startGame()" style="
+    <button onclick="iniciarJuegoLimpio()" style="
       background: #00ffcc;
       color: black;
       border: none;
@@ -378,7 +336,7 @@
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
-    ">🎮 Comenzar Juego</button>
+    ">🎮 Iniciar Juego</button>
 
     <button onclick="mostrarTopRanking()" style="
       background: #ffaa00;
@@ -402,7 +360,7 @@
   </div>
   
   <!-- ======================= -->
-  <!-- Panel de la Tienda (abajo a la izquierda) -->
+  <!-- Panel de la Tienda (abajo a la izquierda, oculto por defecto) -->
   <!-- ======================= -->
   <div id="tiendaCDOGE">
     <h3 style="margin-bottom: 10px; color: #00ffff; font-size: 22px;">🛒 Tienda CosmoDoge</h3>
@@ -437,10 +395,10 @@
   <!-- Contador de CDOGE (esquina inferior derecha) -->
   <div id="contadorCDOGE">💰 CDOGE: 0</div>
   
-  <!-- Pantalla de Inicio -->
+  <!-- Pantalla de Inicio (solo se mostrará cuando aún no se inicie el juego) -->
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
-    <button class="btn" id="startButton" onclick="startGame()">¡Comenzar!</button>
+    <button class="btn" id="startButton" onclick="iniciarJuegoLimpio()">¡Comenzar!</button>
   </div>
   
   <!-- Pantalla de Game Over con animación -->
@@ -462,13 +420,7 @@
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
   </div>
   
-  <!-- Botón de Ranking (siempre visible) -->
-  <div id="rankingButton">
-    <div style="color: white; font-size: 14px; font-weight: bold;">🏆 Top 5 CosmoDoge</div>
-    <button class="btn" id="verRankingBtn" onclick="mostrarTopRanking()">🔎 Ver Ranking</button>
-  </div>
-  
-  <!-- Panel de Ranking -->
+  <!-- Panel de Ranking (se mantiene el que ya funcionaba) -->
   <div id="rankingPanel">
     <div id="topRanking"></div>
     <button class="btn" id="closeRankingBtn" onclick="this.parentNode.style.display='none'">Cerrar</button>
@@ -493,7 +445,7 @@
   </button>
   
   <!-- ======================= -->
-  <!-- Lógica del Juego -->
+  <!-- Lógica del Juego y Funciones Adicionales -->
   <!-- ======================= -->
   <script>
     // Detectar si se está en móvil
@@ -568,10 +520,6 @@
     const coinDisplay = document.getElementById("coinDisplay");
     const highScoreDisplay = document.getElementById("highScoreDisplay");
     const finalScoreElem = document.getElementById("finalScore");
-    const startButton = document.getElementById("startButton");
-    const reiniciarBtn = document.getElementById("reiniciarBtn");
-    const gameOverScreenElem = document.getElementById("gameOverScreen");
-    const newRecordMessage = document.getElementById("newRecordMessage");
     const playerNameForm = document.getElementById("playerNameForm");
     const nombreJugadorDiv = document.getElementById("nombreJugador");
     
@@ -675,7 +623,7 @@
     
     // Carga de imagen y sonido para la moneda CDOGE
     const imagenMoneda = new Image();
-    imagenMoneda.src = "moneda-cosmodoge.png"; // asegúrate que está en la misma carpeta
+    imagenMoneda.src = "moneda-cosmodoge.png"; // Asegúrate que esté en la misma carpeta
     const sonidoMoneda = new Audio("sonido-moneda-cdoge.mp3");
     
     // Ubicaciones estratégicas para la generación de la moneda
@@ -699,7 +647,7 @@
       };
       monedasCDOGE.push(nuevaMoneda);
     }
-    setInterval(generarMonedaCDOGE, 20000); // cada 20 segundos
+    setInterval(generarMonedaCDOGE, 20000);
     
     // Dibuja las monedas CDOGE
     function dibujarMonedasCDOGE() {
@@ -729,7 +677,7 @@
       });
     }
     
-    // Función para mostrar un mensaje temporal al recolectar la moneda
+    // Muestra un mensaje temporal al recolectar la moneda
     function mostrarMensajeTemporal(texto, x, y) {
       const mensaje = document.createElement("div");
       mensaje.textContent = texto;
@@ -781,7 +729,7 @@
       drawCoins();
       drawObstacles();
       
-      // Dibuja las monedas CDOGE y detecta colisiones con el personaje
+      // Dibuja y verifica colisiones de monedas CDOGE
       dibujarMonedasCDOGE();
       detectarColisionMonedas(doge);
     
@@ -860,7 +808,15 @@
       });
     }
     
-    // Función para iniciar la partida (se usa en el botón del menú y en startScreen)
+    // Función que oculta el menú y la tienda antes de iniciar el juego
+    function iniciarJuegoLimpio() {
+      document.getElementById("menuPrincipal").style.display = "none";
+      document.getElementById("tiendaCDOGE").style.display = "none";
+      // Llamamos a la función principal del juego
+      startGame();
+    }
+    
+    // Función para iniciar el juego; se puede llamar directamente o desde iniciarJuegoLimpio()
     function startGame() {
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("pantallaCarga").style.display = "none";
@@ -869,8 +825,8 @@
       gameLoop = requestAnimationFrame(updateGame);
     }
     
-    // Asignar startGame() también al botón de inicio (si fuera necesario)
-    startButton.onclick = startGame;
+    // Asignamos la función iniciarJuegoLimpio al botón de inicio en startScreen (opcional, ya que también se usa en el menú)
+    document.getElementById("startButton").onclick = iniciarJuegoLimpio;
     
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
@@ -896,34 +852,13 @@
       location.reload();
     });
     
-    const verRankingBtn = document.getElementById("verRankingBtn");
-    const rankingPanel = document.getElementById("rankingPanel");
-    verRankingBtn.addEventListener("click", () => {
-      if (rankingPanel.style.display === "none" || rankingPanel.style.display === "") {
-        rankingPanel.style.display = "block";
-        mostrarTopRanking();
-      } else {
-        rankingPanel.style.display = "none";
-      }
-    });
-    const closeRankingBtn = document.getElementById("closeRankingBtn");
-    closeRankingBtn.addEventListener("click", () => {
-      rankingPanel.style.display = "none";
-    });
-    
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        cancelarAnimacion();
-        mostrarBotonReanudar();
+        if (gameLoop) cancelAnimationFrame(gameLoop);
+        document.getElementById("reanudarBtn").style.display = "block";
         pausaPorCambioVentana = true;
       }
     });
-    function cancelarAnimacion() {
-      if (gameLoop) cancelAnimationFrame(gameLoop);
-    }
-    function mostrarBotonReanudar() {
-      document.getElementById("reanudarBtn").style.display = "block";
-    }
     document.getElementById("reanudarBtn").addEventListener("click", () => {
       document.getElementById("reanudarBtn").style.display = "none";
       if (pausaPorCambioVentana) {
@@ -951,7 +886,6 @@
         const account = accounts[0];
         botonWallet.textContent = `🧑‍🚀 Wallet: ${account.slice(0, 6)}...${account.slice(-4)}`;
     
-        // Usar ethers.providers.Web3Provider para navegar en versión v5.
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contrato = new ethers.Contract(tokenAddress, tokenABI, provider);
     
@@ -961,7 +895,6 @@
     
         balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${balanceFormateado}</strong> $CDOGE listos para despegar!`;
         balanceDiv.style.display = "block";
-    
       } catch (error) {
         console.error("Error al conectar:", error);
         alert("❌ Ocurrió un error al conectar tu wallet.");
