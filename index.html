@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <!-- Asegúrate de tener el viewport para dispositivos móviles -->
+  <!-- Vista adaptable para móviles -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CosmoDoge Flotante 🚀</title>
   <style>
@@ -67,10 +67,8 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-    .btn:hover {
-      background-color: #00e7f5;
-    }
-
+    .btn:hover { background-color: #00e7f5; }
+    
     /* ======================= */
     /* Pantalla de Game Over con animación */
     /* ======================= */
@@ -108,10 +106,8 @@
       transition: background 0.3s;
       display: none;
     }
-    #reiniciarBtn:hover {
-      background: #00e7f5;
-    }
-
+    #reiniciarBtn:hover { background: #00e7f5; }
+    
     /* ======================= */
     /* Botón y Panel de Ranking */
     /* ======================= */
@@ -153,7 +149,7 @@
       border-radius: 5px;
     }
     #closeRankingBtn { margin-top: 10px; }
-
+    
     /* ======================= */
     /* Formulario de Registro  */
     /* ======================= */
@@ -168,7 +164,7 @@
       padding: 20px;
       border-radius: 10px;
     }
-
+    
     /* ======================= */
     /* Pantalla de carga preloader */
     /* ======================= */
@@ -197,7 +193,7 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
+    
     /* ======================= */
     /* Mostrar nombre del jugador en pantalla */
     /* ======================= */
@@ -211,15 +207,48 @@
       text-shadow: 1px 1px 3px black;
       z-index: 10;
     }
+    
+    /* ======================= */
+    /* Estilos para MetaMask: Botón de conectar y balance flotante */
+    /* ======================= */
+    #conectarWalletBtn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10000;
+      background: #00ffff;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+    }
+    #balanceCDOGE {
+      position: fixed;
+      top: 70px;
+      left: 20px;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.7);
+      color: #00ffcc;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      display: none;
+      max-width: 250px;
+      text-shadow: 1px 1px 3px black;
+    }
   </style>
-
+  
   <!-- ======================= -->
-  <!-- Firebase y Funciones de Firestore -->
+  <!-- Firebase y Funciones de Firestore (Módulo) -->
   <!-- ======================= -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
+  
     const firebaseConfig = {
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
@@ -228,11 +257,11 @@
       messagingSenderId: "648227069914",
       appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
     };
-
+  
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
-    // Función para guardar (crear) el registro del jugador usando addDoc.
+  
+    // Función para guardar el registro del jugador utilizando addDoc y serverTimestamp()
     async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
@@ -248,8 +277,10 @@
         console.error("❌ Error al guardar documento:", error);
       }
     }
-
-    // Función para mostrar el Top 5 del ranking.
+  
+    window.guardarJugadorAutomatic = guardarJugadorAutomatic;
+  
+    // Función para mostrar el ranking (Top 5).
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -267,7 +298,7 @@
         console.error("❌ Error al cargar el ranking:", error);
       }
     };
-
+  
     window.guardarJugadorAutomatic = guardarJugadorAutomatic;
   </script>
 </head>
@@ -281,55 +312,61 @@
       Iniciando viaje intergaláctico...
     </p>
   </div>
-
+  
   <!-- ======================= -->
-  <!-- Interfaz del Juego        -->
+  <!-- Botón para conectar MetaMask y Balance -->
+  <!-- ======================= -->
+  <button id="conectarWalletBtn">🔗 Conectar Wallet</button>
+  <div id="balanceCDOGE"></div>
+  
+  <!-- ======================= -->
+  <!-- Interfaz del Juego -->
   <!-- ======================= -->
   <canvas id="gameCanvas" width="480" height="640"></canvas>
   <div id="scoreDisplay">🚀 x 0</div>
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
-
+  
   <!-- Mostrar nombre del jugador en pantalla -->
   <div id="nombreJugador"></div>
-
+  
   <!-- Pantalla de Inicio -->
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
     <button class="btn" id="startButton">¡Comenzar!</button>
   </div>
-
+  
   <!-- Pantalla de Game Over con animación -->
   <div id="gameOverScreen">
     <h1>🚨 GAME OVER 🚨</h1>
     <p>Puntaje: <span id="finalScore">0</span></p>
     <button id="reiniciarBtn">Reiniciar</button>
   </div>
-
+  
   <!-- Mensaje de Nuevo Récord (opcional) -->
   <div id="newRecordMessage" style="display:none;">
     <h1>🌟 ¡Nuevo récord galáctico!</h1>
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
-
-  <!-- Formulario para registrar el puntaje (si el usuario no está registrado) -->
+  
+  <!-- Formulario para registrar el puntaje (solo si el usuario no está registrado) -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
   </div>
-
+  
   <!-- Botón de Ranking (siempre visible) -->
   <div id="rankingButton">
     <div style="color: white; font-size: 14px; font-weight: bold;">🏆 Top 5 CosmoDoge</div>
     <button class="btn" id="verRankingBtn">🔎 Ver Ranking</button>
   </div>
-
+  
   <!-- Panel de Ranking -->
   <div id="rankingPanel">
     <div id="topRanking"></div>
     <button class="btn" id="closeRankingBtn">Cerrar</button>
   </div>
-
+  
   <!-- Botón para reanudar el juego (auto-pausa) -->
   <button id="reanudarBtn" style="
     display: none;
@@ -347,29 +384,35 @@
     cursor: pointer;">
     Reanudar Juego
   </button>
-
+  
   <!-- ======================= -->
-  <!-- Lógica del Juego         -->
+  <!-- Lógica del Juego -->
   <!-- ======================= -->
   <script>
-    // Declaración global para el loop de animación.
+    // Declarar variable global para el loop.
     let gameLoop;
-    
+  
+    // Variable para auto-pausa.
+    let pausaPorCambioVentana = false;
+  
     // Función auxiliar para reproducir audio de forma segura.
     function playSound(audioElement) {
       audioElement.currentTime = 0;
       audioElement.play().catch(error => console.error("Error al reproducir sonido:", error));
     }
-
+  
     // Variables de audio.
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
     const sndBoom = new Audio("boom.mp3");
     const sndRecord = new Audio("record.mp3");
+    // Usamos "music" ya definida en la parte superior de este script en el head; aquí se vuelve a declarar para el juego:
+    // (Asegúrate de no duplicar, o si lo haces, usa la misma instancia en todo el código)
     const music = new Audio("music-cosmodoge-theme.mp3");
     music.loop = true;
     music.volume = 0.3;
-
+  
+    // Canvas y contexto.
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -377,9 +420,9 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     }
-
+  
     // ==============================
-    // Variables y configuraciones del juego
+    // Variables y configuraciones del juego.
     // ==============================
     const fondos = [
       "fondo-cosmodoge-v2.png",
@@ -389,7 +432,7 @@
     let fondoIndex = 0;
     const fondo = new Image();
     fondo.src = fondos[fondoIndex];
-
+  
     const doge = {
       x: 80,
       y: 200,
@@ -399,7 +442,7 @@
       img: new Image()
     };
     doge.img.src = "cosmodoge-cohete-juego.png";
-
+  
     let gravity = 0.5;
     const gravityLevels = [0.5, 0.6, 0.8, 1.0];
     const jump = -10;
@@ -411,11 +454,11 @@
     let timeElapsed = 0;
     let lastScoreTime = 0;
     let lastFondoChange = 0;
-
+  
     const coinImg = new Image();
     coinImg.src = "coin-cosmodoge.png";
     let coinsArray = [];
-
+  
     const obstacleImgs = [
       "obstaculo-estelar.png",
       "obstaculo-explosion.png",
@@ -423,9 +466,9 @@
     ];
     let specialObstacles = [];
     let lastObstacleSpawn = Date.now();
-
+  
     // ==============================
-    // Obtención de elementos del DOM
+    // Obtención de elementos del DOM.
     // ==============================
     const scoreDisplay = document.getElementById("scoreDisplay");
     const coinDisplay = document.getElementById("coinDisplay");
@@ -433,14 +476,14 @@
     const finalScoreElem = document.getElementById("finalScore");
     const startButton = document.getElementById("startButton");
     const reiniciarBtn = document.getElementById("reiniciarBtn");
-    const gameOverScreen = document.getElementById("gameOverScreen");
+    const gameOverScreenElem = document.getElementById("gameOverScreen");
     const newRecordMessage = document.getElementById("newRecordMessage");
     const playerNameForm = document.getElementById("playerNameForm");
     const nombreJugadorDiv = document.getElementById("nombreJugador");
-
+  
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
-
+  
     // Función para mostrar el nombre del jugador en pantalla.
     function mostrarNombreJugador(nombre) {
       nombreJugadorDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
@@ -449,15 +492,15 @@
     if (nombreGuardado) {
       mostrarNombreJugador(nombreGuardado);
     }
-
+  
     function drawBackground() {
       ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
     }
-
+  
     function drawDoge() {
       ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
     }
-
+  
     function spawnCoinGroup() {
       const amount = Math.floor(Math.random() * 6) + 5;
       for (let i = 0; i < amount; i++) {
@@ -470,7 +513,7 @@
         });
       }
     }
-
+  
     function drawCoins() {
       for (let i = coinsArray.length - 1; i >= 0; i--) {
         const coin = coinsArray[i];
@@ -490,7 +533,7 @@
         }
       }
     }
-
+  
     function spawnObstacle() {
       const img = new Image();
       img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
@@ -504,7 +547,7 @@
         img: img
       });
     }
-
+  
     function drawObstacles() {
       specialObstacles.forEach((obs) => {
         obs.x -= obs.speedX;
@@ -521,22 +564,22 @@
       });
       specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
     }
-
+  
     function updateDifficulty(seconds) {
       if (seconds >= 75) gravity = gravityLevels[3];
       else if (seconds >= 45) gravity = gravityLevels[2];
       else if (seconds >= 30) gravity = gravityLevels[1];
       else gravity = gravityLevels[0];
     }
-
-    // Uso de deltaTime en el bucle principal.
+  
+    // Uso de deltaTime para actualizar el juego de forma consistente.
     let lastTime = 0;
     function updateGame(timestamp) {
       if (isGameOver) return;
       if (!lastTime) lastTime = timestamp;
       const deltaTime = timestamp - lastTime;
       lastTime = timestamp;
-
+  
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
       doge.velocity += gravity * (deltaTime / 16);
@@ -548,7 +591,7 @@
       drawDoge();
       drawCoins();
       drawObstacles();
-
+  
       timeElapsed += deltaTime;
       const seconds = timeElapsed / 1000;
       if (seconds - lastScoreTime >= 5) {
@@ -570,7 +613,7 @@
       }
       gameLoop = requestAnimationFrame(updateGame);
     }
-
+  
     // Función Game Over con animación y pausa.
     function gameOver() {
       isGameOver = true;
@@ -581,17 +624,15 @@
       }
       music.pause();
       music.currentTime = 0;
-
-      // Muestra la pantalla de Game Over con transición
+  
       const gameOverScreenElem = document.getElementById("gameOverScreen");
       gameOverScreenElem.classList.add("show");
-
-      // Muestra el botón de reiniciar después de 1.5 segundos
+  
+      // Mostrar el botón de reiniciar después de 1.5 segundos.
       setTimeout(() => {
         document.getElementById("reiniciarBtn").style.display = "block";
       }, 1500);
-
-      // Si se bate el récord...
+  
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
@@ -611,8 +652,8 @@
         playerNameForm.style.display = "none";
       }
     }
-
-    // Eventos de control
+  
+    // Eventos de control.
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" && gameStarted && !isGameOver) {
         doge.velocity = jump;
@@ -628,7 +669,7 @@
         playSound(sndJump);
       });
     }
-
+  
     startButton.onclick = () => {
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("pantallaCarga").style.display = "none";
@@ -636,7 +677,7 @@
       music.play();
       gameLoop = requestAnimationFrame(updateGame);
     };
-
+  
     // Registro manual: cuando el usuario ingresa su nombre.
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
@@ -657,12 +698,12 @@
         alert("Por favor, ingresa tu nombre galáctico.");
       }
     });
-
-    // Reinicia el juego.
+  
+    // Reiniciar el juego.
     document.getElementById("reiniciarBtn").addEventListener("click", () => {
       location.reload();
     });
-
+  
     const verRankingBtn = document.getElementById("verRankingBtn");
     const rankingPanel = document.getElementById("rankingPanel");
     verRankingBtn.addEventListener("click", () => {
@@ -677,38 +718,13 @@
     closeRankingBtn.addEventListener("click", () => {
       rankingPanel.style.display = "none";
     });
-
+  
+    // Función para guardar el registro en Firestore (ya definido en el módulo, se usa esa función global).
+    // No se declara nuevamente para evitar duplicidades.
+  
     // ==============================
-    // Función para guardar el registro en Firestore.
+    // Auto-pausa al cambiar de pestaña o minimizar la ventana.
     // ==============================
-    function guardarJugadorAutomatic(username, puntaje, monedas) {
-      const data = {
-        nombre: String(username),
-        puntaje: Number(puntaje),
-        monedas: Number(monedas),
-        fecha: serverTimestamp()
-      };
-      console.log("Actualizando documento para:", data);
-      return addDoc(collection(db, "jugadores"), data)
-        .then(() => {
-          console.log("Documento guardado correctamente para:", username);
-        })
-        .catch(error => {
-          console.error("Error al guardar documento:", error);
-          throw error;
-        });
-    }
-
-    // Función para mostrar el nombre del jugador en pantalla.
-    function mostrarNombreJugador(nombre) {
-      const nombreDiv = document.getElementById("nombreJugador");
-      nombreDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
-    }
-
-    // ==============================
-    // Auto-pausa al cambiar de pestaña o minimizar la ventana
-    // ==============================
-    let pausaPorCambioVentana = false;
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         cancelarAnimacion();
@@ -725,22 +741,70 @@
     document.getElementById("reanudarBtn").addEventListener("click", () => {
       document.getElementById("reanudarBtn").style.display = "none";
       if (pausaPorCambioVentana) {
-        // Se reanuda el juego llamando a requestAnimationFrame
         gameLoop = requestAnimationFrame(updateGame);
         pausaPorCambioVentana = false;
       }
     });
-
+  
     // ==============================
-    // Inicialización al cargar el DOM
+    // Función para mostrar el nombre del jugador (arriba a la derecha).
+    // ==============================
+    function mostrarNombreJugador(nombre) {
+      const nombreDiv = document.getElementById("nombreJugador");
+      nombreDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
+    }
+  
+    // ==============================
+    // MetaMask: Conectar wallet y mostrar balance de $CDOGE
+    // ==============================
+    // Asegúrate de que ethers.js se haya cargado (se incluye al final del documento).
+    const botonWallet = document.getElementById("conectarWalletBtn");
+    const balanceDiv = document.getElementById("balanceCDOGE");
+    const tokenAddress = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A";
+    const tokenABI = [
+      "function balanceOf(address account) view returns (uint256)",
+      "function decimals() view returns (uint8)"
+    ];
+  
+    botonWallet.addEventListener("click", async () => {
+      if (typeof window.ethereum === "undefined") {
+        alert("🦊 Por favor instala MetaMask para conectar tu wallet.");
+        return;
+      }
+      try {
+        const [cuenta] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        botonWallet.textContent = `🧑‍🚀 Wallet: ${cuenta.slice(0, 6)}...${cuenta.slice(-4)}`;
+  
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const contrato = new ethers.Contract(tokenAddress, tokenABI, provider);
+  
+        const balance = await contrato.balanceOf(cuenta);
+        const decimales = await contrato.decimals();
+        const balanceFormateado = Number(balance / 10n ** BigInt(decimales)).toLocaleString();
+  
+        balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${balanceFormateado}</strong> $CDOGE listos para despegar!`;
+        balanceDiv.style.display = "block";
+      } catch (error) {
+        console.error("Error al conectar:", error);
+        alert("❌ Ocurrió un error al conectar tu wallet.");
+      }
+    });
+  
+    // ==============================
+    // Inicialización al cargar el DOM.
     // ==============================
     window.addEventListener("DOMContentLoaded", () => {
-      setTimeout(() => {  // Oculta la pantalla de carga preloader tras 3 segundos
+      setTimeout(() => {
         const pantallaCarga = document.getElementById("pantallaCarga");
         if (pantallaCarga) pantallaCarga.style.display = "none";
       }, 3000);
       document.getElementById("startScreen").style.display = "flex";
     });
   </script>
+  
+  <!-- ======================= -->
+  <!-- Importar ethers.js -->
+  <!-- ======================= -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.min.js"></script>
 </body>
 </html>
