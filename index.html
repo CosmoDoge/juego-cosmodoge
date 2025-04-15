@@ -66,12 +66,30 @@
     }
     
     /* ======================= */
-    /* Panel del menú principal (arriba a la derecha) */
+    /* Botón de Conectar Wallet (esquina superior derecha) */
     /* ======================= */
-    /* Ahora solo se muestra el botón de Tienda */
-    #menuPrincipal {
+    #conectarWalletBtn {
       position: fixed;
       top: 20px;
+      right: 20px;
+      z-index: 10000;
+      background: #00ffff;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+    }
+    
+    /* ======================= */
+    /* Panel del menú principal: Solo el botón de Tienda (arriba a la derecha) */
+    /* ======================= */
+    /* Ahora se posiciona justo debajo del botón de Conectar Wallet */
+    #menuPrincipal {
+      position: fixed;
+      top: 70px; /* Ubicado justo debajo de Conectar Wallet */
       right: 20px;
       display: flex;
       flex-direction: column;
@@ -217,22 +235,8 @@
     }
     
     /* ======================= */
-    /* Estilos para MetaMask: Botón y Balance */
+    /* Estilos para el Balance de MetaMask */
     /* ======================= */
-    #conectarWalletBtn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 10000;
-      background: #00ffff;
-      color: black;
-      border: none;
-      border-radius: 12px;
-      padding: 10px 20px;
-      font-size: 16px;
-      font-family: 'Orbitron', sans-serif;
-      cursor: pointer;
-    }
     #balanceCDOGE {
       position: fixed;
       top: 70px;
@@ -320,13 +324,13 @@
   </div>
   
   <!-- ======================= -->
-  <!-- Botón para conectar MetaMask y Balance -->
+  <!-- Botón para Conectar Wallet y Balance -->
   <!-- ======================= -->
   <button id="conectarWalletBtn">🔗 Conectar Wallet</button>
   <div id="balanceCDOGE"></div>
   
   <!-- ======================= -->
-  <!-- Menú Principal: Solo botón de Tienda (arriba a la derecha) -->
+  <!-- Menú Principal: Solo botón de Tienda (arriba a la derecha, justo debajo de Conectar Wallet) -->
   <!-- ======================= -->
   <div id="menuPrincipal">
     <button onclick="toggleTienda()" style="
@@ -373,7 +377,7 @@
   <!-- Nombre del jugador (parte superior central) -->
   <div id="nombreJugador"></div>
   
-  <!-- Contador de $CDOGE (ahora debajo del nivel máximo) -->
+  <!-- Contador de $CDOGE (debajo de "Máx") -->
   <div id="contadorCDOGE">💰 CDOGE: 0</div>
   
   <!-- Pantalla de Inicio (se muestra hasta que se inicie el juego) -->
