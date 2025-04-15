@@ -5,6 +5,8 @@
   <!-- Vista adaptable para móviles -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CosmoDoge Flotante 🚀</title>
+  <!-- Cargar ethers.js versión UMD para navegadores -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
   <style>
     /* ======================= */
     /* Estilos generales y optimización móvil */
@@ -209,7 +211,7 @@
     }
     
     /* ======================= */
-    /* Estilos para MetaMask: Botón de conectar y balance flotante */
+    /* Estilos para MetaMask: Botón y Balance */
     /* ======================= */
     #conectarWalletBtn {
       position: fixed;
@@ -243,7 +245,7 @@
   </style>
   
   <!-- ======================= -->
-  <!-- Firebase y Funciones de Firestore (Módulo) -->
+  <!-- Firebase y Funciones de Firestore -->
   <!-- ======================= -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -261,7 +263,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
   
-    // Función para guardar el registro del jugador utilizando addDoc y serverTimestamp()
+    // Función para guardar el registro del jugador usando addDoc y serverTimestamp().
     async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
@@ -278,9 +280,7 @@
       }
     }
   
-    window.guardarJugadorAutomatic = guardarJugadorAutomatic;
-  
-    // Función para mostrar el ranking (Top 5).
+    // Función para mostrar el Top 5 del ranking.
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -349,7 +349,7 @@
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
   
-  <!-- Formulario para registrar el puntaje (solo si el usuario no está registrado) -->
+  <!-- Formulario para registrar el puntaje (si el usuario no está registrado) -->
   <div id="playerNameForm">
     <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
@@ -389,40 +389,35 @@
   <!-- Lógica del Juego -->
   <!-- ======================= -->
   <script>
-    // Declarar variable global para el loop.
     let gameLoop;
-  
-    // Variable para auto-pausa.
     let pausaPorCambioVentana = false;
-  
-    // Función auxiliar para reproducir audio de forma segura.
+    
+    // Función auxiliar para reproducir audio.
     function playSound(audioElement) {
       audioElement.currentTime = 0;
       audioElement.play().catch(error => console.error("Error al reproducir sonido:", error));
     }
-  
+    
     // Variables de audio.
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
     const sndBoom = new Audio("boom.mp3");
     const sndRecord = new Audio("record.mp3");
-    // Usamos "music" ya definida en la parte superior de este script en el head; aquí se vuelve a declarar para el juego:
-    // (Asegúrate de no duplicar, o si lo haces, usa la misma instancia en todo el código)
     const music = new Audio("music-cosmodoge-theme.mp3");
     music.loop = true;
     music.volume = 0.3;
-  
+    
     // Canvas y contexto.
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
+    const esMovil = /Mobi|Android/i.test(navigator.userAgent);
+    if (esMovil) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     }
-  
+    
     // ==============================
-    // Variables y configuraciones del juego.
+    // Configuraciones del juego.
     // ==============================
     const fondos = [
       "fondo-cosmodoge-v2.png",
@@ -432,7 +427,7 @@
     let fondoIndex = 0;
     const fondo = new Image();
     fondo.src = fondos[fondoIndex];
-  
+    
     const doge = {
       x: 80,
       y: 200,
@@ -442,7 +437,7 @@
       img: new Image()
     };
     doge.img.src = "cosmodoge-cohete-juego.png";
-  
+    
     let gravity = 0.5;
     const gravityLevels = [0.5, 0.6, 0.8, 1.0];
     const jump = -10;
@@ -454,11 +449,11 @@
     let timeElapsed = 0;
     let lastScoreTime = 0;
     let lastFondoChange = 0;
-  
+    
     const coinImg = new Image();
     coinImg.src = "coin-cosmodoge.png";
     let coinsArray = [];
-  
+    
     const obstacleImgs = [
       "obstaculo-estelar.png",
       "obstaculo-explosion.png",
@@ -466,9 +461,9 @@
     ];
     let specialObstacles = [];
     let lastObstacleSpawn = Date.now();
-  
+    
     // ==============================
-    // Obtención de elementos del DOM.
+    // Elementos del DOM.
     // ==============================
     const scoreDisplay = document.getElementById("scoreDisplay");
     const coinDisplay = document.getElementById("coinDisplay");
@@ -480,11 +475,10 @@
     const newRecordMessage = document.getElementById("newRecordMessage");
     const playerNameForm = document.getElementById("playerNameForm");
     const nombreJugadorDiv = document.getElementById("nombreJugador");
-  
+    
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
-  
-    // Función para mostrar el nombre del jugador en pantalla.
+    
     function mostrarNombreJugador(nombre) {
       nombreJugadorDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
     }
@@ -492,15 +486,15 @@
     if (nombreGuardado) {
       mostrarNombreJugador(nombreGuardado);
     }
-  
+    
     function drawBackground() {
       ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
     }
-  
+    
     function drawDoge() {
       ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
     }
-  
+    
     function spawnCoinGroup() {
       const amount = Math.floor(Math.random() * 6) + 5;
       for (let i = 0; i < amount; i++) {
@@ -513,7 +507,7 @@
         });
       }
     }
-  
+    
     function drawCoins() {
       for (let i = coinsArray.length - 1; i >= 0; i--) {
         const coin = coinsArray[i];
@@ -533,7 +527,7 @@
         }
       }
     }
-  
+    
     function spawnObstacle() {
       const img = new Image();
       img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
@@ -547,7 +541,7 @@
         img: img
       });
     }
-  
+    
     function drawObstacles() {
       specialObstacles.forEach((obs) => {
         obs.x -= obs.speedX;
@@ -564,22 +558,21 @@
       });
       specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
     }
-  
+    
     function updateDifficulty(seconds) {
       if (seconds >= 75) gravity = gravityLevels[3];
       else if (seconds >= 45) gravity = gravityLevels[2];
       else if (seconds >= 30) gravity = gravityLevels[1];
       else gravity = gravityLevels[0];
     }
-  
-    // Uso de deltaTime para actualizar el juego de forma consistente.
+    
     let lastTime = 0;
     function updateGame(timestamp) {
       if (isGameOver) return;
       if (!lastTime) lastTime = timestamp;
       const deltaTime = timestamp - lastTime;
       lastTime = timestamp;
-  
+    
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
       doge.velocity += gravity * (deltaTime / 16);
@@ -591,7 +584,7 @@
       drawDoge();
       drawCoins();
       drawObstacles();
-  
+    
       timeElapsed += deltaTime;
       const seconds = timeElapsed / 1000;
       if (seconds - lastScoreTime >= 5) {
@@ -613,8 +606,7 @@
       }
       gameLoop = requestAnimationFrame(updateGame);
     }
-  
-    // Función Game Over con animación y pausa.
+    
     function gameOver() {
       isGameOver = true;
       if (finalScoreElem) {
@@ -624,15 +616,14 @@
       }
       music.pause();
       music.currentTime = 0;
-  
+    
       const gameOverScreenElem = document.getElementById("gameOverScreen");
       gameOverScreenElem.classList.add("show");
-  
-      // Mostrar el botón de reiniciar después de 1.5 segundos.
+    
       setTimeout(() => {
         document.getElementById("reiniciarBtn").style.display = "block";
       }, 1500);
-  
+    
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
@@ -652,8 +643,7 @@
         playerNameForm.style.display = "none";
       }
     }
-  
-    // Eventos de control.
+    
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" && gameStarted && !isGameOver) {
         doge.velocity = jump;
@@ -661,7 +651,7 @@
         playSound(sndJump);
       }
     });
-    if (isMobile) {
+    if (esMovil) {
       document.addEventListener("touchstart", () => {
         if (!gameStarted || isGameOver) return;
         doge.velocity = jump;
@@ -669,7 +659,7 @@
         playSound(sndJump);
       });
     }
-  
+    
     startButton.onclick = () => {
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("pantallaCarga").style.display = "none";
@@ -677,8 +667,7 @@
       music.play();
       gameLoop = requestAnimationFrame(updateGame);
     };
-  
-    // Registro manual: cuando el usuario ingresa su nombre.
+    
     document.getElementById("saveScoreButton").addEventListener("click", () => {
       const nombre = document.getElementById("playerName").value.trim();
       console.log("Intentando registrar el jugador:", nombre);
@@ -698,12 +687,11 @@
         alert("Por favor, ingresa tu nombre galáctico.");
       }
     });
-  
-    // Reiniciar el juego.
+    
     document.getElementById("reiniciarBtn").addEventListener("click", () => {
       location.reload();
     });
-  
+    
     const verRankingBtn = document.getElementById("verRankingBtn");
     const rankingPanel = document.getElementById("rankingPanel");
     verRankingBtn.addEventListener("click", () => {
@@ -718,13 +706,32 @@
     closeRankingBtn.addEventListener("click", () => {
       rankingPanel.style.display = "none";
     });
-  
-    // Función para guardar el registro en Firestore (ya definido en el módulo, se usa esa función global).
-    // No se declara nuevamente para evitar duplicidades.
-  
-    // ==============================
-    // Auto-pausa al cambiar de pestaña o minimizar la ventana.
-    // ==============================
+    
+    // Función para guardar el registro en Firestore.
+    function guardarJugadorAutomatic(username, puntaje, monedas) {
+      const data = {
+        nombre: String(username),
+        puntaje: Number(puntaje),
+        monedas: Number(monedas),
+        fecha: serverTimestamp()
+      };
+      console.log("Actualizando documento para:", data);
+      return addDoc(collection(db, "jugadores"), data)
+        .then(() => {
+          console.log("Documento guardado correctamente para:", username);
+        })
+        .catch(error => {
+          console.error("Error al guardar documento:", error);
+          throw error;
+        });
+    }
+    
+    function mostrarNombreJugador(nombre) {
+      const nombreDiv = document.getElementById("nombreJugador");
+      nombreDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
+    }
+    
+    // Auto-pausa: Detener animación al cambiar de pestaña o minimizar.
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         cancelarAnimacion();
@@ -745,19 +752,11 @@
         pausaPorCambioVentana = false;
       }
     });
-  
+    
     // ==============================
-    // Función para mostrar el nombre del jugador (arriba a la derecha).
+    // MetaMask: Conectar wallet y mostrar balance de $CDOGE.
     // ==============================
-    function mostrarNombreJugador(nombre) {
-      const nombreDiv = document.getElementById("nombreJugador");
-      nombreDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
-    }
-  
-    // ==============================
-    // MetaMask: Conectar wallet y mostrar balance de $CDOGE
-    // ==============================
-    // Asegúrate de que ethers.js se haya cargado (se incluye al final del documento).
+    // Usamos ethers.js cargado globalmente (UMD) para la conexión.
     const botonWallet = document.getElementById("conectarWalletBtn");
     const balanceDiv = document.getElementById("balanceCDOGE");
     const tokenAddress = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A";
@@ -765,7 +764,7 @@
       "function balanceOf(address account) view returns (uint256)",
       "function decimals() view returns (uint8)"
     ];
-  
+    
     botonWallet.addEventListener("click", async () => {
       if (typeof window.ethereum === "undefined") {
         alert("🦊 Por favor instala MetaMask para conectar tu wallet.");
@@ -775,7 +774,8 @@
         const [cuenta] = await window.ethereum.request({ method: 'eth_requestAccounts' });
         botonWallet.textContent = `🧑‍🚀 Wallet: ${cuenta.slice(0, 6)}...${cuenta.slice(-4)}`;
   
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        // Usar ethers.providers.Web3Provider para navegadores.
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contrato = new ethers.Contract(tokenAddress, tokenABI, provider);
   
         const balance = await contrato.balanceOf(cuenta);
@@ -784,12 +784,13 @@
   
         balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${balanceFormateado}</strong> $CDOGE listos para despegar!`;
         balanceDiv.style.display = "block";
+  
       } catch (error) {
         console.error("Error al conectar:", error);
         alert("❌ Ocurrió un error al conectar tu wallet.");
       }
     });
-  
+    
     // ==============================
     // Inicialización al cargar el DOM.
     // ==============================
@@ -803,8 +804,8 @@
   </script>
   
   <!-- ======================= -->
-  <!-- Importar ethers.js -->
+  <!-- Importar ethers.js (si no se cargó arriba ya) -->
   <!-- ======================= -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
 </body>
 </html>
