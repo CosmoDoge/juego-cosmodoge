@@ -5,8 +5,10 @@
   <!-- Vista adaptable para móviles -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CosmoDoge Flotante 🚀</title>
-  <!-- Cargar ethers.js versión UMD para navegadores -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
+  
+  <!-- Cargar ethers.js (versión UMD 5.7.2) para navegadores -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  
   <style>
     /* ======================= */
     /* Estilos generales y optimización móvil */
@@ -213,10 +215,11 @@
     /* ======================= */
     /* Estilos para MetaMask: Botón y Balance */
     /* ======================= */
+    /* Reubicar el botón en la esquina superior derecha */
     #conectarWalletBtn {
       position: fixed;
       top: 20px;
-      left: 20px;
+      right: 20px;
       z-index: 10000;
       background: #00ffff;
       color: black;
@@ -230,7 +233,7 @@
     #balanceCDOGE {
       position: fixed;
       top: 70px;
-      left: 20px;
+      right: 20px;
       z-index: 10000;
       background: rgba(0, 0, 0, 0.7);
       color: #00ffcc;
@@ -263,7 +266,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
   
-    // Función para guardar el registro del jugador usando addDoc y serverTimestamp().
+    // Función para guardar el registro del jugador usando addDoc y serverTimestamp()
     async function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
@@ -389,16 +392,16 @@
   <!-- Lógica del Juego -->
   <!-- ======================= -->
   <script>
+    // Declara la variable esMovil para detectar si se está en móvil.
+    const esMovil = /Mobi|Android/i.test(navigator.userAgent);
     let gameLoop;
     let pausaPorCambioVentana = false;
     
-    // Función auxiliar para reproducir audio.
     function playSound(audioElement) {
       audioElement.currentTime = 0;
       audioElement.play().catch(error => console.error("Error al reproducir sonido:", error));
     }
     
-    // Variables de audio.
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
     const sndBoom = new Audio("boom.mp3");
@@ -407,18 +410,13 @@
     music.loop = true;
     music.volume = 0.3;
     
-    // Canvas y contexto.
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const esMovil = /Mobi|Android/i.test(navigator.userAgent);
     if (esMovil) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     }
     
-    // ==============================
-    // Configuraciones del juego.
-    // ==============================
     const fondos = [
       "fondo-cosmodoge-v2.png",
       "fondo-cosmodoge-v3.png",
@@ -462,9 +460,6 @@
     let specialObstacles = [];
     let lastObstacleSpawn = Date.now();
     
-    // ==============================
-    // Elementos del DOM.
-    // ==============================
     const scoreDisplay = document.getElementById("scoreDisplay");
     const coinDisplay = document.getElementById("coinDisplay");
     const highScoreDisplay = document.getElementById("highScoreDisplay");
@@ -707,7 +702,6 @@
       rankingPanel.style.display = "none";
     });
     
-    // Función para guardar el registro en Firestore.
     function guardarJugadorAutomatic(username, puntaje, monedas) {
       const data = {
         nombre: String(username),
@@ -731,7 +725,6 @@
       nombreDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
     }
     
-    // Auto-pausa: Detener animación al cambiar de pestaña o minimizar.
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         cancelarAnimacion();
@@ -753,10 +746,7 @@
       }
     });
     
-    // ==============================
-    // MetaMask: Conectar wallet y mostrar balance de $CDOGE.
-    // ==============================
-    // Usamos ethers.js cargado globalmente (UMD) para la conexión.
+    // MetaMask: Conectar wallet y mostrar balance de $CDOGE
     const botonWallet = document.getElementById("conectarWalletBtn");
     const balanceDiv = document.getElementById("balanceCDOGE");
     const tokenAddress = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A";
@@ -767,33 +757,31 @@
     
     botonWallet.addEventListener("click", async () => {
       if (typeof window.ethereum === "undefined") {
-        alert("🦊 Por favor instala MetaMask para conectar tu wallet.");
+        alert("🦊 Por favor, instala MetaMask para conectar tu wallet.");
         return;
       }
       try {
-        const [cuenta] = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        botonWallet.textContent = `🧑‍🚀 Wallet: ${cuenta.slice(0, 6)}...${cuenta.slice(-4)}`;
-  
-        // Usar ethers.providers.Web3Provider para navegadores.
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+        botonWallet.textContent = `🧑‍🚀 Wallet: ${account.slice(0, 6)}...${account.slice(-4)}`;
+    
+        // Usar ethers.providers.Web3Provider para navegar en versión v5.
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contrato = new ethers.Contract(tokenAddress, tokenABI, provider);
-  
-        const balance = await contrato.balanceOf(cuenta);
+    
+        const balance = await contrato.balanceOf(account);
         const decimales = await contrato.decimals();
-        const balanceFormateado = Number(balance / 10n ** BigInt(decimales)).toLocaleString();
-  
+        const balanceFormateado = Number(balance / 10 ** decimales).toLocaleString();
+    
         balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${balanceFormateado}</strong> $CDOGE listos para despegar!`;
         balanceDiv.style.display = "block";
-  
+    
       } catch (error) {
         console.error("Error al conectar:", error);
         alert("❌ Ocurrió un error al conectar tu wallet.");
       }
     });
     
-    // ==============================
-    // Inicialización al cargar el DOM.
-    // ==============================
     window.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         const pantallaCarga = document.getElementById("pantallaCarga");
@@ -802,10 +790,5 @@
       document.getElementById("startScreen").style.display = "flex";
     });
   </script>
-  
-  <!-- ======================= -->
-  <!-- Importar ethers.js (si no se cargó arriba ya) -->
-  <!-- ======================= -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
 </body>
 </html>
