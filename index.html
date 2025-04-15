@@ -30,7 +30,8 @@
       max-height: 100vh;
       margin: auto;
     }
-    #scoreDisplay, #coinDisplay, #highScoreDisplay, #nombreJugador {
+    /* Contadores en la esquina superior izquierda */
+    #scoreDisplay, #coinDisplay, #highScoreDisplay {
       position: absolute;
       color: white;
       font-size: 18px;
@@ -39,6 +40,30 @@
     #scoreDisplay { top: 10px; left: 10px; }
     #coinDisplay { top: 40px; left: 10px; }
     #highScoreDisplay { top: 70px; left: 10px; }
+    
+    /* Nombre del jugador en la parte superior central */
+    #nombreJugador {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: #00ffff;
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 1px 1px 3px black;
+      z-index: 10;
+    }
+    
+    /* Contador de CDOGE en la esquina inferior derecha */
+    #contadorCDOGE {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      color: #00ffcc;
+      font-family: Orbitron, sans-serif;
+      font-size: 18px;
+      z-index: 1000;
+    }
     
     /* ======================= */
     /* Pantallas superpuestas (Inicio, Game Over, Nuevo Récord) */
@@ -199,20 +224,6 @@
     }
     
     /* ======================= */
-    /* Mostrar nombre del jugador en pantalla */
-    /* ======================= */
-    #nombreJugador {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      font-size: 18px;
-      color: #00ffff;
-      font-family: 'Orbitron', sans-serif;
-      text-shadow: 1px 1px 3px black;
-      z-index: 10;
-    }
-    
-    /* ======================= */
     /* Estilos para MetaMask: Botón y Balance */
     /* ======================= */
     #conectarWalletBtn {
@@ -328,21 +339,12 @@
   <div id="scoreDisplay">🚀 x 0</div>
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
+  
+  <!-- Nombre del jugador en la parte superior central -->
   <div id="nombreJugador"></div>
   
-  <!-- ======================= -->
-  <!-- CONTADOR CDOGE (NUEVO) -->
-  <!-- ======================= -->
-  <div id="contadorCDOGE" style="
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    color: #00ffcc;
-    font-family: Orbitron, sans-serif;
-    font-size: 18px;
-    z-index: 1000;">
-    💰 CDOGE: 0
-  </div>
+  <!-- Contador de CDOGE en la esquina inferior derecha -->
+  <div id="contadorCDOGE">💰 CDOGE: 0</div>
   
   <!-- Pantalla de Inicio -->
   <div id="startScreen" style="display:none;">
@@ -573,20 +575,19 @@
       else gravity = gravityLevels[0];
     }
     
-    // ===============================
-    // NUEVA CONFIGURACIÓN DE MONEDAS CDOGE
-    // ===============================
+    // ============================================================
+    // NUEVA CONFIGURACIÓN DE MONEDAS CDOGE (Aparece cada 20 segundos)
+    // ============================================================
     let monedasCDOGE = [];
     let totalCDOGERecolectado = 0;
     const valorPorMoneda = 50; // valor simbólico
     
-    // === CARGA DE IMAGEN Y SONIDO === //
+    // Carga de imagen y sonido para la moneda CDOGE
     const imagenMoneda = new Image();
     imagenMoneda.src = "moneda-cosmodoge.png"; // asegúrate que está en la misma carpeta
-    
     const sonidoMoneda = new Audio("sonido-moneda-cdoge.mp3");
     
-    // === UBICACIONES ESTRATÉGICAS === //
+    // Ubicaciones estratégicas para la generación de la moneda
     const ubicacionesDificiles = [
       { x: 80, y: 100 },
       { x: canvas.width - 120, y: 80 },
@@ -595,7 +596,7 @@
       { x: 100, y: canvas.height - 150 }
     ];
     
-    // === GENERACIÓN CADA 15 MINUTOS === //
+    // Genera una moneda CDOGE cada 20 segundos (si aún no hay una en pantalla)
     function generarMonedaCDOGE() {
       if (monedasCDOGE.length >= 1) return;
       const posicion = ubicacionesDificiles[Math.floor(Math.random() * ubicacionesDificiles.length)];
@@ -607,9 +608,9 @@
       };
       monedasCDOGE.push(nuevaMoneda);
     }
-    setInterval(generarMonedaCDOGE, 900000); // cada 15 minutos
+    setInterval(generarMonedaCDOGE, 20000); // cada 20 segundos
     
-    // === DIBUJAR MONEDAS CDOGE === //
+    // Dibuja las monedas CDOGE
     function dibujarMonedasCDOGE() {
       monedasCDOGE.forEach(moneda => {
         if (!moneda.recolectada) {
@@ -618,7 +619,7 @@
       });
     }
     
-    // === DETECTAR COLISIÓN CON CDOGE === //
+    // Detecta colisión entre el personaje y la moneda CDOGE
     function detectarColisionMonedas(doge) {
       monedasCDOGE.forEach(moneda => {
         if (
@@ -637,7 +638,7 @@
       });
     }
     
-    // === MOSTRAR MENSAJE TEMPORAL === //
+    // Función para mostrar un mensaje temporal al recolectar la moneda
     function mostrarMensajeTemporal(texto, x, y) {
       const mensaje = document.createElement("div");
       mensaje.textContent = texto;
@@ -661,14 +662,14 @@
       }, 1600);
     }
     
-    // === CONTADOR VISUAL DE CDOGE === //
+    // Actualiza el contador visual de CDOGE
     function actualizarContadorCDOGE() {
       const div = document.getElementById("contadorCDOGE");
       if (div) div.textContent = `💰 CDOGE: ${totalCDOGERecolectado}`;
     }
-    // ===============================
+    // ============================================================
     // FIN CONFIGURACIÓN DE MONEDAS CDOGE
-    // ===============================
+    // ============================================================
     
     let lastTime = 0;
     function updateGame(timestamp) {
@@ -689,7 +690,7 @@
       drawCoins();
       drawObstacles();
       
-      // Dibuja las monedas CDOGE y detecta colisiones con el doge
+      // Dibuja las monedas CDOGE y detecta colisiones con el personaje
       dibujarMonedasCDOGE();
       detectarColisionMonedas(doge);
     
