@@ -215,7 +215,6 @@
     /* ======================= */
     /* Estilos para MetaMask: Botón y Balance */
     /* ======================= */
-    /* Reubicar el botón en la esquina superior derecha */
     #conectarWalletBtn {
       position: fixed;
       top: 20px;
@@ -329,9 +328,21 @@
   <div id="scoreDisplay">🚀 x 0</div>
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
-  
-  <!-- Mostrar nombre del jugador en pantalla -->
   <div id="nombreJugador"></div>
+  
+  <!-- ======================= -->
+  <!-- CONTADOR CDOGE (NUEVO) -->
+  <!-- ======================= -->
+  <div id="contadorCDOGE" style="
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    color: #00ffcc;
+    font-family: Orbitron, sans-serif;
+    font-size: 18px;
+    z-index: 1000;">
+    💰 CDOGE: 0
+  </div>
   
   <!-- Pantalla de Inicio -->
   <div id="startScreen" style="display:none;">
@@ -392,7 +403,7 @@
   <!-- Lógica del Juego -->
   <!-- ======================= -->
   <script>
-    // Declara la variable esMovil para detectar si se está en móvil.
+    // Detectar si se está en móvil
     const esMovil = /Mobi|Android/i.test(navigator.userAgent);
     let gameLoop;
     let pausaPorCambioVentana = false;
@@ -474,6 +485,7 @@
     coinDisplay.textContent = "💰 x " + coins;
     highScoreDisplay.textContent = "🔝 Máx: " + highScore;
     
+    // Función para mostrar el nombre del jugador
     function mostrarNombreJugador(nombre) {
       nombreJugadorDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
     }
@@ -561,6 +573,103 @@
       else gravity = gravityLevels[0];
     }
     
+    // ===============================
+    // NUEVA CONFIGURACIÓN DE MONEDAS CDOGE
+    // ===============================
+    let monedasCDOGE = [];
+    let totalCDOGERecolectado = 0;
+    const valorPorMoneda = 50; // valor simbólico
+    
+    // === CARGA DE IMAGEN Y SONIDO === //
+    const imagenMoneda = new Image();
+    imagenMoneda.src = "moneda-cosmodoge.png"; // asegúrate que está en la misma carpeta
+    
+    const sonidoMoneda = new Audio("sonido-moneda-cdoge.mp3");
+    
+    // === UBICACIONES ESTRATÉGICAS === //
+    const ubicacionesDificiles = [
+      { x: 80, y: 100 },
+      { x: canvas.width - 120, y: 80 },
+      { x: canvas.width / 2, y: canvas.height / 3 },
+      { x: canvas.width - 80, y: canvas.height - 120 },
+      { x: 100, y: canvas.height - 150 }
+    ];
+    
+    // === GENERACIÓN CADA 15 MINUTOS === //
+    function generarMonedaCDOGE() {
+      if (monedasCDOGE.length >= 1) return;
+      const posicion = ubicacionesDificiles[Math.floor(Math.random() * ubicacionesDificiles.length)];
+      const nuevaMoneda = {
+        ...posicion,
+        width: 32,
+        height: 32,
+        recolectada: false
+      };
+      monedasCDOGE.push(nuevaMoneda);
+    }
+    setInterval(generarMonedaCDOGE, 900000); // cada 15 minutos
+    
+    // === DIBUJAR MONEDAS CDOGE === //
+    function dibujarMonedasCDOGE() {
+      monedasCDOGE.forEach(moneda => {
+        if (!moneda.recolectada) {
+          ctx.drawImage(imagenMoneda, moneda.x, moneda.y, moneda.width, moneda.height);
+        }
+      });
+    }
+    
+    // === DETECTAR COLISIÓN CON CDOGE === //
+    function detectarColisionMonedas(doge) {
+      monedasCDOGE.forEach(moneda => {
+        if (
+          !moneda.recolectada &&
+          doge.x < moneda.x + moneda.width &&
+          doge.x + doge.width > moneda.x &&
+          doge.y < moneda.y + moneda.height &&
+          doge.y + doge.height > moneda.y
+        ) {
+          moneda.recolectada = true;
+          totalCDOGERecolectado += valorPorMoneda;
+          sonidoMoneda.play();
+          mostrarMensajeTemporal(`+${valorPorMoneda} $CDOGE`, moneda.x, moneda.y);
+          actualizarContadorCDOGE();
+        }
+      });
+    }
+    
+    // === MOSTRAR MENSAJE TEMPORAL === //
+    function mostrarMensajeTemporal(texto, x, y) {
+      const mensaje = document.createElement("div");
+      mensaje.textContent = texto;
+      mensaje.style.position = "absolute";
+      mensaje.style.left = `${x}px`;
+      mensaje.style.top = `${y}px`;
+      mensaje.style.color = "#00ffcc";
+      mensaje.style.fontFamily = "Orbitron, sans-serif";
+      mensaje.style.fontSize = "18px";
+      mensaje.style.zIndex = "1000";
+      mensaje.style.transition = "all 1.5s ease";
+      document.body.appendChild(mensaje);
+    
+      setTimeout(() => {
+        mensaje.style.opacity = "0";
+        mensaje.style.transform = "translateY(-40px)";
+      }, 100);
+    
+      setTimeout(() => {
+        document.body.removeChild(mensaje);
+      }, 1600);
+    }
+    
+    // === CONTADOR VISUAL DE CDOGE === //
+    function actualizarContadorCDOGE() {
+      const div = document.getElementById("contadorCDOGE");
+      if (div) div.textContent = `💰 CDOGE: ${totalCDOGERecolectado}`;
+    }
+    // ===============================
+    // FIN CONFIGURACIÓN DE MONEDAS CDOGE
+    // ===============================
+    
     let lastTime = 0;
     function updateGame(timestamp) {
       if (isGameOver) return;
@@ -579,6 +688,10 @@
       drawDoge();
       drawCoins();
       drawObstacles();
+      
+      // Dibuja las monedas CDOGE y detecta colisiones con el doge
+      dibujarMonedasCDOGE();
+      detectarColisionMonedas(doge);
     
       timeElapsed += deltaTime;
       const seconds = timeElapsed / 1000;
@@ -701,29 +814,6 @@
     closeRankingBtn.addEventListener("click", () => {
       rankingPanel.style.display = "none";
     });
-    
-    function guardarJugadorAutomatic(username, puntaje, monedas) {
-      const data = {
-        nombre: String(username),
-        puntaje: Number(puntaje),
-        monedas: Number(monedas),
-        fecha: serverTimestamp()
-      };
-      console.log("Actualizando documento para:", data);
-      return addDoc(collection(db, "jugadores"), data)
-        .then(() => {
-          console.log("Documento guardado correctamente para:", username);
-        })
-        .catch(error => {
-          console.error("Error al guardar documento:", error);
-          throw error;
-        });
-    }
-    
-    function mostrarNombreJugador(nombre) {
-      const nombreDiv = document.getElementById("nombreJugador");
-      nombreDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
-    }
     
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
