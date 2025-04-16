@@ -84,7 +84,7 @@
     }
     
     /* ======================= */
-    /* Panel del menú principal: Solo botón de Tienda (ubicado justo debajo de Conectar Wallet) */
+    /* Panel del menú principal: Solo el botón de Tienda (ubicado justo debajo de Conectar Wallet) */
     /* ======================= */
     #menuPrincipal {
       position: fixed;
@@ -432,11 +432,11 @@
   <!-- Lógica del Juego y Funciones Adicionales -->
   <!-- ======================= -->
   <script>
-    // Variables para el imán y aura
+    // VARIABLES PARA IMÁN Y AURA
     let imanActivo = false;
     let auraAzul = false;
     
-    // Función para activar el imán
+    // FUNCION PARA ACTIVAR EL IMÁN
     function activarIman() {
       imanActivo = true;
       auraAzul = true;
@@ -450,7 +450,7 @@
       }, 3600000);
     }
     
-    // Función de efecto visual: dibuja un aura azul alrededor del doge
+    // EFECTO VISUAL: DIBUJAR AURA
     function dibujarAura(doge) {
       if (auraAzul) {
         ctx.beginPath();
@@ -554,7 +554,6 @@
     
     function drawDoge() {
       ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
-      // Llamamos a dibujar el aura justo después de dibujar al doge
       dibujarAura(doge);
     }
     
@@ -707,7 +706,7 @@
       });
     }
     
-    // Muestra un mensaje temporal al recolectar la moneda o al activar/desactivar el imán
+    // Muestra un mensaje temporal (para monedas y activación del imán)
     function mostrarMensajeTemporal(texto, x, y) {
       const mensaje = document.createElement("div");
       mensaje.textContent = texto;
@@ -720,12 +719,12 @@
       mensaje.style.zIndex = "1000";
       mensaje.style.transition = "all 1.5s ease";
       document.body.appendChild(mensaje);
-    
+      
       setTimeout(() => {
         mensaje.style.opacity = "0";
         mensaje.style.transform = "translateY(-40px)";
       }, 100);
-    
+      
       setTimeout(() => {
         document.body.removeChild(mensaje);
       }, 1600);
@@ -746,7 +745,7 @@
       if (!lastTime) lastTime = timestamp;
       const deltaTime = timestamp - lastTime;
       lastTime = timestamp;
-    
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
       doge.velocity += gravity * (deltaTime / 16);
@@ -758,11 +757,11 @@
       drawDoge();
       drawCoins();
       drawObstacles();
-    
+      
       // Dibuja y gestiona colisiones de monedas CDOGE
       dibujarMonedasCDOGE();
       detectarColisionMonedas(doge);
-    
+      
       timeElapsed += deltaTime;
       const seconds = timeElapsed / 1000;
       if (seconds - lastScoreTime >= 5) {
@@ -794,14 +793,14 @@
       }
       music.pause();
       music.currentTime = 0;
-    
+      
       const gameOverScreenElem = document.getElementById("gameOverScreen");
       gameOverScreenElem.classList.add("show");
-    
+      
       setTimeout(() => {
         document.getElementById("reiniciarBtn").style.display = "block";
       }, 1500);
-    
+      
       if (score > highScore) {
         localStorage.setItem("cdogeFloatHighScore", score);
         highScore = score;
@@ -950,22 +949,47 @@
     }
     
     // =====================================================
-    // Lógica del botón para comprar el imán
+    // FUNCIONES PARA COMPRAR EL IMÁN CON $CDOGE REALES
     // =====================================================
-    document.getElementById("comprarIman").addEventListener("click", () => {
-      const costoIman = 5000;
-      // Primero, se verifica si en la wallet hay suficiente saldo (si ya se conectó la wallet)
-      if (window.walletCDOGE && window.walletCDOGE >= costoIman) {
-        window.walletCDOGE -= costoIman;
+    async function comprarImanConCDOGE() {
+      const tokenAddress = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A"; // contrato oficial $CDOGE
+      const walletDelJuego = "0x1980dCdDA07071970dEAa69c975F590976Ee667D"; // tu wallet receptora
+      const tokenABI = [
+        "function transfer(address to, uint256 amount) public returns (bool)",
+        "function decimals() public view returns (uint8)"
+      ];
+    
+      try {
+        if (!window.ethereum) {
+          alert("❌ Necesitas MetaMask para comprar.");
+          return;
+        }
+    
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const token = new ethers.Contract(tokenAddress, tokenABI, signer);
+    
+        const decimals = await token.decimals();
+        const amount = ethers.utils.parseUnits("5000", decimals);
+    
+        const confirmacion = confirm("¿Quieres comprar el 🧲 Imán Espacial por 5,000 $CDOGE reales?");
+        if (!confirmacion) return;
+    
+        const tx = await token.transfer(walletDelJuego, amount);
+        mostrarMensajeTemporal("⏳ Esperando confirmación de compra...", canvas.width / 2, 120);
+        await tx.wait();
+    
+        // Activar imán
         activarIman();
-      } else if (totalCDOGERecolectado >= costoIman) {
-        totalCDOGERecolectado -= costoIman;
-        actualizarContadorCDOGE();
-        activarIman();
-      } else {
-        alert("❌ No tienes suficientes $CDOGE para comprar el imán.");
+        alert("✅ ¡Imán activado! Gracias por tu compra.");
+      } catch (err) {
+        console.error("❌ Error al comprar el imán:", err);
+        alert("❌ La compra falló o fue cancelada.");
       }
-    });
+    }
+    
+    // Conecta la función comprarImanConCDOGE al botón del imán en la tienda
+    document.getElementById("comprarIman").addEventListener("click", comprarImanConCDOGE);
   </script>
 </body>
 </html>
