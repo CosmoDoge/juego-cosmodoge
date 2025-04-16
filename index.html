@@ -549,6 +549,9 @@
     music.loop = true;
     music.volume = 0.3;
     
+    // Declaramos 'lastTime' solo una vez a nivel global
+    let lastTime = 0;
+    
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     if (esMovil) {
@@ -581,7 +584,7 @@
     let score = 0;
     let coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
     let highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
-    // Recuperar las monedas $CDOGE recolectadas permanentemente
+    // Recuperar permanentemente las monedas $CDOGE recolectadas
     let totalCDOGERecolectado = parseInt(localStorage.getItem("cdogeRecolectados") || "0");
     let gameStarted = false;
     let isGameOver = false;
@@ -751,7 +754,7 @@
         const dy = doge.y - moneda.y;
         const distancia = Math.sqrt(dx * dx + dy * dy);
         
-        // Si el imán está activo y la moneda se encuentra a menos de 150px, aplicar atracción
+        // Si el imán está activo y la moneda está a menos de 150px, aplicar atracción
         if (imanActivo && distancia < 150) {
           const atraccionX = (doge.x - moneda.x) * 0.05;
           const atraccionY = (doge.y - moneda.y) * 0.05;
@@ -781,7 +784,6 @@
     // FIN CONFIGURACIÓN DE MONEDAS $CDOGE
     // ============================================================
     
-    let lastTime = 0;
     function updateGame(timestamp) {
       if (isGameOver) return;
       if (!lastTime) lastTime = timestamp;
@@ -799,7 +801,6 @@
       drawDoge();
       drawCoins();
       drawObstacles();
-      dibujarAura(doge);
       // Dibuja y gestiona colisiones de monedas CDOGE
       dibujarMonedasCDOGE();
       detectarColisionMonedas(doge);
@@ -1026,210 +1027,6 @@
     // Conecta la función comprarImanConCDOGE al botón del imán en la tienda
     document.getElementById("comprarIman").addEventListener("click", comprarImanConCDOGE);
     
-    // =====================================================
-    // Lógica del Juego
-    // =====================================================
-    let lastTime = 0;
-    function updateGame(timestamp) {
-      if (isGameOver) return;
-      if (!lastTime) lastTime = timestamp;
-      const deltaTime = timestamp - lastTime;
-      lastTime = timestamp;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground();
-      doge.velocity += gravity * (deltaTime / 16);
-      doge.y += doge.velocity * (deltaTime / 16);
-      if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
-        gameOver();
-        return;
-      }
-      drawDoge();
-      drawCoins();
-      drawObstacles();
-      dibujarAura(doge);
-      // Dibuja y gestiona colisiones de monedas CDOGE
-      dibujarMonedasCDOGE();
-      detectarColisionMonedas(doge);
-      
-      timeElapsed += deltaTime;
-      const seconds = timeElapsed / 1000;
-      if (seconds - lastScoreTime >= 5) {
-        score++;
-        lastScoreTime = seconds;
-        scoreDisplay.textContent = "🚀 x " + score;
-      }
-      if (seconds - lastFondoChange >= 30) {
-        fondoIndex = (fondoIndex + 1) % fondos.length;
-        fondo.src = fondos[fondoIndex];
-        lastFondoChange = seconds;
-      }
-      if (Math.floor(timeElapsed / 16) % 150 === 0) spawnCoinGroup();
-      const now = Date.now();
-      const spawnInterval = (timeElapsed / 16) >= 3600 ? 1000 : ((timeElapsed / 16) >= 1800 ? 2000 : 3000);
-      if (now - lastObstacleSpawn >= spawnInterval) {
-        spawnObstacle();
-        lastObstacleSpawn = now;
-      }
-      gameLoop = requestAnimationFrame(updateGame);
-    }
-    
-    function gameOver() {
-      isGameOver = true;
-      if (finalScoreElem) {
-        finalScoreElem.textContent = score;
-      } else {
-        console.warn("⚠️ Elemento finalScore no encontrado.");
-      }
-      music.pause();
-      music.currentTime = 0;
-      
-      const gameOverScreenElem = document.getElementById("gameOverScreen");
-      gameOverScreenElem.classList.add("show");
-      
-      setTimeout(() => {
-        document.getElementById("reiniciarBtn").style.display = "block";
-      }, 1500);
-      
-      if (score > highScore) {
-        localStorage.setItem("cdogeFloatHighScore", score);
-        highScore = score;
-        highScoreDisplay.textContent = "🔝 Máx: " + highScore;
-        newRecordMessage.style.display = "flex";
-        playSound(sndRecord);
-        const username = localStorage.getItem("cosmodogeliveUserName");
-        if (username) {
-          guardarJugadorAutomatic(username, score, coins);
-          playerNameForm.style.display = "none";
-          mostrarNombreJugador(username);
-        } else {
-          playerNameForm.style.display = "flex";
-        }
-      } else {
-        playSound(sndBoom);
-        playerNameForm.style.display = "none";
-      }
-    }
-    
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" && gameStarted && !isGameOver) {
-        doge.velocity = jump;
-        sndJump.currentTime = 0;
-        playSound(sndJump);
-      }
-    });
-    if (esMovil) {
-      document.addEventListener("touchstart", () => {
-        if (!gameStarted || isGameOver) return;
-        doge.velocity = jump;
-        sndJump.currentTime = 0;
-        playSound(sndJump);
-      });
-    }
-    
-    // Función que oculta el menú y la tienda para iniciar el juego
-    function iniciarJuegoLimpio() {
-      document.getElementById("menuPrincipal").style.display = "none";
-      document.getElementById("tiendaCDOGE").style.display = "none";
-      startGame();
-    }
-    
-    // Función para iniciar el juego (se usa desde la pantalla inicial)
-    function startGame() {
-      document.getElementById("startScreen").style.display = "none";
-      document.getElementById("pantallaCarga").style.display = "none";
-      gameStarted = true;
-      music.play();
-      gameLoop = requestAnimationFrame(updateGame);
-    }
-    
-    // Asignamos la función iniciarJuegoLimpio al botón de la pantalla inicial
-    document.getElementById("startButton").onclick = iniciarJuegoLimpio;
-    
-    document.getElementById("saveScoreButton").addEventListener("click", () => {
-      const nombre = document.getElementById("playerName").value.trim();
-      console.log("Intentando registrar el jugador:", nombre);
-      if (nombre) {
-        localStorage.setItem("cosmodogeliveUserName", nombre);
-        guardarJugadorAutomatic(nombre, score, coins)
-          .then(() => {
-            console.log("Registro guardado correctamente.");
-            playerNameForm.style.display = "none";
-            mostrarTopRanking();
-            mostrarNombreJugador(nombre);
-          })
-          .catch((err) => {
-            console.error("Error al registrar jugador:", err);
-          });
-      } else {
-        alert("Por favor, ingresa tu nombre galáctico.");
-      }
-    });
-    
-    document.getElementById("reiniciarBtn").addEventListener("click", () => {
-      location.reload();
-    });
-    
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        if (gameLoop) cancelAnimationFrame(gameLoop);
-        document.getElementById("reanudarBtn").style.display = "block";
-        pausaPorCambioVentana = true;
-      }
-    });
-    document.getElementById("reanudarBtn").addEventListener("click", () => {
-      document.getElementById("reanudarBtn").style.display = "none";
-      if (pausaPorCambioVentana) {
-        gameLoop = requestAnimationFrame(updateGame);
-        pausaPorCambioVentana = false;
-      }
-    });
-    
-    // MetaMask: Conectar wallet y mostrar balance de $CDOGE
-    const botonWallet = document.getElementById("conectarWalletBtn");
-    const balanceDiv = document.getElementById("balanceCDOGE");
-    const tokenAddressGlobal = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A";
-    const tokenABI_Global = [
-      "function balanceOf(address account) view returns (uint256)",
-      "function decimals() view returns (uint8)"
-    ];
-    
-    botonWallet.addEventListener("click", async () => {
-      if (typeof window.ethereum === "undefined") {
-        alert("🦊 Por favor, instala MetaMask para conectar tu wallet.");
-        return;
-      }
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const account = accounts[0];
-        botonWallet.textContent = `🧑‍🚀 Wallet: ${account.slice(0, 6)}...${account.slice(-4)}`;
-    
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contrato = new ethers.Contract(tokenAddressGlobal, tokenABI_Global, provider);
-    
-        const balance = await contrato.balanceOf(account);
-        const decimales = await contrato.decimals();
-        const formatted = Number(balance / 10 ** decimales).toLocaleString();
-        // Almacena el balance en una variable global para usar en la compra
-        window.walletCDOGE = Number(balance / 10 ** decimales);
-    
-        balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${formatted}</strong> $CDOGE listos para despegar!`;
-        balanceDiv.style.display = "block";
-      } catch (error) {
-        console.error("Error al conectar:", error);
-        alert("❌ Ocurrió un error al conectar tu wallet.");
-      }
-    });
-    
-    // Al cargar el DOM, se actualiza el estado del imán y se muestra la pantalla de inicio
-    window.addEventListener("DOMContentLoaded", () => {
-      actualizarEstadoIman();
-      setTimeout(() => {
-        const pantallaCarga = document.getElementById("pantallaCarga");
-        if (pantallaCarga) pantallaCarga.style.display = "none";
-      }, 3000);
-      document.getElementById("startScreen").style.display = "flex";
-    });
   </script>
 </body>
 </html>
