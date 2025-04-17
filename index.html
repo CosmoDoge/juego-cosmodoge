@@ -2,17 +2,264 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <!-- Vista adaptable para móviles -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CosmoDoge Flotante 🚀</title>
-
-  <!-- ethers.js -->
+  
+  <!-- Cargar ethers.js (versión UMD 5.7.2) para navegadores -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-  <!-- Firebase -->
+  
+  <style>
+    /* ======================= */
+    /* Estilos generales y optimización móvil */
+    /* ======================= */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    body {
+      background: black;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+      max-width: 100vw;
+      max-height: 100vh;
+      margin: auto;
+    }
+    /* Contadores en la esquina superior izquierda */
+    #scoreDisplay, #coinDisplay, #highScoreDisplay {
+      position: absolute;
+      color: white;
+      font-size: 18px;
+      text-shadow: 2px 2px 5px #000;
+    }
+    #scoreDisplay { top: 10px; left: 10px; }
+    #coinDisplay { top: 40px; left: 10px; }
+    #highScoreDisplay { top: 70px; left: 10px; }
+    
+    /* Contador de $CDOGE debajo del "Máx" */
+    #contadorCDOGE {
+      position: absolute;
+      top: 100px;
+      left: 10px;
+      color: #00ffcc;
+      font-family: Orbitron, sans-serif;
+      font-size: 18px;
+      z-index: 1000;
+    }
+    
+    /* Nombre del jugador en la parte superior central */
+    #nombreJugador {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: #00ffff;
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 1px 1px 3px black;
+      z-index: 10;
+    }
+    
+    /* ======================= */
+    /* Botón de Conectar Wallet (esquina superior derecha) */
+    /* ======================= */
+    #conectarWalletBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      background: #00ffff;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+    }
+    
+    /* ======================= */
+    /* Panel del menú principal: Solo el botón de Tienda (ubicado justo debajo de Conectar Wallet) */
+    /* ======================= */
+    #menuPrincipal {
+      position: fixed;
+      top: 70px; /* Ubicado justo debajo de Conectar Wallet */
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10000;
+      font-family: Orbitron, sans-serif;
+    }
+    
+    /* ======================= */
+    /* Panel de la tienda (abajo a la izquierda, oculto por defecto) */
+    /* ======================= */
+    #tiendaCDOGE {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ffff;
+      border-radius: 15px;
+      padding: 15px;
+      z-index: 1000;
+      font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
+      width: 320px;
+      box-shadow: 0 0 15px #00ffff;
+      display: none;
+      backdrop-filter: blur(5px);
+    }
+    
+    /* ======================= */
+    /* Pantallas superpuestas: Inicio, Game Over, Nuevo Récord */
+    /* ======================= */
+    #startScreen, #newRecordMessage {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 10;
+    }
+    #startScreen h1, #newRecordMessage h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      padding: 1rem 2rem;
+      background-color: #00ffff;
+      border: none;
+      border-radius: 10px;
+      color: black;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover { background-color: #00e7f5; }
+    
+    /* ======================= */
+    /* Pantalla de Game Over con animación */
+    /* ======================= */
+    #gameOverScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9998;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+    #gameOverScreen.show {
+      display: flex;
+      opacity: 1;
+    }
+    #reiniciarBtn {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: #00ffff;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.3s;
+      display: none;
+    }
+    #reiniciarBtn:hover { background: #00e7f5; }
+    
+    /* ======================= */
+    /* Formulario de Registro */
+    /* ======================= */
+    #playerNameForm {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      position: relative;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    
+    /* ======================= */
+    /* Pantalla de carga Preloader */
+    /* ======================= */
+    #pantallaCarga {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid #ffffff22;
+      border-top: 6px solid #00ffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* ======================= */
+    /* Estilos para el Balance de MetaMask */
+    /* ======================= */
+    #balanceCDOGE {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.7);
+      color: #00ffcc;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      display: none;
+      max-width: 250px;
+      text-shadow: 1px 1px 3px black;
+    }
+  </style>
+  
+  <!-- ======================= -->
+  <!-- Firebase y Funciones de Firestore -->
+  <!-- ======================= -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
+  
     const firebaseConfig = {
       apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
       authDomain: "cosmodogelive.firebaseapp.com",
@@ -21,23 +268,28 @@
       messagingSenderId: "648227069914",
       appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
     };
-
+  
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
-    window.guardarJugadorAutomatic = async function(username, puntaje, monedas) {
+  
+    // Función para guardar el registro del jugador usando addDoc y serverTimestamp()
+    async function guardarJugadorAutomatic(username, puntaje, monedas) {
+      const data = {
+        nombre: String(username),
+        puntaje: Number(puntaje),
+        monedas: Number(monedas),
+        fecha: serverTimestamp()
+      };
+      console.log("Datos a enviar a Firestore:", data);
       try {
-        await addDoc(collection(db, "jugadores"), {
-          nombre: String(username),
-          puntaje: Number(puntaje),
-          monedas: Number(monedas),
-          fecha: serverTimestamp()
-        });
+        await addDoc(collection(db, "jugadores"), data);
+        console.log("✅ Documento guardado correctamente para:", username);
       } catch (error) {
-        console.error("❌ Error guardando jugador:", error);
+        console.error("❌ Error al guardar documento:", error);
       }
-    };
-
+    }
+  
+    // Función para mostrar el Top 5 del ranking (se mantiene el mismo)
     window.mostrarTopRanking = async function() {
       const lista = document.getElementById("topRanking");
       try {
@@ -51,227 +303,174 @@
         html += "</ul>";
         lista.innerHTML = html;
       } catch (error) {
-        console.error("❌ Error cargando ranking:", error);
-        lista.innerHTML = "<p style='color:red;'>Error cargando ranking.</p>";
+        lista.innerHTML = "<p style='color:red;'>No se pudo cargar el ranking. Intenta más tarde.</p>";
+        console.error("❌ Error al cargar el ranking:", error);
       }
     };
+  
+    window.guardarJugadorAutomatic = guardarJugadorAutomatic;
   </script>
-
-  <!-- Estilos -->
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      overflow: hidden;
-      width: 100%;
-      height: 100%;
-      touch-action: none;
-      background: black;
-      font-family: 'Orbitron', Arial, sans-serif;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-      max-width: 100vw;
-      max-height: 100vh;
-    }
-    #scoreDisplay, #coinDisplay, #highScoreDisplay, #contadorCDOGE {
-      position: absolute;
-      left: 10px;
-      color: white;
-      font-size: 18px;
-      text-shadow: 2px 2px 5px #000;
-    }
-    #scoreDisplay { top: 10px; }
-    #coinDisplay { top: 40px; }
-    #highScoreDisplay { top: 70px; }
-    #contadorCDOGE { top: 100px; color: #00ffcc; }
-    #nombreJugador {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 18px;
-      color: #00ffff;
-      z-index: 10;
-    }
-    #conectarWalletBtn, #reanudarBtn, #menuPrincipal button, .btn {
+</head>
+<body>
+  <!-- ======================= -->
+  <!-- Pantalla de carga Preloader -->
+  <!-- ======================= -->
+  <div id="pantallaCarga">
+    <div class="spinner"></div>
+    <p style="color: white; font-size: 20px; font-family: 'Orbitron', sans-serif; margin-top: 20px; text-align: center;">
+      Iniciando viaje intergaláctico...
+    </p>
+  </div>
+  
+  <!-- ======================= -->
+  <!-- Botón para Conectar Wallet y Balance -->
+  <!-- ======================= -->
+  <button id="conectarWalletBtn">🔗 Conectar Wallet</button>
+  <div id="balanceCDOGE"></div>
+  
+  <!-- ======================= -->
+  <!-- Menú Principal: Solo botón de Tienda (arriba a la derecha, justo debajo de Conectar Wallet) -->
+  <!-- ======================= -->
+  <div id="menuPrincipal">
+    <button onclick="toggleTienda()" style="
       background: #00ffff;
       color: black;
       border: none;
       border-radius: 12px;
       padding: 10px 20px;
       font-size: 16px;
-      font-family: 'Orbitron', sans-serif;
       cursor: pointer;
-      z-index: 10000;
-      transition: background-color 0.3s ease;
-    }
-    .btn:hover, #conectarWalletBtn:hover, #menuPrincipal button:hover {
-      background-color: #00e7f5;
-    }
-    #conectarWalletBtn { position: fixed; top: 20px; right: 20px; }
-    #reanudarBtn { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-    #menuPrincipal { position: fixed; top: 70px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
-    #tiendaCDOGE {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: rgba(0,0,0,0.85);
-      border: 2px solid #00ffff;
-      border-radius: 15px;
-      padding: 15px;
-      display: none;
-      width: 300px;
-      color: white;
-    }
-    #contadorIman {
-      position: fixed;
-      bottom: 10px;
-      right: 20px;
-      background: rgba(0,0,0,0.7);
-      padding: 8px 12px;
-      border-radius: 10px;
-      display: none;
-      font-size: 16px;
-      color: #00ffff;
-      z-index: 1000;
-    }
-    #pantallaCarga {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: black;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      z-index: 9999;
-    }
-    .spinner {
-      width: 60px; height: 60px;
-      border: 6px solid #ffffff22;
-      border-top: 6px solid #00ffff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    #gameOverScreen {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      text-align: center;
-      opacity: 0;
-      transition: opacity 1s;
-      z-index: 9998;
-    }
-    #gameOverScreen.show { display: flex; opacity: 1; }
-    #balanceCDOGE {
-      position: fixed;
-      top: 120px;
-      right: 20px;
-      background: rgba(0,0,0,0.7);
-      padding: 10px;
-      color: #00ffcc;
-      font-size: 16px;
-      border-radius: 10px;
-      display: none;
-      z-index: 10000;
-    }
-  </style>
-</head>
-<body>
-  <div id="pantallaCarga">
-    <div class="spinner"></div>
-    <p style="color: white; font-size: 20px; margin-top: 20px;">Iniciando viaje intergaláctico...</p>
+    ">🛒 Tienda</button>
   </div>
-
+  
+  <!-- ======================= -->
+  <!-- Panel de la Tienda (abajo a la izquierda, oculto por defecto) -->
+  <!-- ======================= -->
+  <div id="tiendaCDOGE">
+    <h3 style="margin-bottom: 10px; color: #00ffff; font-size: 22px;">🛒 Tienda CosmoDoge</h3>
+    <!-- Producto: Imán Espacial -->
+    <div style="margin-bottom: 15px; padding: 10px; background: #111111; border-radius: 10px; border: 1px solid #00ffcc;">
+      <p style="margin: 0; font-size: 16px; color: #00ffcc;">🧲 Imán Espacial</p>
+      <p style="margin: 5px 0 10px; font-size: 14px; color: #bbbbbb;">Atrae monedas durante 1 hora automáticamente.</p>
+      <button id="comprarIman" style="
+        background: #00ffcc;
+        color: black;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 15px;
+        cursor: pointer;
+        width: 100%;
+      ">Comprar por 5,000 $CDOGE</button>
+    </div>
+  </div>
+  
+  <!-- ======================= -->
+  <!-- Interfaz del Juego -->
+  <!-- ======================= -->
   <canvas id="gameCanvas" width="480" height="640"></canvas>
-
   <div id="scoreDisplay">🚀 x 0</div>
   <div id="coinDisplay">💰 x 0</div>
   <div id="highScoreDisplay">🔝 Máx: 0</div>
-  <div id="contadorCDOGE">💰 CDOGE: 0</div>
+  
+  <!-- Nombre del jugador (parte superior central) -->
   <div id="nombreJugador"></div>
-
-  <button id="conectarWalletBtn">🔗 Conectar Wallet</button>
-  <div id="balanceCDOGE"></div>
-
-  <div id="menuPrincipal">
-    <button onclick="toggleTienda()">🛒 Tienda</button>
-  </div>
-
-  <div id="tiendaCDOGE">
-    <h3 style="margin-bottom: 10px; color: #00ffff;">🛒 Tienda CosmoDoge</h3>
-    <div style="margin-bottom: 15px; padding: 10px; background: #111; border-radius: 10px; border: 1px solid #00ffcc;">
-      <p style="margin: 0;">🧲 Imán Espacial</p>
-      <p style="font-size: 14px; color: #bbb;">Atrae monedas durante 1 hora automáticamente.</p>
-      <button id="comprarIman" class="btn" style="margin-top: 5px;">Comprar por 5,000 $CDOGE</button>
-    </div>
-  </div>
-
-  <div id="contadorIman">🧲 Imán activo: 60:00</div>
-
+  
+  <!-- Contador de $CDOGE (debajo de "Máx") -->
+  <div id="contadorCDOGE">💰 CDOGE: 0</div>
+  
+  <!-- Pantalla de Inicio (se muestra hasta que se inicie el juego) -->
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
-    <button class="btn" id="startButton">¡Comenzar!</button>
+    <button class="btn" id="startButton" onclick="iniciarJuegoLimpio()">¡Comenzar!</button>
   </div>
-
+  
+  <!-- Pantalla de Game Over -->
   <div id="gameOverScreen">
     <h1>🚨 GAME OVER 🚨</h1>
     <p>Puntaje: <span id="finalScore">0</span></p>
-    <button class="btn" id="reiniciarBtn" style="margin-top: 20px;">Reiniciar</button>
+    <button id="reiniciarBtn">Reiniciar</button>
   </div>
-
+  
+  <!-- Mensaje de Nuevo Récord (opcional) -->
   <div id="newRecordMessage" style="display:none;">
     <h1>🌟 ¡Nuevo récord galáctico!</h1>
     <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
   </div>
-
-  <div id="playerNameForm" style="display:none; margin-top: 20px;">
-    <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; margin-bottom: 10px;">
+  
+  <!-- Formulario para registrar puntaje -->
+  <div id="playerNameForm">
+    <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
     <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
   </div>
-
-  <div id="rankingPanel" style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); text-align: center;">
+  
+  <!-- Panel de Ranking (se mantiene el existente) -->
+  <div id="rankingPanel">
     <div id="topRanking"></div>
     <button class="btn" id="closeRankingBtn" onclick="this.parentNode.style.display='none'">Cerrar</button>
   </div>
-
-  <button id="reanudarBtn">Reanudar Juego</button>
+  
+  <!-- Botón para reanudar el juego (auto-pausa) -->
+  <button id="reanudarBtn" style="
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 30px;
+    font-size: 20px;
+    background: #00ffff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Orbitron', sans-serif;
+    z-index: 10000;
+    cursor: pointer;">
+    Reanudar Juego
+  </button>
+  
+  <!-- ======================= -->
+  <!-- Lógica del Juego y Funciones Adicionales -->
+  <!-- ======================= -->
   <script>
-    // ====================
-    // VARIABLES DEL JUEGO
-    // ====================
-    let canvas = document.getElementById('gameCanvas');
-    let ctx = canvas.getContext('2d');
+    // VARIABLES PARA IMÁN Y AURA
+    let imanActivo = false;
+    let auraAzul = false;
+    
+    // FUNCION PARA ACTIVAR EL IMÁN
+    function activarIman() {
+      imanActivo = true;
+      auraAzul = true;
+      mostrarMensajeTemporal("🧲 Imán activado por 1 hora", canvas.width / 2, 100);
+      
+      // Desactivar tras 1 hora (3600000 ms)
+      setTimeout(() => {
+        imanActivo = false;
+        auraAzul = false;
+        mostrarMensajeTemporal("⏱️ El imán ha expirado", canvas.width / 2, 100);
+      }, 3600000);
+    }
+    
+    // EFECTO VISUAL: DIBUJAR AURA
+    function dibujarAura(doge) {
+      if (auraAzul) {
+        ctx.beginPath();
+        ctx.arc(doge.x + doge.width / 2, doge.y + doge.height / 2, doge.width * 0.8, 0, Math.PI * 2);
+        ctx.strokeStyle = '#00ffff88';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+    }
+    
+    // Detectar si se está en móvil
+    const esMovil = /Mobi|Android/i.test(navigator.userAgent);
     let gameLoop;
-    let doge, fondo, fondos, fondoIndex, coinsArray = [], specialObstacles = [], monedasCDOGE = [];
-    let score = 0, coins = 0, totalCDOGERecolectado = 0, highScore = 0, gameStarted = false, isGameOver = false;
-    let gravedad = 0.5, saltar = -10, timeElapsed = 0, lastScoreTime = 0, lastFondoChange = 0;
-    let imanActivo = false, auraAzul = false, intervaloIman;
-    let esMovil = /Mobi|Android/i.test(navigator.userAgent);
+    let pausaPorCambioVentana = false;
     
-    // ====================
-    // CARGA DE ASSETS
-    // ====================
-    const dogeImg = new Image(); dogeImg.src = "cosmodoge-cohete-juego.png";
-    const coinImg = new Image(); coinImg.src = "coin-cosmodoge.png";
-    const monedaCdogeImg = new Image(); monedaCdogeImg.src = "moneda-cosmodoge.png";
-    fondos = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
-    fondoIndex = 0; fondo = new Image(); fondo.src = fondos[fondoIndex];
+    function playSound(audioElement) {
+      audioElement.currentTime = 0;
+      audioElement.play().catch(error => console.error("Error al reproducir sonido:", error));
+    }
     
-    // ====================
-    // SONIDOS
-    // ====================
     const sndJump = new Audio("jump.mp3");
     const sndCoin = new Audio("coin.mp3");
     const sndBoom = new Audio("boom.mp3");
@@ -280,320 +479,517 @@
     music.loop = true;
     music.volume = 0.3;
     
-    // ====================
-    // FUNCIONES PRINCIPALES
-    // ====================
-    function inicializarJuego() {
-      doge = { x: 80, y: 200, width: 50, height: 50, velocity: 0, img: dogeImg };
-      coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
-      totalCDOGERecolectado = parseInt(localStorage.getItem("cdogeRecolectados")) || 0;
-      highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
-      actualizarContadores();
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    if (esMovil) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
     
-    function actualizarContadores() {
-      document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
-      document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
-      document.getElementById('contadorCDOGE').textContent = `💰 CDOGE: ${totalCDOGERecolectado}`;
-    }
-   // ====================
-// ESTADO DEL IMÁN
-// ====================
-function actualizarEstadoIman() {
-  clearInterval(intervaloIman);
-  const expiracion = parseInt(localStorage.getItem("imanExpiraEn") || 0);
-  const restante = expiracion - Date.now();
-  if (restante > 0) {
-    imanActivo = true; auraAzul = true;
-    iniciarContadorIman(restante);
-  } else {
-    imanActivo = false; auraAzul = false;
-    document.getElementById('contadorIman').style.display = "none";
-    localStorage.removeItem("imanExpiraEn");
-  }
-}
-
-function iniciarContadorIman(tiempo) {
-  const div = document.getElementById("contadorIman");
-  div.style.display = "block";
-  intervaloIman = setInterval(() => {
-    const expiracion = parseInt(localStorage.getItem("imanExpiraEn") || 0);
-    const restante = expiracion - Date.now();
-    if (restante <= 0) {
-      clearInterval(intervaloIman);
-      div.style.display = "none";
-      imanActivo = false; auraAzul = false;
-      localStorage.removeItem("imanExpiraEn");
-    } else {
-      const minutos = Math.floor(restante / 60000);
-      const segundos = Math.floor((restante % 60000) / 1000);
-      div.textContent = `🧲 Imán activo: ${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
-    }
-  }, 1000);
-}
-
-// ====================
-// MOTOR DEL JUEGO
-// ====================
-function updateGame() {
-  if (isGameOver) return;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
-
-  // Movimiento Doge
-  doge.velocity += gravedad;
-  doge.y += doge.velocity;
-  if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
-    finalizarJuego();
-    return;
-  }
-
-  // Dibujar Doge
-  ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
-  if (auraAzul) dibujarAura(doge);
-
-  // Dibujar monedas normales y monedas CDOGE
-  dibujarCoins();
-  dibujarMonedasCDOGE();
-  detectarColisionMonedas();
-
-  // Obstáculos especiales
-  dibujarObstaculos();
-
-  // Score y cambios de fondo
-  timeElapsed += 16;
-  if (timeElapsed - lastScoreTime >= 5000) {
-    score++;
-    lastScoreTime = timeElapsed;
-    document.getElementById('scoreDisplay').textContent = `🚀 x ${score}`;
-  }
-
-  if (timeElapsed - lastFondoChange >= 30000) {
-    fondoIndex = (fondoIndex + 1) % fondos.length;
+    const fondos = [
+      "fondo-cosmodoge-v2.png",
+      "fondo-cosmodoge-v3.png",
+      "fondo-cosmodoge-v4.png"
+    ];
+    let fondoIndex = 0;
+    const fondo = new Image();
     fondo.src = fondos[fondoIndex];
-    lastFondoChange = timeElapsed;
-  }
-
-  gameLoop = requestAnimationFrame(updateGame);
-}
-
-function dibujarAura(doge) {
-  ctx.beginPath();
-  ctx.arc(doge.x + doge.width/2, doge.y + doge.height/2, doge.width * 1.5, 0, Math.PI * 2);
-  ctx.strokeStyle = '#00ffff88';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-}
-
-function dibujarCoins() {
-  coinsArray.forEach((coin, index) => {
-    coin.x -= 2;
-    ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
-    if (checkCollision(doge, coin)) {
-      coins++;
-      localStorage.setItem("cdogeCoins", coins);
-      document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
-      sndCoin.play().catch(()=>{});
-      coinsArray.splice(index, 1);
+    
+    const doge = {
+      x: 80,
+      y: 200,
+      width: 50,
+      height: 50,
+      velocity: 0,
+      img: new Image()
+    };
+    doge.img.src = "cosmodoge-cohete-juego.png";
+    
+    let gravity = 0.5;
+    const gravityLevels = [0.5, 0.6, 0.8, 1.0];
+    const jump = -10;
+    let score = 0;
+    let coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
+    let highScore = parseInt(localStorage.getItem("cdogeFloatHighScore")) || 0;
+    let gameStarted = false;
+    let isGameOver = false;
+    let timeElapsed = 0;
+    let lastScoreTime = 0;
+    let lastFondoChange = 0;
+    
+    const coinImg = new Image();
+    coinImg.src = "coin-cosmodoge.png";
+    let coinsArray = [];
+    
+    const obstacleImgs = [
+      "obstaculo-estelar.png",
+      "obstaculo-explosion.png",
+      "obstaculo-explosion-aire.png"
+    ];
+    let specialObstacles = [];
+    let lastObstacleSpawn = Date.now();
+    
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const coinDisplay = document.getElementById("coinDisplay");
+    const highScoreDisplay = document.getElementById("highScoreDisplay");
+    const finalScoreElem = document.getElementById("finalScore");
+    const playerNameForm = document.getElementById("playerNameForm");
+    const nombreJugadorDiv = document.getElementById("nombreJugador");
+    
+    coinDisplay.textContent = "💰 x " + coins;
+    highScoreDisplay.textContent = "🔝 Máx: " + highScore;
+    
+    // Función para mostrar el nombre del jugador
+    function mostrarNombreJugador(nombre) {
+      nombreJugadorDiv.textContent = `🐶 CosmoPlayer: ${nombre}`;
     }
-  });
-}
-
-function dibujarMonedasCDOGE() {
-  monedasCDOGE.forEach((moneda, index) => {
-    if (!moneda.recolectada) {
-      ctx.drawImage(monedaCdogeImg, moneda.x, moneda.y, moneda.width, moneda.height);
+    const nombreGuardado = localStorage.getItem("cosmodogeliveUserName");
+    if (nombreGuardado) {
+      mostrarNombreJugador(nombreGuardado);
     }
-    if (imanActivo && distancia(doge, moneda) < 150) {
-      moneda.x += (doge.x - moneda.x) * 0.05;
-      moneda.y += (doge.y - moneda.y) * 0.05;
+    
+    function drawBackground() {
+      ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
     }
-    if (!moneda.recolectada && checkCollision(doge, moneda)) {
-      moneda.recolectada = true;
-      totalCDOGERecolectado += 50;
-      localStorage.setItem("cdogeRecolectados", totalCDOGERecolectado);
-      document.getElementById('contadorCDOGE').textContent = `💰 CDOGE: ${totalCDOGERecolectado}`;
-      sndCoin.play().catch(()=>{});
+    
+    function drawDoge() {
+      ctx.drawImage(doge.img, doge.x, doge.y, doge.width, doge.height);
+      dibujarAura(doge);
     }
-  });
-}
-
-function detectarColisionMonedas() {
-  monedasCDOGE = monedasCDOGE.filter(m => !m.recolectada);
-}
-
-function dibujarObstaculos() {
-  specialObstacles.forEach((obs, index) => {
-    obs.x -= obs.speedX;
-    obs.y += obs.speedY;
-    ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
-    if (checkCollision(doge, obs)) finalizarJuego();
-  });
-  specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
-}
-
-function distancia(a, b) {
-  return Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2);
-}
-
-function checkCollision(a, b) {
-  return (a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y);
-}
- // ====================
-// FINALIZAR JUEGO
-// ====================
-function finalizarJuego() {
-  isGameOver = true;
-  cancelAnimationFrame(gameLoop);
-  music.pause();
-  music.currentTime = 0;
-  document.getElementById('finalScore').textContent = score;
-  document.getElementById('gameOverScreen').classList.add('show');
-
-  setTimeout(() => {
-    document.getElementById('reiniciarBtn').style.display = "block";
-  }, 1500);
-
-  if (score > highScore) {
-    localStorage.setItem("cdogeFloatHighScore", score);
-    document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${score}`;
-    document.getElementById('newRecordMessage').style.display = "flex";
-    sndRecord.play().catch(()=>{});
-    const username = localStorage.getItem("cosmodogeliveUserName");
-    if (username) {
-      guardarJugadorAutomatic(username, score, coins);
-    } else {
-      document.getElementById('playerNameForm').style.display = "flex";
+    
+    function spawnCoinGroup() {
+      const amount = Math.floor(Math.random() * 6) + 5;
+      for (let i = 0; i < amount; i++) {
+        coinsArray.push({
+          x: canvas.width + i * 40,
+          y: Math.random() * (canvas.height - 100),
+          width: 30,
+          height: 30,
+          speed: 2
+        });
+      }
     }
-  } else {
-    sndBoom.play().catch(()=>{});
-  }
-}
-
-// ====================
-// FUNCIONES GUARDAR JUGADOR
-// ====================
-function guardarNombreJugador() {
-  const nombre = document.getElementById('playerName').value.trim();
-  if (nombre) {
-    localStorage.setItem("cosmodogeliveUserName", nombre);
-    guardarJugadorAutomatic(nombre, score, coins);
-    document.getElementById('playerNameForm').style.display = "none";
-  } else {
-    alert("Por favor, ingresa tu nombre galáctico.");
-  }
-}
-
-// ====================
-// REANUDAR JUEGO
-// ====================
-function reanudarJuego() {
-  document.getElementById('reanudarBtn').style.display = "none";
-  gameLoop = requestAnimationFrame(updateGame);
-}
-
-// ====================
-// META MASK / WALLET
-// ====================
-async function conectarWallet() {
-  if (!window.ethereum) {
-    alert("🦊 Instala MetaMask.");
-    return;
-  }
-  try {
-    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-    const account = accounts[0];
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const contrato = new ethers.Contract("0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A", [
-      "function balanceOf(address) view returns (uint256)",
+    
+    function drawCoins() {
+      for (let i = coinsArray.length - 1; i >= 0; i--) {
+        const coin = coinsArray[i];
+        coin.x -= coin.speed;
+        ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
+        if (
+          doge.x < coin.x + coin.width &&
+          doge.x + doge.width > coin.x &&
+          doge.y < coin.y + coin.height &&
+          doge.y + doge.height > coin.y
+        ) {
+          coins++;
+          localStorage.setItem("cdogeCoins", coins);
+          coinDisplay.textContent = "💰 x " + coins;
+          playSound(sndCoin);
+          coinsArray.splice(i, 1);
+        }
+      }
+    }
+    
+    function spawnObstacle() {
+      const img = new Image();
+      img.src = obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)];
+      specialObstacles.push({
+        x: canvas.width,
+        y: Math.random() * canvas.height,
+        width: 50,
+        height: 50,
+        speedX: 2 + Math.random() * 2,
+        speedY: 0.5 + Math.random() * 1.5,
+        img: img
+      });
+    }
+    
+    function drawObstacles() {
+      specialObstacles.forEach((obs) => {
+        obs.x -= obs.speedX;
+        obs.y += obs.y < doge.y ? obs.speedY : -obs.speedY;
+        ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
+        if (
+          doge.x < obs.x + obs.width &&
+          doge.x + doge.width > obs.x &&
+          doge.y < obs.y + obs.height &&
+          doge.y + doge.height > obs.y
+        ) {
+          gameOver();
+        }
+      });
+      specialObstacles = specialObstacles.filter(obs => obs.x + obs.width > 0);
+    }
+    
+    function updateDifficulty(seconds) {
+      if (seconds >= 75) gravity = gravityLevels[3];
+      else if (seconds >= 45) gravity = gravityLevels[2];
+      else if (seconds >= 30) gravity = gravityLevels[1];
+      else gravity = gravityLevels[0];
+    }
+    
+    // ============================================================
+    // CONFIGURACIÓN DE MONEDAS $CDOGE (aparece cada 20 segundos)
+    // ============================================================
+    let monedasCDOGE = [];
+    let totalCDOGERecolectado = 0;
+    const valorPorMoneda = 50; // valor simbólico
+    
+    // Carga de imagen y sonido para la moneda CDOGE
+    const imagenMoneda = new Image();
+    imagenMoneda.src = "moneda-cosmodoge.png"; // Asegúrate que esté en la misma carpeta
+    const sonidoMoneda = new Audio("sonido-moneda-cdoge.mp3");
+    
+    // Ubicaciones estratégicas para la generación de la moneda
+    const ubicacionesDificiles = [
+      { x: 80, y: 100 },
+      { x: canvas.width - 120, y: 80 },
+      { x: canvas.width / 2, y: canvas.height / 3 },
+      { x: canvas.width - 80, y: canvas.height - 120 },
+      { x: 100, y: canvas.height - 150 }
+    ];
+    
+    // Genera una moneda CDOGE cada 20 segundos (si aún no hay una en pantalla)
+    function generarMonedaCDOGE() {
+      if (monedasCDOGE.length >= 1) return;
+      const posicion = ubicacionesDificiles[Math.floor(Math.random() * ubicacionesDificiles.length)];
+      const nuevaMoneda = {
+        ...posicion,
+        width: 32,
+        height: 32,
+        recolectada: false
+      };
+      monedasCDOGE.push(nuevaMoneda);
+    }
+    setInterval(generarMonedaCDOGE, 20000);
+    
+    // Dibuja las monedas CDOGE
+    function dibujarMonedasCDOGE() {
+      monedasCDOGE.forEach(moneda => {
+        if (!moneda.recolectada) {
+          ctx.drawImage(imagenMoneda, moneda.x, moneda.y, moneda.width, moneda.height);
+        }
+      });
+    }
+    
+    // Detecta colisión entre el personaje y la moneda CDOGE,
+    // e incluye la lógica de atracción si el imán está activo.
+    function detectarColisionMonedas(doge) {
+      monedasCDOGE.forEach(moneda => {
+        // Calcular la distancia entre doge y la moneda
+        const dx = doge.x - moneda.x;
+        const dy = doge.y - moneda.y;
+        const distancia = Math.sqrt(dx * dx + dy * dy);
+        
+        // Si el imán está activo y la moneda se encuentra a menos de 150px, aplicar atracción
+        if (imanActivo && distancia < 150) {
+          const atraccionX = (doge.x - moneda.x) * 0.05;
+          const atraccionY = (doge.y - moneda.y) * 0.05;
+          moneda.x += atraccionX;
+          moneda.y += atraccionY;
+        }
+        
+        // Detección de colisión normal: si se tocan, la moneda se recoge
+        if (
+          !moneda.recolectada &&
+          doge.x < moneda.x + moneda.width &&
+          doge.x + doge.width > moneda.x &&
+          doge.y < moneda.y + moneda.height &&
+          doge.y + doge.height > moneda.y
+        ) {
+          moneda.recolectada = true;
+          totalCDOGERecolectado += valorPorMoneda;
+          sonidoMoneda.play();
+          mostrarMensajeTemporal(`+${valorPorMoneda} $CDOGE`, moneda.x, moneda.y);
+          actualizarContadorCDOGE();
+        }
+      });
+    }
+    
+    // Muestra un mensaje temporal (para monedas y activación del imán)
+    function mostrarMensajeTemporal(texto, x, y) {
+      const mensaje = document.createElement("div");
+      mensaje.textContent = texto;
+      mensaje.style.position = "absolute";
+      mensaje.style.left = `${x}px`;
+      mensaje.style.top = `${y}px`;
+      mensaje.style.color = "#00ffcc";
+      mensaje.style.fontFamily = "Orbitron, sans-serif";
+      mensaje.style.fontSize = "18px";
+      mensaje.style.zIndex = "1000";
+      mensaje.style.transition = "all 1.5s ease";
+      document.body.appendChild(mensaje);
+      
+      setTimeout(() => {
+        mensaje.style.opacity = "0";
+        mensaje.style.transform = "translateY(-40px)";
+      }, 100);
+      
+      setTimeout(() => {
+        document.body.removeChild(mensaje);
+      }, 1600);
+    }
+    
+    // Actualiza el contador visual de $CDOGE
+    function actualizarContadorCDOGE() {
+      const div = document.getElementById("contadorCDOGE");
+      if (div) div.textContent = `💰 CDOGE: ${totalCDOGERecolectado}`;
+    }
+    // ============================================================
+    // FIN CONFIGURACIÓN DE MONEDAS $CDOGE
+    // ============================================================
+    
+    let lastTime = 0;
+    function updateGame(timestamp) {
+      if (isGameOver) return;
+      if (!lastTime) lastTime = timestamp;
+      const deltaTime = timestamp - lastTime;
+      lastTime = timestamp;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      doge.velocity += gravity * (deltaTime / 16);
+      doge.y += doge.velocity * (deltaTime / 16);
+      if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
+        gameOver();
+        return;
+      }
+      drawDoge();
+      drawCoins();
+      drawObstacles();
+      
+      // Dibuja y gestiona colisiones de monedas CDOGE
+      dibujarMonedasCDOGE();
+      detectarColisionMonedas(doge);
+      
+      timeElapsed += deltaTime;
+      const seconds = timeElapsed / 1000;
+      if (seconds - lastScoreTime >= 5) {
+        score++;
+        lastScoreTime = seconds;
+        scoreDisplay.textContent = "🚀 x " + score;
+      }
+      if (seconds - lastFondoChange >= 30) {
+        fondoIndex = (fondoIndex + 1) % fondos.length;
+        fondo.src = fondos[fondoIndex];
+        lastFondoChange = seconds;
+      }
+      if (Math.floor(timeElapsed / 16) % 150 === 0) spawnCoinGroup();
+      const now = Date.now();
+      const spawnInterval = (timeElapsed / 16) >= 3600 ? 1000 : ((timeElapsed / 16) >= 1800 ? 2000 : 3000);
+      if (now - lastObstacleSpawn >= spawnInterval) {
+        spawnObstacle();
+        lastObstacleSpawn = now;
+      }
+      gameLoop = requestAnimationFrame(updateGame);
+    }
+    
+    function gameOver() {
+      isGameOver = true;
+      if (finalScoreElem) {
+        finalScoreElem.textContent = score;
+      } else {
+        console.warn("⚠️ Elemento finalScore no encontrado.");
+      }
+      music.pause();
+      music.currentTime = 0;
+      
+      const gameOverScreenElem = document.getElementById("gameOverScreen");
+      gameOverScreenElem.classList.add("show");
+      
+      setTimeout(() => {
+        document.getElementById("reiniciarBtn").style.display = "block";
+      }, 1500);
+      
+      if (score > highScore) {
+        localStorage.setItem("cdogeFloatHighScore", score);
+        highScore = score;
+        highScoreDisplay.textContent = "🔝 Máx: " + highScore;
+        newRecordMessage.style.display = "flex";
+        playSound(sndRecord);
+        const username = localStorage.getItem("cosmodogeliveUserName");
+        if (username) {
+          guardarJugadorAutomatic(username, score, coins);
+          playerNameForm.style.display = "none";
+          mostrarNombreJugador(username);
+        } else {
+          playerNameForm.style.display = "flex";
+        }
+      } else {
+        playSound(sndBoom);
+        playerNameForm.style.display = "none";
+      }
+    }
+    
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && gameStarted && !isGameOver) {
+        doge.velocity = jump;
+        sndJump.currentTime = 0;
+        playSound(sndJump);
+      }
+    });
+    if (esMovil) {
+      document.addEventListener("touchstart", () => {
+        if (!gameStarted || isGameOver) return;
+        doge.velocity = jump;
+        sndJump.currentTime = 0;
+        playSound(sndJump);
+      });
+    }
+    
+    // Función que oculta el menú y la tienda para iniciar el juego
+    function iniciarJuegoLimpio() {
+      document.getElementById("menuPrincipal").style.display = "none";
+      document.getElementById("tiendaCDOGE").style.display = "none";
+      // Se inicia el juego llamando a startGame()
+      startGame();
+    }
+    
+    // Función para iniciar el juego (se usa desde la pantalla inicial)
+    function startGame() {
+      document.getElementById("startScreen").style.display = "none";
+      document.getElementById("pantallaCarga").style.display = "none";
+      gameStarted = true;
+      music.play();
+      gameLoop = requestAnimationFrame(updateGame);
+    }
+    
+    // Asignamos la función iniciarJuegoLimpio al botón de la pantalla inicial
+    document.getElementById("startButton").onclick = iniciarJuegoLimpio;
+    
+    document.getElementById("saveScoreButton").addEventListener("click", () => {
+      const nombre = document.getElementById("playerName").value.trim();
+      console.log("Intentando registrar el jugador:", nombre);
+      if (nombre) {
+        localStorage.setItem("cosmodogeliveUserName", nombre);
+        guardarJugadorAutomatic(nombre, score, coins)
+          .then(() => {
+            console.log("Registro guardado correctamente.");
+            playerNameForm.style.display = "none";
+            mostrarTopRanking();
+            mostrarNombreJugador(nombre);
+          })
+          .catch((err) => {
+            console.error("Error al registrar jugador:", err);
+          });
+      } else {
+        alert("Por favor, ingresa tu nombre galáctico.");
+      }
+    });
+    
+    document.getElementById("reiniciarBtn").addEventListener("click", () => {
+      location.reload();
+    });
+    
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        if (gameLoop) cancelAnimationFrame(gameLoop);
+        document.getElementById("reanudarBtn").style.display = "block";
+        pausaPorCambioVentana = true;
+      }
+    });
+    document.getElementById("reanudarBtn").addEventListener("click", () => {
+      document.getElementById("reanudarBtn").style.display = "none";
+      if (pausaPorCambioVentana) {
+        gameLoop = requestAnimationFrame(updateGame);
+        pausaPorCambioVentana = false;
+      }
+    });
+    
+    // MetaMask: Conectar wallet y mostrar balance de $CDOGE
+    const botonWallet = document.getElementById("conectarWalletBtn");
+    const balanceDiv = document.getElementById("balanceCDOGE");
+    const tokenAddress = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A";
+    const tokenABI = [
+      "function balanceOf(address account) view returns (uint256)",
       "function decimals() view returns (uint8)"
-    ], provider);
-    const balance = await contrato.balanceOf(account);
-    const decimals = await contrato.decimals();
-    const formatted = Number(balance / (10 ** decimals)).toLocaleString();
-    document.getElementById('balanceCDOGE').innerHTML = `🚀 Balance: <strong>${formatted}</strong> $CDOGE`;
-    document.getElementById('balanceCDOGE').style.display = "block";
-    document.getElementById('conectarWalletBtn').textContent = `🧑‍🚀 ${account.slice(0,6)}...${account.slice(-4)}`;
-  } catch (err) {
-    console.error("Error conectando wallet:", err);
-  }
-}
-
-// ====================
-// TIENDA / COMPRAR IMÁN
-// ====================
-async function comprarImanConCDOGE() {
-  if (!window.ethereum) {
-    alert("❌ Instala MetaMask para comprar.");
-    return;
-  }
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
-  const tokenAddress = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A";
-  const walletDelJuego = "0x1980dCdDA07071970dEAa69c975F590976Ee667D";
-  const tokenABI = [
-    "function transfer(address to, uint256 amount) public returns (bool)",
-    "function decimals() view returns (uint8)"
-  ];
-  const token = new ethers.Contract(tokenAddress, tokenABI, signer);
-  const decimals = await token.decimals();
-  const amount = ethers.utils.parseUnits("5000", decimals);
-
-  if (confirm("¿Comprar 🧲 Imán por 5,000 $CDOGE?")) {
-    try {
-      const tx = await token.transfer(walletDelJuego, amount);
-      await tx.wait();
-      activarIman();
-      alert("✅ ¡Imán activado!");
-    } catch (error) {
-      console.error(error);
-      alert("❌ Error o compra cancelada.");
+    ];
+    
+    botonWallet.addEventListener("click", async () => {
+      if (typeof window.ethereum === "undefined") {
+        alert("🦊 Por favor, instala MetaMask para conectar tu wallet.");
+        return;
+      }
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+        botonWallet.textContent = `🧑‍🚀 Wallet: ${account.slice(0, 6)}...${account.slice(-4)}`;
+    
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contrato = new ethers.Contract(tokenAddress, tokenABI, provider);
+    
+        const balance = await contrato.balanceOf(account);
+        const decimales = await contrato.decimals();
+        const formatted = Number(balance / 10 ** decimales).toLocaleString();
+        // Almacena el balance en una variable global para usar en la compra
+        window.walletCDOGE = Number(balance / 10 ** decimales);
+    
+        balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${formatted}</strong> $CDOGE listos para despegar!`;
+        balanceDiv.style.display = "block";
+      } catch (error) {
+        console.error("Error al conectar:", error);
+        alert("❌ Ocurrió un error al conectar tu wallet.");
+      }
+    });
+    
+    window.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        const pantallaCarga = document.getElementById("pantallaCarga");
+        if (pantallaCarga) pantallaCarga.style.display = "none";
+      }, 3000);
+      document.getElementById("startScreen").style.display = "flex";
+    });
+    
+    // =====================================================
+    // Función para mostrar/ocultar la Tienda
+    // =====================================================
+    function toggleTienda() {
+      const tienda = document.getElementById("tiendaCDOGE");
+      tienda.style.display = (tienda.style.display === "none" || tienda.style.display === "") ? "block" : "none";
     }
-  }
-}
-
-// ====================
-// MOSTRAR/OCULTAR TIENDA
-// ====================
-function toggleTienda() {
-  const tienda = document.getElementById("tiendaCDOGE");
-  tienda.style.display = tienda.style.display === "block" ? "none" : "block";
-}
-
-// ====================
-// INICIO AUTOMÁTICO
-// ====================
-window.addEventListener("DOMContentLoaded", () => {
-  inicializarJuego();
-  actualizarEstadoIman();
-  setTimeout(() => document.getElementById('pantallaCarga').style.display = "none", 3000);
-  document.getElementById('startScreen').style.display = "flex";
-});
-
-document.getElementById('startButton').addEventListener('click', iniciarJuego);
-document.getElementById('reiniciarBtn').addEventListener('click', () => location.reload());
-document.getElementById('saveScoreButton').addEventListener('click', guardarNombreJugador);
-document.getElementById('comprarIman').addEventListener('click', comprarImanConCDOGE);
-document.getElementById('conectarWalletBtn').addEventListener('click', conectarWallet);
-document.getElementById('reanudarBtn').addEventListener('click', reanudarJuego);
-
-document.addEventListener("keydown", e => { if (e.code === "Space" && gameStarted && !isGameOver) saltarDoge(); });
-if (esMovil) {
-  document.addEventListener("touchstart", () => { if (gameStarted && !isGameOver) saltarDoge(); });
-}
-
-function iniciarJuego() {
-  document.getElementById('menuPrincipal').style.display = "none";
-  document.getElementById('startScreen').style.display = "none";
-  document.getElementById('conectarWalletBtn').style.display = "none";
-  music.play().catch(()=>{});
-  gameStarted = true;
-  gameLoop = requestAnimationFrame(updateGame);
-}
-
-function saltarDoge() {
-  doge.velocity = saltar;
-  sndJump.play().catch(()=>{});
-}
-</script>
+    
+    // =====================================================
+    // FUNCIONES PARA COMPRAR EL IMÁN CON $CDOGE REALES
+    // =====================================================
+    async function comprarImanConCDOGE() {
+      const tokenAddress = "0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A"; // contrato oficial $CDOGE
+      const walletDelJuego = "0x1980dCdDA07071970dEAa69c975F590976Ee667D"; // tu wallet receptora
+      const tokenABI = [
+        "function transfer(address to, uint256 amount) public returns (bool)",
+        "function decimals() public view returns (uint8)"
+      ];
+    
+      try {
+        if (!window.ethereum) {
+          alert("❌ Necesitas MetaMask para comprar.");
+          return;
+        }
+    
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const token = new ethers.Contract(tokenAddress, tokenABI, signer);
+    
+        const decimals = await token.decimals();
+        const amount = ethers.utils.parseUnits("5000", decimals);
+    
+        const confirmacion = confirm("¿Quieres comprar el 🧲 Imán Espacial por 5,000 $CDOGE reales?");
+        if (!confirmacion) return;
+    
+        const tx = await token.transfer(walletDelJuego, amount);
+        mostrarMensajeTemporal("⏳ Esperando confirmación de compra...", canvas.width / 2, 120);
+        await tx.wait();
+    
+        // Activar imán
+        activarIman();
+        alert("✅ ¡Imán activado! Gracias por tu compra.");
+      } catch (err) {
+        console.error("❌ Error al comprar el imán:", err);
+        alert("❌ La compra falló o fue cancelada.");
+      }
+    }
+    
+    // Conecta la función comprarImanConCDOGE al botón del imán en la tienda
+    document.getElementById("comprarIman").addEventListener("click", comprarImanConCDOGE);
+  </script>
+</body>
+</html>
