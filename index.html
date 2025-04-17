@@ -51,7 +51,17 @@
       font-size: 18px;
       z-index: 1000;
     }
-    
+    <div id="imanContador" style="
+  position: absolute;
+  top: 130px;
+  left: 10px;
+  font-size: 18px;
+  color: #00ffcc;
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 2px 2px 5px #000;
+  z-index: 1000;
+  display: none;
+">🧲 Imán activo: 60:00</div> 
     /* Nombre del jugador en la parte superior central */
     #nombreJugador {
       position: fixed;
@@ -435,21 +445,33 @@
     // VARIABLES PARA IMÁN Y AURA
     let imanActivo = false;
     let auraAzul = false;
-    
-    // FUNCION PARA ACTIVAR EL IMÁN
     function activarIman() {
-      imanActivo = true;
-      auraAzul = true;
-      mostrarMensajeTemporal("🧲 Imán activado por 1 hora", canvas.width / 2, 100);
-      
-      // Desactivar tras 1 hora (3600000 ms)
-      setTimeout(() => {
-        imanActivo = false;
-        auraAzul = false;
-        mostrarMensajeTemporal("⏱️ El imán ha expirado", canvas.width / 2, 100);
-      }, 3600000);
+  const ahora = Date.now();
+  const duracionUnaHora = 60 * 60 * 1000; // 1 hora en milisegundos
+  const tiempoExpiracion = ahora + duracionUnaHora;
+  localStorage.setItem("imanExpiracion", tiempoExpiracion);
+
+  imanActivo = true;
+  auraAzul = true;
+  mostrarMensajeTemporal("🧲 Imán activado por 1 hora", canvas.width / 2, 100);
+
+  verificarExpiracionIman(); // 🔥 Inicia verificación continua
+setInterval(actualizarContadorIman, 1000);
+}
+ function verificarExpiracionIman() {
+  const intervalID = setInterval(() => {
+    const tiempoExpiracion = parseInt(localStorage.getItem("imanExpiracion")) || 0;
+    const ahora = Date.now();
+    if (ahora >= tiempoExpiracion) {
+      imanActivo = false;
+      auraAzul = false;
+      localStorage.removeItem("imanExpiracion");
+      clearInterval(intervalID);
+      mostrarMensajeTemporal("⏱️ El imán ha expirado", canvas.width / 2, 100);
     }
-    
+  }, 1000); // cada segundo
+}
+
     // EFECTO VISUAL: DIBUJAR AURA
     function dibujarAura(doge) {
       if (auraAzul) {
@@ -570,25 +592,42 @@
       }
     }
     
-    function drawCoins() {
-      for (let i = coinsArray.length - 1; i >= 0; i--) {
-        const coin = coinsArray[i];
-        coin.x -= coin.speed;
-        ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
-        if (
-          doge.x < coin.x + coin.width &&
-          doge.x + doge.width > coin.x &&
-          doge.y < coin.y + coin.height &&
-          doge.y + doge.height > coin.y
-        ) {
-          coins++;
-          localStorage.setItem("cdogeCoins", coins);
-          coinDisplay.textContent = "💰 x " + coins;
-          playSound(sndCoin);
-          coinsArray.splice(i, 1);
-        }
+   function drawCoins() {
+  for (let i = coinsArray.length - 1; i >= 0; i--) {
+    const coin = coinsArray[i];
+
+    // 🔵 Si el imán está activo, atraer monedas normales
+    if (imanActivo) {
+      const dx = doge.x + doge.width / 2 - (coin.x + coin.width / 2);
+      const dy = doge.y + doge.height / 2 - (coin.y + coin.height / 2);
+      const distancia = Math.sqrt(dx * dx + dy * dy);
+
+      if (distancia < 200) {
+        const fuerza = 1 - distancia / 200; // Más cerca = más fuerte
+        coin.x += dx * 0.05 * fuerza;
+        coin.y += dy * 0.05 * fuerza;
       }
     }
+
+    coin.x -= coin.speed;
+    ctx.drawImage(coinImg, coin.x, coin.y, coin.width, coin.height);
+
+    // Detección de colisión normal
+    if (
+      doge.x < coin.x + coin.width &&
+      doge.x + doge.width > coin.x &&
+      doge.y < coin.y + coin.height &&
+      doge.y + doge.height > coin.y
+    ) {
+      coins++;
+      localStorage.setItem("cdogeCoins", coins);
+      coinDisplay.textContent = "💰 x " + coins;
+      playSound(sndCoin);
+      coinsArray.splice(i, 1);
+    }
+  }
+}
+
     
     function spawnObstacle() {
       const img = new Image();
@@ -632,7 +671,7 @@
     // CONFIGURACIÓN DE MONEDAS $CDOGE (aparece cada 20 segundos)
     // ============================================================
     let monedasCDOGE = [];
-    let totalCDOGERecolectado = 0;
+    let totalCDOGERecolectado = parseInt(localStorage.getItem("cdogeTotalCoins")) || 0;
     const valorPorMoneda = 50; // valor simbólico
     
     // Carga de imagen y sonido para la moneda CDOGE
@@ -674,38 +713,32 @@
     
     // Detecta colisión entre el personaje y la moneda CDOGE,
     // e incluye la lógica de atracción si el imán está activo.
-    function detectarColisionMonedas(doge) {
-      monedasCDOGE.forEach(moneda => {
-        // Calcular la distancia entre doge y la moneda
-        const dx = doge.x - moneda.x;
-        const dy = doge.y - moneda.y;
-        const distancia = Math.sqrt(dx * dx + dy * dy);
-        
-        // Si el imán está activo y la moneda se encuentra a menos de 150px, aplicar atracción
-        if (imanActivo && distancia < 150) {
-          const atraccionX = (doge.x - moneda.x) * 0.05;
-          const atraccionY = (doge.y - moneda.y) * 0.05;
-          moneda.x += atraccionX;
-          moneda.y += atraccionY;
-        }
-        
-        // Detección de colisión normal: si se tocan, la moneda se recoge
-        if (
-          !moneda.recolectada &&
-          doge.x < moneda.x + moneda.width &&
-          doge.x + doge.width > moneda.x &&
-          doge.y < moneda.y + moneda.height &&
-          doge.y + doge.height > moneda.y
-        ) {
-          moneda.recolectada = true;
-          totalCDOGERecolectado += valorPorMoneda;
-          sonidoMoneda.play();
-          mostrarMensajeTemporal(`+${valorPorMoneda} $CDOGE`, moneda.x, moneda.y);
-          actualizarContadorCDOGE();
-        }
-      });
+   function detectarColisionMonedas(doge) {
+  monedasCDOGE.forEach(moneda => {
+    if (!moneda.recolectada) {
+      const dx = doge.x + doge.width / 2 - (moneda.x + moneda.width / 2);
+      const dy = doge.y + doge.height / 2 - (moneda.y + moneda.height / 2);
+      const distancia = Math.sqrt(dx * dx + dy * dy);
+
+      // Si el imán está activo, atraer la moneda
+      if (imanActivo && distancia < 200) {
+        const fuerza = 1 - distancia / 200; // Más cerca = más fuerte
+        moneda.x += dx * 0.05 * fuerza;
+        moneda.y += dy * 0.05 * fuerza;
+      }
+
+      // Si la distancia es muy pequeña, recolectar automáticamente
+      if (distancia < 20) {
+        moneda.recolectada = true;
+        totalCDOGERecolectado += valorPorMoneda;
+        localStorage.setItem("cdogeTotalCoins", totalCDOGERecolectado);
+        sonidoMoneda.play();
+        mostrarMensajeTemporal(`+${valorPorMoneda} $CDOGE`, moneda.x, moneda.y);
+        actualizarContadorCDOGE();
+      }
     }
-    
+  });
+}
     // Muestra un mensaje temporal (para monedas y activación del imán)
     function mostrarMensajeTemporal(texto, x, y) {
       const mensaje = document.createElement("div");
@@ -734,8 +767,23 @@
     function actualizarContadorCDOGE() {
       const div = document.getElementById("contadorCDOGE");
       if (div) div.textContent = `💰 CDOGE: ${totalCDOGERecolectado}`;
-    }
-    // ============================================================
+    }     
+    function actualizarContadorIman() {
+  const contador = document.getElementById("imanContador");
+  const tiempoExpiracion = parseInt(localStorage.getItem("imanExpiracion")) || 0;
+  const ahora = Date.now();
+  const tiempoRestante = tiempoExpiracion - ahora;
+
+  if (tiempoRestante > 0) {
+    const minutos = Math.floor(tiempoRestante / 60000);
+    const segundos = Math.floor((tiempoRestante % 60000) / 1000);
+    contador.textContent = `🧲 Imán activo: ${minutos}:${segundos < 10 ? "0" : ""}${segundos}`;
+    contador.style.display = "block";
+  } else {
+    contador.style.display = "none";
+  }
+}
+// ============================================================
     // FIN CONFIGURACIÓN DE MONEDAS $CDOGE
     // ============================================================
     
@@ -904,33 +952,42 @@
       "function balanceOf(address account) view returns (uint256)",
       "function decimals() view returns (uint8)"
     ];
-    
     botonWallet.addEventListener("click", async () => {
-      if (typeof window.ethereum === "undefined") {
-        alert("🦊 Por favor, instala MetaMask para conectar tu wallet.");
-        return;
-      }
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const account = accounts[0];
-        botonWallet.textContent = `🧑‍🚀 Wallet: ${account.slice(0, 6)}...${account.slice(-4)}`;
-    
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contrato = new ethers.Contract(tokenAddress, tokenABI, provider);
-    
-        const balance = await contrato.balanceOf(account);
-        const decimales = await contrato.decimals();
-        const formatted = Number(balance / 10 ** decimales).toLocaleString();
-        // Almacena el balance en una variable global para usar en la compra
-        window.walletCDOGE = Number(balance / 10 ** decimales);
-    
-        balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${formatted}</strong> $CDOGE listos para despegar!`;
-        balanceDiv.style.display = "block";
-      } catch (error) {
-        console.error("Error al conectar:", error);
-        alert("❌ Ocurrió un error al conectar tu wallet.");
-      }
-    });
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (typeof window.ethereum === "undefined") {
+    if (isMobile) {
+      // Si es móvil y no hay Ethereum inyectado, redirige al MetaMask Deep Link
+      const dappUrl = encodeURIComponent(window.location.href.replace(/^https?:\/\//, ""));
+      window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+    } else {
+      alert("🦊 Por favor, instala MetaMask para conectar tu wallet.");
+    }
+    return;
+  }
+
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const account = accounts[0];
+    botonWallet.textContent = `🧑‍🚀 Wallet: ${account.slice(0, 6)}...${account.slice(-4)}`;
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contrato = new ethers.Contract(tokenAddress, tokenABI, provider);
+
+    const balance = await contrato.balanceOf(account);
+    const decimales = await contrato.decimals();
+    const formatted = Number(balance / 10 ** decimales).toLocaleString();
+
+    window.walletCDOGE = Number(balance / 10 ** decimales);
+
+    balanceDiv.innerHTML = `🚀 ¡Tu nave lleva <strong>${formatted}</strong> $CDOGE listos para despegar!`;
+    balanceDiv.style.display = "block";
+  } catch (error) {
+    console.error("Error al conectar:", error);
+    alert("❌ Ocurrió un error al conectar tu wallet.");
+  }
+});
+
     
     window.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
