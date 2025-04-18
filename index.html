@@ -786,69 +786,51 @@ setInterval(actualizarContadorIman, 1000);
 // ============================================================
     // FIN CONFIGURACIÓN DE MONEDAS $CDOGE
     // ============================================================
-    // ============================================================
-// CONFIGURACIÓN DE RENDIMIENTO
-// ============================================================
-const TARGET_FPS = 45; // Puedes ajustar a 40-50 si quieres
-const FRAME_DURATION = 1000 / TARGET_FPS;
-let acumuladorDelta = 0;
-
-   let lastTime = 0;
-function updateGame(timestamp) {
-  if (isGameOver) return;
-
-  if (!lastTime) lastTime = timestamp;
-  const deltaTime = timestamp - lastTime;
-  acumuladorDelta += deltaTime;
-
-  if (acumuladorDelta >= FRAME_DURATION) {
-    lastTime = timestamp;
-    acumuladorDelta = 0;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBackground();
-    doge.velocity += gravity * (deltaTime / 16);
-    doge.y += doge.velocity * (deltaTime / 16);
-
-    if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
-      gameOver();
-      return;
+    
+    let lastTime = 0;
+    function updateGame(timestamp) {
+      if (isGameOver) return;
+      if (!lastTime) lastTime = timestamp;
+      const deltaTime = timestamp - lastTime;
+      lastTime = timestamp;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      doge.velocity += gravity * (deltaTime / 16);
+      doge.y += doge.velocity * (deltaTime / 16);
+      if (doge.y + doge.height >= canvas.height || doge.y <= 0) {
+        gameOver();
+        return;
+      }
+      drawDoge();
+      drawCoins();
+      drawObstacles();
+      
+      // Dibuja y gestiona colisiones de monedas CDOGE
+      dibujarMonedasCDOGE();
+      detectarColisionMonedas(doge);
+      
+      timeElapsed += deltaTime;
+      const seconds = timeElapsed / 1000;
+      if (seconds - lastScoreTime >= 5) {
+        score++;
+        lastScoreTime = seconds;
+        scoreDisplay.textContent = "🚀 x " + score;
+      }
+      if (seconds - lastFondoChange >= 30) {
+        fondoIndex = (fondoIndex + 1) % fondos.length;
+        fondo.src = fondos[fondoIndex];
+        lastFondoChange = seconds;
+      }
+      if (Math.floor(timeElapsed / 16) % 150 === 0) spawnCoinGroup();
+      const now = Date.now();
+      const spawnInterval = (timeElapsed / 16) >= 3600 ? 1000 : ((timeElapsed / 16) >= 1800 ? 2000 : 3000);
+      if (now - lastObstacleSpawn >= spawnInterval) {
+        spawnObstacle();
+        lastObstacleSpawn = now;
+      }
+      gameLoop = requestAnimationFrame(updateGame);
     }
-
-    drawDoge();
-    drawCoins();
-    drawObstacles();
-    dibujarMonedasCDOGE();
-    detectarColisionMonedas(doge);
-
-    timeElapsed += deltaTime;
-    const seconds = timeElapsed / 1000;
-
-    if (seconds - lastScoreTime >= 5) {
-      score++;
-      lastScoreTime = seconds;
-      scoreDisplay.textContent = "🚀 x " + score;
-    }
-
-    if (seconds - lastFondoChange >= 30) {
-      fondoIndex = (fondoIndex + 1) % fondos.length;
-      fondo.src = fondos[fondoIndex];
-      lastFondoChange = seconds;
-    }
-
-    if (Math.floor(timeElapsed / 16) % 150 === 0) spawnCoinGroup();
-
-    const now = Date.now();
-    const spawnInterval = (timeElapsed / 16) >= 3600 ? 1000 : ((timeElapsed / 16) >= 1800 ? 2000 : 3000);
-    if (now - lastObstacleSpawn >= spawnInterval) {
-      spawnObstacle();
-      lastObstacleSpawn = now;
-    }
-  }
-
-  gameLoop = requestAnimationFrame(updateGame);
-}
-
     
     function gameOver() {
       isGameOver = true;
@@ -910,43 +892,15 @@ function updateGame(timestamp) {
       // Se inicia el juego llamando a startGame()
       startGame();
     }
-    function precargarImagenes(urls) {
-  return Promise.all(
-    urls.map(
-      src =>
-        new Promise((resolve) => {
-          const img = new Image();
-          img.onload = resolve;
-          img.src = src;
-        })
-    )
-  );
-}
-
-// Lista de todas las imágenes a precargar
-const imagenesACargar = [
-  "fondo-cosmodoge-v2.png",
-  "fondo-cosmodoge-v3.png",
-  "fondo-cosmodoge-v4.png",
-  "cosmodoge-cohete-juego.png",
-  "coin-cosmodoge.png",
-  "moneda-cosmodoge.png",
-  "obstaculo-estelar.png",
-  "obstaculo-explosion.png",
-  "obstaculo-explosion-aire.png"
-];
-
+    
     // Función para iniciar el juego (se usa desde la pantalla inicial)
-async function startGame() {
-  document.getElementById("startScreen").style.display = "none";
-  document.getElementById("pantallaCarga").style.display = "none";
-
-  await precargarImagenes(imagenesACargar); // 🚀 Precarga antes de iniciar
-
-  gameStarted = true;
-  music.play();
-  gameLoop = requestAnimationFrame(updateGame);
-}
+    function startGame() {
+      document.getElementById("startScreen").style.display = "none";
+      document.getElementById("pantallaCarga").style.display = "none";
+      gameStarted = true;
+      music.play();
+      gameLoop = requestAnimationFrame(updateGame);
+    }
     
     // Asignamos la función iniciarJuegoLimpio al botón de la pantalla inicial
     document.getElementById("startButton").onclick = iniciarJuegoLimpio;
