@@ -786,6 +786,75 @@ setInterval(actualizarContadorIman, 1000);
   }
 }
 // ============================================================
+    // CONFIGURACIÓN DE MONEDAS $BCOSMO (alternan con CDOGE)
+    // ============================================================
+    let monedasBCOSMO = [];
+    const imagenBCOSMO = new Image();
+    imagenBCOSMO.src = "moneda-bcosmo.png";
+    const sonidoBCOSMO = new Audio("sonido-moneda-bcosmo.mp3");
+    const valorBCOSMO = 50;
+
+    function generarGrupoMonedasBCOSMO() {
+      monedasBCOSMO = [];
+      const posiciones = [
+        { x: 80, y: 100 },
+        { x: canvas.width / 2, y: canvas.height / 2 },
+        { x: canvas.width - 120, y: canvas.height - 100 }
+      ];
+      posiciones.forEach(pos => {
+        monedasBCOSMO.push({
+          ...pos,
+          width: 32,
+          height: 32,
+          recolectada: false
+        });
+      });
+    }
+
+    function dibujarMonedasBCOSMO() {
+      monedasBCOSMO.forEach(moneda => {
+        if (!moneda.recolectada) {
+          ctx.drawImage(imagenBCOSMO, moneda.x, moneda.y, moneda.width, moneda.height);
+        }
+      });
+    }
+
+    function detectarColisionBCOSMO(doge) {
+      monedasBCOSMO.forEach(moneda => {
+        if (!moneda.recolectada) {
+          const dx = doge.x + doge.width / 2 - (moneda.x + moneda.width / 2);
+          const dy = doge.y + doge.height / 2 - (moneda.y + moneda.height / 2);
+          const distancia = Math.sqrt(dx * dx + dy * dy);
+
+          if (imanActivo && distancia < 200) {
+            const fuerza = 1 - distancia / 200;
+            moneda.x += dx * 0.05 * fuerza;
+            moneda.y += dy * 0.05 * fuerza;
+          }
+
+          if (distancia < 20) {
+            moneda.recolectada = true;
+            coins += valorBCOSMO;
+            localStorage.setItem("cdogeCoins", coins);
+            coinDisplay.textContent = "💰 x " + coins;
+            sonidoBCOSMO.play();
+            mostrarMensajeTemporal(`+${valorBCOSMO} $BCOSMO`, moneda.x, moneda.y);
+          }
+        }
+      });
+    }
+
+    let turnoBCOSMO = false;
+    setInterval(() => {
+      if (turnoBCOSMO) {
+        generarGrupoMonedasBCOSMO();
+      } else {
+        generarMonedaCDOGE();
+      }
+      turnoBCOSMO = !turnoBCOSMO;
+    }, 15000);
+
+// ============================================================
     // FIN CONFIGURACIÓN DE MONEDAS $CDOGE
     // ============================================================
     
@@ -811,6 +880,8 @@ setInterval(actualizarContadorIman, 1000);
       // Dibuja y gestiona colisiones de monedas CDOGE
       dibujarMonedasCDOGE();
       detectarColisionMonedas(doge);
+      dibujarMonedasBCOSMO();
+      detectarColisionBCOSMO(doge);
       
       timeElapsed += deltaTime;
       const seconds = timeElapsed / 1000;
@@ -1033,6 +1104,30 @@ document.getElementById("comprarIman").addEventListener("click", comprarImanConC
         // ⚠️ Aquí se integrará la lógica real con Solana Web3 (más adelante)
         activarIman();
         mostrarMensajeTemporal("🧲 Imán activado por 1 hora (BCOSMO)", canvas.width / 2, 120);
+
+        // ================================
+        // TRANSFERENCIA REAL DE $BCOSMO
+        // ================================
+        // Preparar lógica usando Solana Web3.js
+        // Este bloque puede ser completado al integrar Solana full
+        /*
+        import { Connection, PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
+        const connection = new Connection("https://api.mainnet-beta.solana.com");
+        const recipient = new PublicKey(WALLET_RECEPTORA);
+        const sender = new PublicKey(walletAddress);
+
+        const tx = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: sender,
+            toPubkey: recipient,
+            lamports: MONTO * LAMPORTS_PER_BCOSMO  // ajustar decimales reales
+          })
+        );
+
+        const { signature } = await provider.signAndSendTransaction(tx);
+        await connection.confirmTransaction(signature);
+        console.log("✅ Transferencia BCOSMO confirmada:", signature);
+        */
         alert("✅ Imán comprado con $BCOSMO. ¡Gracias por apoyar el proyecto!");
 
       } catch (err) {
