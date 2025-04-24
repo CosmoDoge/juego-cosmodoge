@@ -1101,6 +1101,18 @@ document.getElementById("comprarIman").addEventListener("click", comprarImanConC
         const resp = await provider.connect();
         const walletAddress = resp.publicKey.toString();
 
+        // ✅ Verificación del balance real de $BCOSMO antes de activar el imán
+        const response = await fetch(`https://public-api.solscan.io/account/tokens?account=${walletAddress}`);
+        const tokens = await response.json();
+        const tokenInfo = tokens.find(t => t.tokenAddress === BCOSMO_MINT);
+
+        if (!tokenInfo || parseFloat(tokenInfo.tokenAmount.uiAmountString) < MONTO) {
+          alert("⚠️ No tienes suficiente balance de $BCOSMO para comprar el imán.");
+          return;
+        }
+        
+
+       
         // ⚠️ Aquí se integrará la lógica real con Solana Web3 (más adelante)
         activarIman();
         mostrarMensajeTemporal("🧲 Imán activado por 1 hora (BCOSMO)", canvas.width / 2, 120);
@@ -1176,14 +1188,6 @@ async function connectPhantomWallet() {
     alert("❌ No se pudo conectar Phantom.");
   }
 }
-
-    
-
- 
-
-    
-  
-
   </script>
 <div id="imanContador" style="
   position: fixed;
