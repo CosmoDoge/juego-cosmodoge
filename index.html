@@ -408,14 +408,17 @@
   
   <!-- Formulario para registrar puntaje -->
   <script>
-   coins = parseInt(localStorage.getItem('cdogeCoins')) || 0;
-    let bcosmo = parseInt(localStorage.getItem('bcosmoCount')) || 0;
-    document.getElementById('coinDisplay').textContent = `💰 ${coins}`;
-    document.getElementById('contadorCDOGE').textContent = `💰 CDOGE: ${coins}`;
-    document.getElementById('contadorBCOSMO').textContent = `🪐 BCOSMO: ${bcosmo}`;
-    let savedName = localStorage.getItem('cosmodogeliveUserName');
-    if (savedName) document.getElementById('nombreJugador').textContent = `🐶 ${savedName}`;
+    window.addEventListener("DOMContentLoaded", () => {
+      let coins = parseInt(localStorage.getItem('cdogeCoins')) || 0;
+      let bcosmo = parseInt(localStorage.getItem('bcosmoCount')) || 0;
+      document.getElementById('coinDisplay').textContent = `💰 ${coins}`;
+      document.getElementById('contadorCDOGE').textContent = `💰 CDOGE: ${coins}`;
+      document.getElementById('contadorBCOSMO').textContent = `🪐 BCOSMO: ${bcosmo}`;
+      let savedName = localStorage.getItem('cosmodogeliveUserName');
+      if (savedName) document.getElementById('nombreJugador').textContent = `🐶 ${savedName}`;
+    });
   </script>
+  
   <!--
      Panel de Ranking (se mantiene el existente) -->
   <div id="rankingPanel">
