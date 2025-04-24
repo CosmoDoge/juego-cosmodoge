@@ -380,17 +380,13 @@
   <!-- ======================= -->
   <!-- Interfaz del Juego -->
   <!-- ======================= -->
-  <canvas id="gameCanvas" width="480" height="640"></canvas>
-  <div id="scoreDisplay">🚀 x 0</div>
-  <div id="coinDisplay">💰 x 0</div>
-  <div id="highScoreDisplay">🔝 Máx: 0</div>
-  
-  <!-- Nombre del jugador (parte superior central) -->
-  <div id="nombreJugador"></div>
-  
-  <!-- Contador de $CDOGE (debajo de "Máx") -->
+  canvas id="gameCanvas" width="480" height="640"></canvas>
+  <div id="scoreDisplay">🚀 0</div>
+  <div id="coinDisplay">💰 0</div>
+  <div id="highScoreDisplay">🔝 0</div>
   <div id="contadorCDOGE">💰 CDOGE: 0</div>
-  
+  <div id="contadorBCOSMO">🪐 BCOSMO: 0</div>
+  <div id="imanContador">🧲 —:—</div>
   <!-- Pantalla de Inicio (se muestra hasta que se inicie el juego) -->
   <div id="startScreen" style="display:none;">
     <h1>🚀 Mantén a CosmoDoge flotando</h1>
@@ -411,12 +407,15 @@
   </div>
   
   <!-- Formulario para registrar puntaje -->
-  <div id="playerNameForm">
-    <input type="text" id="playerName" placeholder="Tu nombre galáctico" style="padding: 10px; font-size: 16px; border-radius: 8px; border: none; margin-bottom: 10px;">
-    <button class="btn" id="saveScoreButton">Guardar Puntaje</button>
-  </div>
-  
-  <!-- Panel de Ranking (se mantiene el existente) -->
+  <let coins = parseInt(localStorage.getItem('cdogeCoins'))||0,
+  bcosmo = parseInt(localStorage.getItem('bcosmoCount'))||0;
+document.getElementById('coinDisplay').textContent = `💰 ${coins}`;
+document.getElementById('contadorCDOGE').textContent = `💰 CDOGE: ${coins}`;
+document.getElementById('contadorBCOSMO').textContent = `🪐 BCOSMO: ${bcosmo}`;
+let savedName = localStorage.getItem('cosmodogeliveUserName');
+if(savedName) document.getElementById('nombreJugador').textContent = `🐶 ${savedName}`;
+  <!--
+     Panel de Ranking (se mantiene el existente) -->
   <div id="rankingPanel">
     <div id="topRanking"></div>
     <button class="btn" id="closeRankingBtn" onclick="this.parentNode.style.display='none'">Cerrar</button>
@@ -1115,13 +1114,13 @@ async function comprarImanConCDOGE() {
   }
 }
 // =====================
-// COMPRAR IMÁN CON $BCOSMO (PumpFun Token)
+// COMPRAR IMÁN CON $BCOSMO (PumpFun Token) ✅ FUNCIONAL
 // =====================
 
 async function comprarImanConBCOSMO() {
-  const WALLET_RECEPTORA = "A6dnVgGa5S1sc2n6mPKd1S5DgsvVoSHSBPf63xtXhKC"; // Wallet receptora
+  const WALLET_RECEPTORA = "A6dnVgGa5S1sc2n6mPKd1S5DgsvVoSHSBPf63xtXhKC";
   const BCOSMO_MINT = "2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump";
-  const MONTO = 2500; // Ajustar si hay decimales luego
+  const MONTO = 2500;
 
   try {
     const provider = window.solana;
@@ -1133,31 +1132,29 @@ async function comprarImanConBCOSMO() {
     const resp = await provider.connect();
     const walletAddress = resp.publicKey.toString();
 
-    // Establecer conexión a la red principal de Solana
     const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
 
-    // Direcciones públicas
     const fromWallet = new solanaWeb3.PublicKey(walletAddress);
     const toWallet = new solanaWeb3.PublicKey(WALLET_RECEPTORA);
     const mint = new solanaWeb3.PublicKey(BCOSMO_MINT);
 
-    // Obtener cuentas asociadas al token
     const fromTokenAccount = await getAssociatedTokenAddress(mint, fromWallet);
     const toTokenAccount = await getAssociatedTokenAddress(mint, toWallet);
 
-    // Crear instrucción de transferencia
+    // Convertir MONTO a entero sin decimales (PumpFun tokens no tienen decimales reales)
+    const transferAmount = BigInt(MONTO);
+
     const transaction = new solanaWeb3.Transaction().add(
       createTransferInstruction(
         fromTokenAccount,
         toTokenAccount,
         fromWallet,
-        MONTO,
+        transferAmount,
         [],
         TOKEN_PROGRAM_ID
       )
     );
 
-    // Firmar y enviar
     transaction.feePayer = fromWallet;
     transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
 
@@ -1165,7 +1162,7 @@ async function comprarImanConBCOSMO() {
     const txid = await connection.sendRawTransaction(signedTransaction.serialize());
     await connection.confirmTransaction(txid);
 
-    // Activar efecto
+    // Activar efecto visual
     activarIman();
     mostrarMensajeTemporal("🧲 Imán activado con $BCOSMO", canvas.width / 2, 120);
   } catch (err) {
@@ -1173,6 +1170,7 @@ async function comprarImanConBCOSMO() {
     alert("❌ La compra con $BCOSMO falló o fue cancelada.");
   }
 }
+
 
 document.getElementById("comprarImanBCOSMO").addEventListener("click", comprarImanConBCOSMO);
 
