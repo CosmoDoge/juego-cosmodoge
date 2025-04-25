@@ -4,43 +4,97 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CosmoDoge Flotante 🚀</title>
-
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
-
-  <!-- Librerías Blockchain -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.41.0/lib/index.iife.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/lib/index.iife.min.js"></script>
-
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: black; font-family: 'Orbitron', Arial, sans-serif; }
-    canvas { display: block; margin: auto; max-width: 100vw; max-height: 100vh; }
-
-    /* Pantalla de carga */
-    #pantallaCarga { position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: black; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 9999; color: white; font-size: 20px;
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: black;
+      font-family: 'Orbitron', Arial, sans-serif;
     }
-    .spinner { width: 60px; height: 60px; border: 6px solid #ffffff22; border-top: 6px solid #0ff; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Pantalla de Inicio */
-    #startScreen { display: none; flex-direction: column; align-items: center; justify-content: center;
+    canvas {
+      display: block;
+      margin: auto;
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+    #pantallaCarga {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: black; z-index: 9998;
+      background: black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+      font-size: 20px;
     }
-    #startBackground { position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: url('fondo-cosmodoge-inicio.png') repeat; background-size: cover;
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid #ffffff22;
+      border-top: 6px solid #0ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #startScreen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: black;
+      z-index: 9998;
+    }
+    #startBackground {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('fondo-cosmodoge-inicio.png') repeat;
+      background-size: cover;
       animation: scrollBg 60s linear infinite;
     }
-    @keyframes scrollBg { 0% { background-position: 0 0; } 100% { background-position: 0 1000px; } }
-    #tituloInicio { z-index: 2; color: #0ff; font-size: 48px; text-shadow: 0 0 20px #0ff; animation: aparecer 2s ease forwards; }
-    @keyframes aparecer { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
-    #dogeInicio { z-index: 2; width: 100px; margin-top: 30px; animation: flotar 3s ease-in-out infinite; }
-    @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-    #startButton { z-index: 2; margin-top: 40px; padding: 12px 24px; background: #0ff; color: black; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
+    @keyframes scrollBg {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 1000px; }
+    }
+    #tituloInicio {
+      z-index: 2;
+      color: #0ff;
+      font-size: 48px;
+      text-shadow: 0 0 20px #0ff;
+      animation: aparecer 2s ease forwards;
+    }
+    @keyframes aparecer {
+      from { opacity: 0; transform: translateY(-50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #dogeInicio {
+      z-index: 2;
+      width: 100px;
+      margin-top: 30px;
+      animation: flotar 3s ease-in-out infinite;
+    }
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    #startButton {
+      z-index: 2;
+      margin-top: 40px;
+      padding: 12px 24px;
+      background: #0ff;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -61,164 +115,183 @@
 
 <!-- Lienzo del Juego -->
 <canvas id="gameCanvas"></canvas>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
-    authDomain: "cosmodogelive.firebaseapp.com",
-    projectId: "cosmodogelive",
-    storageBucket: "cosmodogelive.appspot.com",
-    messagingSenderId: "648227069914",
-    appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  window.guardarJugadorAutomatic = async (nombre, puntaje, monedas) => {
-    await addDoc(collection(db, "jugadores"), { nombre, puntaje, monedas, fecha: serverTimestamp() });
-  };
-
-  window.mostrarTopRanking = async () => {
-    const snap = await getDocs(query(collection(db, "jugadores"), orderBy("puntaje", "desc"), limit(5)));
-    let html = "<h2>🏆 Top 5 CosmoDoge</h2><ul style='list-style:none;padding:0;'>";
-    snap.forEach((doc, i) => {
-      const d = doc.data();
-      html += `<li>#${i + 1} <strong>${d.nombre}</strong> – ${d.puntaje} pts – ${d.monedas} 🪙</li>`;
-    });
-    document.getElementById("topRanking").innerHTML = html + "</ul>";
-  };
-
-  const assets = [
-    'cosmodoge-cohete-juego.png','coin-cosmodoge.png','moneda-cosmodoge.png','moneda-bcosmo.png',
-    'obstaculo-estelar.png','obstaculo-explosion.png','obstaculo-explosion-aire.png','obstaculo-agujero-negro.png',
-    'cofre-espacial.png','fondo-cosmodoge-v2.png','fondo-cosmodoge-v3.png','fondo-cosmodoge-v4.png',
-    'fondo-cosmodoge-inicio.png','jump.mp3','coin.mp3','boom.mp3','record.mp3',
-    'sonido-moneda-cdoge.mp3','sonido-moneda-bcosmo.mp3','music-cosmodoge-theme.mp3'
-  ];
-  Promise.all(assets.map(path => {
-    return path.endsWith('.mp3')
-      ? new Promise(r => { const a = new Audio(path); a.addEventListener('canplaythrough', r, { once: true }); })
-      : new Promise(r => { const i = new Image(); i.src = path; i.onload = r; i.onerror = r; });
-  })).then(() => {
-    document.getElementById('pantallaCarga').style.display = 'none';
-    document.getElementById('startScreen').style.display = 'flex';
-  });
-</script>
-
 <script>
-// Variables esenciales
-const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d');
-function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-// Estado
-let score=0, coins=0, highScore=0, isGameOver=false, gameStarted=false;
-let timeElapsed=0, lastFondoChange=0, lastScoreTime=0;
-const fondos = ['fondo-cosmodoge-v2.png','fondo-cosmodoge-v3.png','fondo-cosmodoge-v4.png'];
-let fondoImg=new Image(); fondoImg.src=fondos[0];
-let fi=0;
-
-// Jugador
-const doge = {x:80, y:200, w:50, h:50, v:0, img:new Image()};
-doge.img.src='cosmodoge-cohete-juego.png';
-
-// Arrays
-let coinsArr=[], obsArr=[], cofresArr=[], agujeroArr=[];
-
-// Funciones de spawn
-function spawnObstacle() {
-  const img=new Image();
-  img.src=['obstaculo-estelar.png','obstaculo-explosion.png','obstaculo-explosion-aire.png'][Math.floor(Math.random()*3)];
-  obsArr.push({x:canvas.width,y:Math.random()*(canvas.height-50),w:50,h:50,sX:2+Math.random()*2,sY:0.5+Math.random()*1});
-}
-function spawnCoinGroup() {
-  for (let i=0;i<5+Math.floor(Math.random()*5);i++) {
-    coinsArr.push({x:canvas.width+i*40,y:Math.random()*(canvas.height-100),w:30,h:30,s:2});
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   }
-}
-function spawnCofre() {
-  if (timeElapsed/1000>45 && Math.random()<0.25 && cofresArr.length<1) {
-    cofresArr.push({x:canvas.width,y:Math.random()*(canvas.height-100),w:50,h:50,s:2});
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+  
+  // Recursos
+  const fondos = ["fondo-cosmodoge-v2.png", "fondo-cosmodoge-v3.png", "fondo-cosmodoge-v4.png"];
+  let fondoImg = new Image(); fondoImg.src = fondos[0];
+  let fi = 0;
+  
+  // Jugador
+  const doge = { x: 80, y: canvas.height / 2, w: 50, h: 50, v: 0, img: new Image() };
+  doge.img.src = "cosmodoge-cohete-juego.png";
+  
+  // Estados
+  let score = 0, coins = 0, isGameOver = false, gameStarted = false;
+  let timeElapsed = 0, lastFondoChange = 0, lastScoreTime = 0;
+  
+  // Arrays
+  let coinsArr = [], obsArr = [], cofresArr = [], agujeroArr = [];
+  
+  // Utilidad
+  function drawBackground() {
+    ctx.drawImage(fondoImg, 0, 0, canvas.width, canvas.height);
   }
-}
-function spawnAgujero() {
-  if (timeElapsed/1000>15 && Math.random()<0.15 && agujeroArr.length<1) {
-    agujeroArr.push({x:canvas.width,y:Math.random()*(canvas.height-150),w:80,h:80,s:1});
+  function drawDoge() {
+    ctx.drawImage(doge.img, doge.x, doge.y, doge.w, doge.h);
   }
-}
-
-// Dibujar
-function drawBackground() { ctx.drawImage(fondoImg,0,0,canvas.width,canvas.height); }
-function drawDoge() { ctx.drawImage(doge.img,doge.x,doge.y,doge.w,doge.h); }
-function drawCoins() {
-  for (let i=coinsArr.length-1;i>=0;i--) {
-    const c=coinsArr[i];
-    c.x-=c.s;
-    ctx.drawImage(new Image('coin-cosmodoge.png'),c.x,c.y,c.w,c.h);
-    if (doge.x<c.x+c.w && doge.x+doge.w>c.x && doge.y<c.y+c.h && doge.y+doge.h>c.y) {
-      coins++;
-      coinsArr.splice(i,1);
+  function showMsg(txt, x, y) {
+    const d = document.createElement("div");
+    Object.assign(d.style, {
+      position: "absolute", left: `${x}px`, top: `${y}px`,
+      color: "#0ff", font: "18px Orbitron", zIndex: 10000,
+      transition: "all 1.5s"
+    });
+    d.textContent = txt;
+    document.body.appendChild(d);
+    setTimeout(() => { d.style.opacity = 0; d.style.transform = "translateY(-40px)"; }, 100);
+    setTimeout(() => d.remove(), 1600);
+  }
+  
+  // Spawns
+  function spawnCoinGroup() {
+    for (let i = 0; i < 6; i++) {
+      coinsArr.push({ x: canvas.width + i * 40, y: Math.random() * (canvas.height - 100), w: 30, h: 30, s: 2 });
     }
-    if (c.x+c.w<0) coinsArr.splice(i,1);
   }
-}
-function drawObstacles() { obsArr.forEach(o=>{o.x-=o.sX;o.y+=(o.y<doge.y?o.sY:-o.sY);ctx.drawImage(new Image(o.img),o.x,o.y,o.w,o.h);}); obsArr=obsArr.filter(o=>o.x+o.w>0); }
-function drawCofres() { cofresArr.forEach(c=>{c.x-=c.s;ctx.drawImage(new Image('cofre-espacial.png'),c.x,c.y,c.w,c.h);}); cofresArr=cofresArr.filter(c=>c.x+c.w>0); }
-function drawAgujeros() { agujeroArr.forEach(a=>{a.x-=a.s;ctx.drawImage(new Image('obstaculo-agujero-negro.png'),a.x,a.y,a.w,a.h); absorverCercanos(a);}); agujeroArr=agujeroArr.filter(a=>a.x+a.w>0); }
-
-// Efecto gravedad
-function absorverCercanos(a) { [...coinsArr,...obsArr].forEach(o=>{const dx=a.x+40-(o.x+o.w/2),dy=a.y+40-(o.y+o.h/2),dist=Math.hypot(dx,dy);if(dist<200){o.x-=dx*0.01;o.y-=dy*0.01;}}); }
-
-// Loop principal
-let lastTs=0;
-function loop(ts) {
-  if (!gameStarted || isGameOver) return;
-  if (!lastTs) lastTs=ts;
-  const dt=ts-lastTs; lastTs=ts;
-  timeElapsed+=dt;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawBackground();
-  doge.v+=0.5*(dt/16);
-  doge.y+=doge.v*(dt/16);
-  if (doge.y+doge.h>=canvas.height || doge.y<=0) {
-    isGameOver=true;
-    alert('🚨 ¡Game Over!');
-    return;
+  function spawnObstacle() {
+    const img = new Image();
+    img.src = ["obstaculo-estelar.png", "obstaculo-explosion.png", "obstaculo-explosion-aire.png"][Math.floor(Math.random() * 3)];
+    obsArr.push({ x: canvas.width, y: Math.random() * (canvas.height - 50), w: 50, h: 50, sX: 2 + Math.random() * 2, sY: 0.5 + Math.random() });
   }
-  drawDoge();
-  drawCoins();
-  drawObstacles();
-  drawCofres();
-  drawAgujeros();
-  if (Math.floor(timeElapsed/1000)%5===0 && lastScoreTime!==Math.floor(timeElapsed/1000)) { score++; lastScoreTime=Math.floor(timeElapsed/1000); }
-  if (Math.floor(timeElapsed/16)%180===0) spawnCoinGroup();
-  if (Math.floor(timeElapsed/16)%250===0) spawnObstacle();
-  if (Math.floor(timeElapsed/16)%400===0) spawnCofre();
-  if (Math.floor(timeElapsed/16)%500===0) spawnAgujero();
-  if (timeElapsed/1000-lastFondoChange>=30) { fi=(fi+1)%fondos.length; fondoImg.src=fondos[fi]; lastFondoChange=timeElapsed/1000; }
-  requestAnimationFrame(loop);
-}
-
-// Iniciar
-function iniciarJuegoCosmodoge() {
-  gameStarted=true;
-  isGameOver=false;
-  score=0;
-  coins=0;
-  timeElapsed=0;
-  doge.y=canvas.height/2;
-  doge.v=0;
-  fondoImg.src=fondos[0];
-  requestAnimationFrame(loop);
-}
-
-// Botón comenzar
-document.getElementById('startButton').addEventListener('click', iniciarJuegoCosmodoge);
-</script>
-
-</body>
-</html>
+  function spawnCofre() {
+    if (timeElapsed / 1000 > 20 && Math.random() < 0.2 && cofresArr.length < 1) {
+      cofresArr.push({ x: canvas.width, y: Math.random() * (canvas.height - 100), w: 50, h: 50, s: 2 });
+    }
+  }
+  function spawnAgujero() {
+    if (timeElapsed / 1000 > 15 && Math.random() < 0.1 && agujeroArr.length < 1) {
+      agujeroArr.push({ x: canvas.width, y: Math.random() * (canvas.height - 150), w: 80, h: 80, s: 1 });
+    }
+  }
+  
+  // Dibujo de objetos
+  function drawCoins() {
+    for (let i = coinsArr.length - 1; i >= 0; i--) {
+      const c = coinsArr[i];
+      c.x -= c.s;
+      ctx.drawImage(new Image("coin-cosmodoge.png"), c.x, c.y, c.w, c.h);
+      if (doge.x < c.x + c.w && doge.x + doge.w > c.x && doge.y < c.y + c.h && doge.y + doge.h > c.y) {
+        coins++; coinsArr.splice(i, 1); showMsg("+1 🪙", c.x, c.y);
+      }
+      if (c.x + c.w < 0) coinsArr.splice(i, 1);
+    }
+  }
+  function drawObstacles() {
+    for (let i = obsArr.length - 1; i >= 0; i--) {
+      const o = obsArr[i];
+      o.x -= o.sX; o.y += (o.y < doge.y ? o.sY : -o.sY);
+      ctx.drawImage(new Image(o.img), o.x, o.y, o.w, o.h);
+      if (doge.x < o.x + o.w && doge.x + doge.w > o.x && doge.y < o.y + o.h && doge.y + doge.h > o.y) {
+        gameOver();
+      }
+      if (o.x + o.w < 0) obsArr.splice(i, 1);
+    }
+  }
+  function drawCofres() {
+    for (let i = cofresArr.length - 1; i >= 0; i--) {
+      const c = cofresArr[i];
+      c.x -= c.s;
+      ctx.drawImage(new Image("cofre-espacial.png"), c.x, c.y, c.w, c.h);
+      if (doge.x < c.x + c.w && doge.x + doge.w > c.x && doge.y < c.y + c.h && doge.y + doge.h > c.y) {
+        cofresArr.splice(i, 1);
+        showMsg("🎁 ¡Premio especial!", canvas.width / 2, 80);
+      }
+      if (c.x + c.w < 0) cofresArr.splice(i, 1);
+    }
+  }
+  function drawAgujeros() {
+    for (let i = agujeroArr.length - 1; i >= 0; i--) {
+      const a = agujeroArr[i];
+      a.x -= a.s;
+      ctx.drawImage(new Image("obstaculo-agujero-negro.png"), a.x, a.y, a.w, a.h);
+      absorverCercanos(a);
+      if (doge.x < a.x + a.w && doge.x + doge.w > a.x && doge.y < a.y + a.h && doge.y + doge.h > a.y) {
+        alert("🌌 ¡El Agujero Negro te absorbió!"); location.reload();
+      }
+      if (a.x + a.w < 0) agujeroArr.splice(i, 1);
+    }
+  }
+  
+  // Absorción gravitacional
+  function absorverCercanos(a) {
+    [...coinsArr, ...obsArr].forEach(obj => {
+      const dx = a.x + 40 - (obj.x + obj.w / 2);
+      const dy = a.y + 40 - (obj.y + obj.h / 2);
+      const dist = Math.hypot(dx, dy);
+      if (dist < 200) {
+        obj.x -= dx * 0.01;
+        obj.y -= dy * 0.01;
+      }
+    });
+  }
+  
+  // Loop principal
+  let lastTs = 0;
+  function loop(ts) {
+    if (!gameStarted || isGameOver) return;
+    if (!lastTs) lastTs = ts;
+    const dt = ts - lastTs;
+    lastTs = ts;
+    timeElapsed += dt;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
+    doge.v += 0.5 * (dt / 16);
+    doge.y += doge.v * (dt / 16);
+    if (doge.y + doge.h >= canvas.height || doge.y <= 0) return gameOver();
+    drawDoge(); drawCoins(); drawObstacles(); drawCofres(); drawAgujeros();
+    if (timeElapsed / 1000 - lastScoreTime >= 5) { score++; lastScoreTime = timeElapsed / 1000; }
+    if (Math.floor(timeElapsed / 16) % 180 === 0) spawnCoinGroup();
+    if (Math.floor(timeElapsed / 16) % 250 === 0) spawnObstacle();
+    if (Math.floor(timeElapsed / 16) % 400 === 0) spawnCofre();
+    if (Math.floor(timeElapsed / 16) % 500 === 0) spawnAgujero();
+    if (timeElapsed / 1000 - lastFondoChange >= 30) {
+      fi = (fi + 1) % fondos.length;
+      fondoImg.src = fondos[fi];
+      lastFondoChange = timeElapsed / 1000;
+    }
+    requestAnimationFrame(loop);
+  }
+  
+  // Game Over
+  function gameOver() {
+    isGameOver = true;
+    alert("🚨 ¡Game Over!");
+  }
+  
+  // Iniciar juego
+  document.getElementById("startButton").addEventListener("click", () => {
+    resizeCanvas();
+    gameStarted = true;
+    isGameOver = false;
+    score = 0;
+    coins = 0;
+    timeElapsed = 0;
+    lastFondoChange = 0;
+    lastScoreTime = 0;
+    doge.y = canvas.height / 2;
+    doge.v = 0;
+    fondoImg.src = fondos[0];
+    requestAnimationFrame(loop);
+  });
+  </script>
+  </body>
+  </html>
