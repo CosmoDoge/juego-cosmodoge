@@ -394,31 +394,43 @@
   </div>
   
   <!-- Pantalla de Game Over -->
-  <div id="gameOverScreen">
-    <h1>🚨 GAME OVER 🚨</h1>
-    <p>Puntaje: <span id="finalScore">0</span></p>
-    <button id="reiniciarBtn">Reiniciar</button>
-  </div>
-  
-  <!-- Mensaje de Nuevo Récord (opcional) -->
-  <div id="newRecordMessage" style="display:none;">
-    <h1>🌟 ¡Nuevo récord galáctico!</h1>
-    <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
-  </div>
-  
-  <!-- Formulario para registrar puntaje -->
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      let coins = parseInt(localStorage.getItem('cdogeCoins')) || 0;
-      let bcosmo = parseInt(localStorage.getItem('bcosmoCount')) || 0;
-      document.getElementById('coinDisplay').textContent = `💰 ${coins}`;
-      document.getElementById('contadorCDOGE').textContent = `💰 CDOGE: ${coins}`;
-      document.getElementById('contadorBCOSMO').textContent = `🪐 BCOSMO: ${bcosmo}`;
-      let savedName = localStorage.getItem('cosmodogeliveUserName');
-      if (savedName) document.getElementById('nombreJugador').textContent = `🐶 ${savedName}`;
-    });
-  </script>
-  
+<div id="gameOverScreen">
+  <h1>🚨 GAME OVER 🚨</h1>
+  <p>Puntaje: <span id="finalScore">0</span></p>
+  <button id="reiniciarBtn">Reiniciar</button>
+</div>
+
+<!-- Mensaje de Nuevo Récord (opcional) -->
+<div id="newRecordMessage" style="display:none;">
+  <h1>🌟 ¡Nuevo récord galáctico!</h1>
+  <p>🏆 ¡Has superado todos los límites de CosmoDoge!</p>
+</div>
+
+<!-- Elementos requeridos para mostrar nombre y contadores -->
+<div id="coinDisplay"></div>
+<div id="contadorCDOGE"></div>
+<div id="contadorBCOSMO"></div>
+<div id="nombreJugador"></div>
+
+<!-- Script para asignar valores a los elementos visuales -->
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const coins = parseInt(localStorage.getItem("cdogeCoins")) || 0;
+    const bcosmo = parseInt(localStorage.getItem("bcosmoCount")) || 0;
+
+    const coinDisplay = document.getElementById("coinDisplay");
+    const contadorCDOGE = document.getElementById("contadorCDOGE");
+    const contadorBCOSMO = document.getElementById("contadorBCOSMO");
+    const nombreJugador = document.getElementById("nombreJugador");
+
+    if (coinDisplay) coinDisplay.textContent = `💰 ${coins}`;
+    if (contadorCDOGE) contadorCDOGE.textContent = `💰 CDOGE: ${coins}`;
+    if (contadorBCOSMO) contadorBCOSMO.textContent = `🪐 BCOSMO: ${bcosmo}`;
+
+    const savedName = localStorage.getItem("cosmodogeliveUserName");
+    if (savedName && nombreJugador) nombreJugador.textContent = `🐶 ${savedName}`;
+  });
+</script>
   <!--
      Panel de Ranking (se mantiene el existente) -->
   <div id="rankingPanel">
