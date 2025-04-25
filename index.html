@@ -40,7 +40,6 @@
   </style>
 </head>
 <body>
-
   <!-- Preloader -->
   <div id="pantallaCarga">
     <div class="spinner"></div>
@@ -61,8 +60,8 @@
 
   <!-- Menú -->
   <div id="menuPrincipal" class="fixed">
-    <button onclick="toggleTienda()">🛒 Tienda</button>
-    <button onclick="toggleRanking()">🏆 Ranking</button>
+    <button id="btnTienda">🛒 Tienda</button>
+    <button id="btnRanking">🏆 Ranking</button>
   </div>
 
   <!-- Tienda -->
@@ -70,12 +69,12 @@
     <h3 style="color:#0ff;">🛒 Tienda CosmoDoge</h3>
     <div style="margin-bottom:15px;padding:10px;background:#111;border:1px solid #0ff;border-radius:10px;">
       <p style="color:#0ff;">🧲 Imán Espacial (CDOGE)</p>
-      <p style="color:#bbb;">Atrae monedas por 1 hora</p>
+      <p style="color:#bbb;">Atrae monedas 1h</p>
       <button id="comprarImanCDOGE" style="width:100%;">Comprar 1 500 $CDOGE</button>
     </div>
     <div style="margin-bottom:15px;padding:10px;background:#111;border:1px solid #0ff;border-radius:10px;">
       <p style="color:#0ff;">🧲 Imán Espacial (BCOSMO)</p>
-      <p style="color:#bbb;">Atrae monedas por 1 hora</p>
+      <p style="color:#bbb;">Atrae monedas 1h</p>
       <button id="comprarImanBCOSMO" style="width:100%;">Comprar 2 500 $BCOSMO</button>
     </div>
     <div style="padding:10px;background:#111;border:1px solid #faa;border-radius:10px;">
@@ -99,7 +98,7 @@
     <button id="reiniciarBtn" class="btn">Reiniciar</button>
   </div>
   <div id="newRecordMessage" style="display:none;">
-    <h1>🌟 ¡Nuevo récord galáctico!</h1>
+    <h1>🌟 Nuevo récord galáctico!</h1>
     <p>Ingresa tu nombre para guardarlo.</p>
   </div>
 
@@ -112,7 +111,7 @@
   <!-- Ranking -->
   <div id="rankingPanel">
     <div id="topRanking"></div>
-    <button class="btn" onclick="toggleRanking()">Cerrar</button>
+    <button class="btn" id="closeRanking">Cerrar</button>
   </div>
 
   <!-- Reanudar -->
@@ -170,6 +169,7 @@
 
   <!-- Lógica principal -->
   <script>
+    // Variables y configuración
     const canvas = document.getElementById("gameCanvas"),
           ctx    = canvas.getContext("2d"),
           esMovil= /Mobi|Android/i.test(navigator.userAgent);
@@ -194,7 +194,7 @@
     const valorPorMoneda = 50,
           valorBCOSMO    = 50,
           ubicaciones    = [
-            {x:80,y:100},{x:canvas.width-120,y:80},
+            {x:80,y:100}, {x:canvas.width-120,y:80},
             {x:canvas.width/2,y:canvas.height/3},
             {x:canvas.width-80,y:canvas.height-120},
             {x:100,y:canvas.height-150}
@@ -232,6 +232,7 @@
           MINT       = "2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump",
           RCV        = "A6dnVgGaS1scC2m6hmPdK15D5gs5vDsHS8PEq3xtJKNx";
 
+    // Utilidades
     function play(s){ s.currentTime=0; s.play().catch(()=>{}); }
     function showMsg(txt,x,y){
       const d=document.createElement("div");
@@ -241,7 +242,7 @@
       setTimeout(()=>d.remove(),1600);
     }
     function updCDOGE(){ document.getElementById("contadorCDOGE").textContent=`💰 CDOGE: ${totalCDOGE}`; }
-    function updShield(){document.getElementById("shieldDisplay").textContent=`🛡️ Escudo: ${shieldCount}`;}
+    function updShield(){ document.getElementById("shieldDisplay").textContent=`🛡️ Escudo: ${shieldCount}`; }
     function updDiff(sec){ gravity = sec>=75?gravityLevels[3]: sec>=45?gravityLevels[2]: sec>=30?gravityLevels[1]: gravityLevels[0]; }
 
     // Imán
@@ -295,7 +296,7 @@
       return false;
     }
 
-    // Spawn y draw de monedas normales
+    // Spawn & draw monedas normales
     function spawnCoinGroup(){
       const amount = Math.floor(Math.random()*6) + 5;
       for(let i=0;i<amount;i++){
@@ -335,7 +336,7 @@
       }
     }
 
-    // Spawn y draw de obstáculos
+    // Spawn & draw obstáculos
     function spawnObstacle(){
       const img = new Image();
       img.src = obsImgs[Math.floor(Math.random()*obsImgs.length)];
@@ -502,62 +503,71 @@
       }
     }
 
-    // Inicialización y controles
-    document.getElementById("startButton").onclick = ()=>{
-      document.getElementById("pantallaCarga").style.display = "none";
-      document.getElementById("startScreen").style.display = "none";
-      document.getElementById("menuPrincipal").style.display = "none";
-      gameStarted = true;
-      music.play();
-      requestAnimationFrame(loop);
-    };
-    document.getElementById("reiniciarBtn").onclick      = ()=> location.reload();
-    document.getElementById("saveScoreButton").onclick   = ()=>{
-      const n = document.getElementById("playerName").value.trim();
-      if(!n) return alert("Ingresa tu nombre");
-      localStorage.setItem("cosmodogeliveUserName", n);
-      document.getElementById("playerNameForm").style.display = "none";
-      guardarJugadorAutomatic(n,score,coins).then(mostrarTopRanking);
-    };
-    document.getElementById("comprarEscudo").onclick     = buyShield;
-    document.getElementById("comprarImanCDOGE").onclick   = comprarImanCDOGE;
-    document.getElementById("comprarImanBCOSMO").onclick = comprarImanBCOSMO;
-    document.getElementById("conectarWalletBtn").onclick = mostrarSelectorWallet;
-
-    document.addEventListener("keydown", e=>{
-      if(e.code==="Space" && gameStarted && !isGameOver){
-        doge.v = jump;
-        play(sndJump);
-      }
-    });
-    document.addEventListener("visibilitychange", ()=>{
-      if(document.hidden && gameStarted && !isGameOver){
-        cancelAnimationFrame(loop);
-        document.getElementById("reanudarBtn").style.display = "block";
-      }
-    });
-    document.getElementById("reanudarBtn").onclick = ()=>{
-      document.getElementById("reanudarBtn").style.display = "none";
-      if(!isGameOver) requestAnimationFrame(loop);
-    };
-
+    // DOMContentLoaded y event listeners
     window.addEventListener("DOMContentLoaded", ()=>{
+      // Desaparece preloader y muestra start
       setTimeout(()=> document.getElementById("pantallaCarga").style.display="none",3000);
       document.getElementById("startScreen").style.display="flex";
+
+      // Actualiza HUD inicial
       document.getElementById("coinDisplay").textContent = `💰 x ${coins}`;
       document.getElementById("highScoreDisplay").textContent = `🔝 Máx: ${highScore}`;
       updCDOGE(); updShield();
+
+      // Nombre guardado
       const u = localStorage.getItem("cosmodogeliveUserName");
       if(u){
         document.getElementById("nombreJugador").textContent = `🐶 ${u}`;
         mostrarTopRanking();
       }
       chkIman();
+
+      // Enlaza botones
+      document.getElementById("conectarWalletBtn").addEventListener("click", mostrarSelectorWallet);
+      document.getElementById("btnTienda").addEventListener("click", toggleTienda);
+      document.getElementById("btnRanking").addEventListener("click", toggleRanking);
+      document.getElementById("startButton").addEventListener("click", ()=>{
+        document.getElementById("pantallaCarga").style.display="none";
+        document.getElementById("startScreen").style.display="none";
+        document.getElementById("menuPrincipal").style.display="none";
+        gameStarted=true; music.play(); requestAnimationFrame(loop);
+      });
+      document.getElementById("reiniciarBtn").addEventListener("click", ()=>location.reload());
+      document.getElementById("saveScoreButton").addEventListener("click", ()=>{
+        const n=document.getElementById("playerName").value.trim();
+        if(!n) return alert("Ingresa tu nombre");
+        localStorage.setItem("cosmodogeliveUserName",n);
+        document.getElementById("playerNameForm").style.display="none";
+        guardarJugadorAutomatic(n,score,coins).then(mostrarTopRanking);
+      });
+      document.getElementById("comprarEscudo").addEventListener("click", buyShield);
+      document.getElementById("comprarImanCDOGE").addEventListener("click", comprarImanCDOGE);
+      document.getElementById("comprarImanBCOSMO").addEventListener("click", comprarImanBCOSMO);
+      document.getElementById("reanudarBtn").addEventListener("click", ()=>{
+        document.getElementById("reanudarBtn").style.display="none";
+        if(!isGameOver) requestAnimationFrame(loop);
+      });
+      document.getElementById("closeRanking").addEventListener("click", toggleRanking);
+
+      // Teclado y visibilidad
+      document.addEventListener("keydown", e=>{
+        if(e.code==="Space"&&gameStarted&&!isGameOver){
+          doge.v=jump;
+          play(sndJump);
+        }
+      });
+      document.addEventListener("visibilitychange", ()=>{
+        if(document.hidden&&gameStarted&&!isGameOver){
+          cancelAnimationFrame(loop);
+          document.getElementById("reanudarBtn").style.display="block";
+        }
+      });
     });
 
+    // Funciones de toggle
     function toggleTienda(){
       const t = document.getElementById("tiendaCDOGE");
-      t.style.display = (t.style.display==="block" ? "none" : "block");
+      t.style.display = (t.style.display==="block"?"none":"block");
     }
     function toggleRanking(){
       const r = document.getElementById("rankingPanel");
