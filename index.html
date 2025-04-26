@@ -478,12 +478,11 @@
   }
   
   /* ===================== EVENTOS DE BOTONES PRINCIPALES ===================== */
-  document.getElementById('startButton').addEventListener('click', () => {
-    document.getElementById('startScreen').style.display = 'none';
-    music.play();
-    window.gameStarted = true;
-    requestAnimationFrame(loop);
-  });
+ document.getElementById('pantallaCarga').style.display = 'none';
+document.getElementById('startScreen').style.display = 'flex';
+music.play();
+console.log('🚀 Precarga omitida. Juego listo.');
+
   
   document.getElementById('reiniciarBtn').addEventListener('click', () => location.reload());
   
