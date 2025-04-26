@@ -197,8 +197,8 @@
 <!-- Canvas de Juego -->
 <canvas id="gameCanvas"></canvas>
 
-<!-- Scripts Lógicos -->
-<script type="module" src="cosmodoge-logica.js"></script>
+
+
 
 </body>
 </html>
@@ -254,9 +254,7 @@
   const sndRecord = new Audio('record.mp3');
   const sndCdoge = new Audio('sonido-moneda-cdoge.mp3');
   const sndBcosmo = new Audio('sonido-moneda-bcosmo.mp3');
-  const music = new Audio('music-cosmodoge-theme.mp3');
-  music.loop = true;
-  music.volume = 0.3;
+  
   
   // Arrays
   let coinsArr = [], obsArr = [], cofresArr = [], agujeroArr = [], cdogeArr = [], bcosmoArr = [];
@@ -554,7 +552,10 @@
   
     requestAnimationFrame(loop);
   }
-  
+  const music = new Audio('music-cosmodoge-theme.mp3');
+music.loop = true;
+music.volume = 0.3;
+
   /* ===================== BOTONES PRINCIPALES ===================== */
   document.getElementById('startButton').addEventListener('click', () => {
     document.getElementById('startScreen').style.display = 'none';
