@@ -298,13 +298,12 @@ let lastFondoChange = 0, timeElapsed = 0, lastScoreTime = 0;
   }));
   
   preloadResources().then(() => {
-    document.getElementById('pantallaCarga').style.display = 'none';
-    document.getElementById('startScreen').style.display = 'flex';
-    console.log('✅ Recursos precargados');
-  }).catch((e) => {
-    console.error('Error cargando recursos:', e);
-    alert('Error cargando imágenes o sonidos. Refresca la página.');
-  });
+   document.getElementById('startButton').addEventListener('click', () => {
+  document.getElementById('startScreen').style.display = 'none';
+  music.play();
+  window.gameStarted = true; // Ahora accede correctamente a la variable global
+  requestAnimationFrame(loop);
+});
   
   // HUD Actualización
   function updHUD() {
