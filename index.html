@@ -233,7 +233,10 @@
   let highScore = parseInt(localStorage.getItem('cdogeFloatHighScore')) || 0;
   let totalCDOGE = parseInt(localStorage.getItem('cdogeTotalCoins')) || 0;
   let totalBCOSMO = parseInt(localStorage.getItem('bcosmoTotalCoins')) || 0;
-  let gameStarted = false, isGameOver = false, lastFondoChange = 0, timeElapsed = 0, lastScoreTime = 0;
+window.gameStarted = false;
+window.isGameOver = false;
+let lastFondoChange = 0, timeElapsed = 0, lastScoreTime = 0;
+
   let gravity = 0.5, jumpPower = -10;
   
   // Recursos
