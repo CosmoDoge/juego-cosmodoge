@@ -497,6 +497,8 @@ function loop(ts) {
   }
   drawDoge();
   drawCoins();
+  drawAgujeroNegro();
+  drawCofreEspacial();
   drawObstacles();
   drawCDOGE();
   drawBCOSMO();
@@ -899,7 +901,180 @@ setInterval(() => {
     }, 2000);
   });
   </script>
+   <script>
+    // --- Agujero Negro Mejorado ---
     
+    let agujeroNegro = null;
+    let faseAgujero = 0; // 0 = arriba, 1 = abajo, 2 = centro
+    const secuenciaAgujero = ['arriba', 'abajo', 'centro'];
+    
+    function spawnAgujeroNegro() {
+      const faseActual = secuenciaAgujero[faseAgujero % 3];
+      const tamano = 80; // Tamaño del agujero
+    
+      let yInicial;
+      if (faseActual === 'arriba') yInicial = 100;
+      else if (faseActual === 'abajo') yInicial = canvas.height - 200;
+      else yInicial = canvas.height / 2 - tamano/2;
+    
+      agujeroNegro = {
+        x: canvas.width + 100,
+        y: yInicial,
+        w: tamano,
+        h: tamano,
+        velocidad: 1.5,
+        radioAtraccion: 180
+      };
+    
+      faseAgujero++;
+    }
+    
+    // Dibujar Agujero Negro
+    function drawAgujeroNegro() {
+      if (!agujeroNegro) return;
+    
+      agujeroNegro.x -= agujeroNegro.velocidad;
+    
+      // Aura de atracción
+      ctx.beginPath();
+      ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.radioAtraccion, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(138,43,226,0.3)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    
+      // Núcleo del agujero
+      const grad = ctx.createRadialGradient(
+        agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, 5,
+        agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2
+      );
+      grad.addColorStop(0, '#0ff');
+      grad.addColorStop(1, '#000');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2, 0, Math.PI*2);
+      ctx.fill();
+    
+      // Aplicar atracción gravitacional
+      aplicarAtraccionAgujero(doge);
+      coinsArr.forEach(c => aplicarAtraccionAgujero(c));
+      cdogeArr.forEach(c => aplicarAtraccionAgujero(c));
+      bcosmoArr.forEach(c => aplicarAtraccionAgujero(c));
+      obsArr.forEach(c => aplicarAtraccionAgujero(c));
+    
+      // Colisión directa con el Doge
+      const dx = (agujeroNegro.x + agujeroNegro.w/2) - (doge.x + doge.w/2);
+      const dy = (agujeroNegro.y + agujeroNegro.h/2) - (doge.y + doge.h/2);
+      const distancia = Math.hypot(dx, dy);
+    
+      if (distancia < agujeroNegro.w/2) {
+        gameOver(); // Game Over instantáneo si entra al núcleo
+      }
+    
+      // Destruir agujero si sale de pantalla
+      if (agujeroNegro.x + agujeroNegro.w < 0) agujeroNegro = null;
+    }
+    
+    // Aplicar atracción gravitacional
+    function aplicarAtraccionAgujero(obj) {
+      const dx = (agujeroNegro.x + agujeroNegro.w/2) - (obj.x + obj.w/2);
+      const dy = (agujeroNegro.y + agujeroNegro.h/2) - (obj.y + obj.h/2);
+      const distancia = Math.hypot(dx, dy);
+    
+      if (distancia < agujeroNegro.radioAtraccion) {
+        const fuerza = (agujeroNegro.radioAtraccion - distancia) / agujeroNegro.radioAtraccion;
+        obj.x += dx * 0.01 * fuerza;
+        obj.y += dy * 0.01 * fuerza;
+      }
+    }
+    
+    // Temporizador para que aparezca el Agujero Negro cada 2 minutos
+    setInterval(() => {
+      if (!isGameOver && !agujeroNegro) {
+        spawnAgujeroNegro();
+      }
+    }, 120000); // Cada 120,000 ms = 2 minutos
+    
+    </script>
+     <script>
+      // --- Cofre Espacial Sistema ---
+      
+      let cofreEspacial = null;
+      
+      // Función para crear el cofre
+      function spawnCofreEspacial() {
+        const yRandom = Math.random() * (canvas.height - 100) + 50;
+        cofreEspacial = {
+          x: canvas.width + 100,
+          y: yRandom,
+          w: 50,
+          h: 50,
+          velocidad: 2,
+          recogido: false
+        };
+      }
+      
+      // Dibujar el cofre
+      function drawCofreEspacial() {
+        if (!cofreEspacial) return;
+      
+        cofreEspacial.x -= cofreEspacial.velocidad;
+        ctx.drawImage(cofreImg, cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
+      
+        // Detección de colisión con el Doge
+        if (!cofreEspacial.recogido && doge.x < cofreEspacial.x + cofreEspacial.w && doge.x + doge.w > cofreEspacial.x && doge.y < cofreEspacial.y + cofreEspacial.h && doge.y + doge.h > cofreEspacial.y) {
+          cofreEspacial.recogido = true;
+          aplicarPremioCofre();
+          setTimeout(() => { cofreEspacial = null; }, 100);
+        }
+      
+        // Desaparecer si sale de pantalla
+        if (cofreEspacial.x + cofreEspacial.w < 0) cofreEspacial = null;
+      }
+      
+      // Aplicar el premio del cofre
+      function aplicarPremioCofre() {
+        const premios = ['iman', 'escudo', 'monedas'];
+        const premio = premios[Math.floor(Math.random() * premios.length)];
+      
+        if (premio === 'iman') {
+          const exp = Date.now() + 300000; // 5 minutos
+          localStorage.setItem('imanExpiracion', exp);
+          checkIman();
+          showMsg('🧲 Imán Espacial x5 min', canvas.width/2, 100);
+        } else if (premio === 'escudo') {
+          localStorage.setItem('escudoPendiente', 'true');
+          showMsg('🛡️ Escudo para la próxima partida', canvas.width/2, 120);
+        } else if (premio === 'monedas') {
+          coins += 1000;
+          localStorage.setItem('cdogeCoins', coins);
+          document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
+          showMsg('💰 +1000 Coins', canvas.width/2, 140);
+        }
+      }
+      
+      // Verificar si hay escudo pendiente al iniciar partida
+      function aplicarEscudoPendiente() {
+        const pendiente = localStorage.getItem('escudoPendiente') === 'true';
+        if (pendiente) {
+          localStorage.setItem('shieldExpiration', Date.now() + 13000); // Activamos escudo 13s
+          checkShield();
+          localStorage.removeItem('escudoPendiente');
+          showMsg('🛡️ Escudo Activado', canvas.width/2, 140);
+        }
+      }
+      
+      // Cada 10 minutos spawneamos un cofre
+      setInterval(() => {
+        if (!isGameOver && !cofreEspacial) {
+          spawnCofreEspacial();
+        }
+      }, 600000); // 10 minutos
+      
+      // Imagen del cofre
+      const cofreImg = new Image();
+      cofreImg.src = 'cofre-espacial.png';
+      </script>
+      
 
   
 
