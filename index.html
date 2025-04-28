@@ -732,7 +732,175 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// --- Sistema de Monedas Reales para Reclamar Tokens ---
+
+let monedasRealesCDOGE = parseInt(localStorage.getItem('cdogeTotalCoins')) || 0;
+let monedasRealesBCOSMO = parseInt(localStorage.getItem('bcosmoTotalCoins')) || 0;
+
+// Actualizar contadores de monedas reales en HUD
+function actualizarContadoresReales() {
+  document.getElementById('contadorCDOGE').textContent = `💰 CDOGE: ${monedasRealesCDOGE.toLocaleString()}`;
+  document.getElementById('contadorBCOSMO').textContent = `🐕 BCOSMO: ${monedasRealesBCOSMO.toLocaleString()}`;
+}
+
+// Botón de Reclamar Tokens dinámico
+function actualizarBotonReclamar() {
+  let botonExistente = document.getElementById('botonReclamarTokens');
+  if ((monedasRealesCDOGE >= 50000 || monedasRealesBCOSMO >= 50000) && !botonExistente) {
+    const boton = document.createElement('button');
+    boton.id = 'botonReclamarTokens';
+    boton.className = 'fixed btn';
+    boton.style.bottom = '100px';
+    boton.style.right = '20px';
+    boton.innerText = "🎁 Reclamar Tokens";
+    boton.onclick = reclamarTokens;
+    document.body.appendChild(boton);
+  }
+}
+
+// Reclamar Tokens (con envío a Telegram y Google Sheets)
+async function reclamarTokens() {
+  let tipoToken = '';
+  if (monedasRealesCDOGE >= 50000) {
+    monedasRealesCDOGE -= 50000;
+    tipoToken = 'CDOGE';
+    localStorage.setItem('cdogeTotalCoins', monedasRealesCDOGE);
+  } else if (monedasRealesBCOSMO >= 50000) {
+    monedasRealesBCOSMO -= 50000;
+    tipoToken = 'BCOSMO';
+    localStorage.setItem('bcosmoTotalCoins', monedasRealesBCOSMO);
+  } else {
+    alert('⚠️ No tienes suficientes monedas reales para reclamar.');
+    return;
+  }
+
+  // Actualizar HUD
+  actualizarContadoresReales();
+  if (document.getElementById('botonReclamarTokens')) document.getElementById('botonReclamarTokens').remove();
+
+  const walletAddress = localStorage.getItem('walletAddress') || 'Wallet No Detectada';
+  const fecha = new Date().toLocaleString();
+  const mensaje = `🚀 Reclamo CosmoDoge\nWallet: ${walletAddress}\nToken: ${tipoToken}\nCantidad: 10000 Tokens\nFecha: ${fecha}`;
+
+  // Enviar a Telegram
+  fetch(`https://api.telegram.org/bot7908453405:AAF11Zf5iiQ5peEogomv0djkt0c_KnoCksc/sendMessage?chat_id=7804711018&text=${encodeURIComponent(mensaje)}`);
+
+  // Enviar a Google Sheets
+  const formData = new FormData();
+  formData.append("entry.1234567890", walletAddress);
+  formData.append("entry.2345678901", tipoToken);
+  formData.append("entry.3456789012", "10000");
+  formData.append("entry.4567890123", fecha);
+
+  fetch("https://script.google.com/macros/s/AKfycbzdsEv22T0mXgS5do-DfyEnQ_AJ8UK8yJkN9JorxIhkkAqAA3cwzXwGHgTgp7Ltzs6PQ/exec", {
+    method: "POST",
+    mode: "no-cors",
+    body: formData
+  });
+
+  alert("🎁 ¡Reclamaste 10,000 Tokens! Se ha enviado tu solicitud.");
+}
+
+// Actualizar cada segundo los contadores y el botón
+setInterval(() => {
+  if (!isGameOver) {
+    actualizarContadoresReales();
+    actualizarBotonReclamar();
+  }
+}, 1000);
 </script>
+<script>
+  // --- Mejoras de Game Over mostrando monedas reales ---
+  
+  function gameOver() {
+    isGameOver = true;
+    music.pause();
+    music.currentTime = 0;
+  
+    document.getElementById('finalScore').textContent = `
+    🚀 Puntaje: ${score}\n
+    💰 CDOGE Recolectados: ${monedasRealesCDOGE.toLocaleString()}\n
+    🐕 BCOSMO Recolectados: ${monedasRealesBCOSMO.toLocaleString()}
+    `;
+  
+    const go = document.getElementById('gameOverScreen');
+    go.style.display = 'flex';
+    setTimeout(() => go.classList.add('show'), 10);
+    setTimeout(() => document.getElementById('reiniciarBtn').style.display = 'block', 1500);
+  
+    if (score > highScore) {
+      localStorage.setItem('cdogeFloatHighScore', score);
+      highScore = score;
+      document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
+      document.getElementById('newRecordMessage').style.display = 'flex';
+      play(sndRecord);
+      const u = localStorage.getItem('cosmodogeliveUserName');
+      if (!u) {
+        document.getElementById('playerNameForm').style.display = 'flex';
+      } else {
+        guardarJugadorAutomatic(u, score, coins).then(mostrarTopRanking);
+      }
+    } else play(sndBoom);
+  }
+  
+  // --- Confirmaciones visuales extra ---
+  function showConfirmation(msg) {
+    const d = document.createElement('div');
+    d.style.position = 'fixed';
+    d.style.top = '50%';
+    d.style.left = '50%';
+    d.style.transform = 'translate(-50%, -50%)';
+    d.style.background = '#0ff';
+    d.style.color = '#000';
+    d.style.padding = '20px';
+    d.style.borderRadius = '15px';
+    d.style.font = '18px Orbitron, sans-serif';
+    d.style.zIndex = '10000';
+    d.style.textAlign = 'center';
+    d.innerText = msg;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 2500);
+  }
+  </script>
+<script>
+  // --- Precarga de Ítems Activos al Iniciar el Juego ---
+  
+  function precargarItems() {
+    // Precargar Imán si sigue activo
+    const expIman = parseInt(localStorage.getItem('imanExpiracion')) || 0;
+    if (Date.now() < expIman) {
+      checkIman();
+      showConfirmation('🧲 Imán activado');
+    }
+  
+    // Precargar Escudo si sigue activo
+    const expShield = parseInt(localStorage.getItem('shieldExpiration')) || 0;
+    if (Date.now() < expShield) {
+      checkShield();
+      showConfirmation('🛡️ Escudo activado');
+    }
+  
+    // Precargar Skin Astronauta si ya lo tiene permanente o temporal
+    const skinPermamente = localStorage.getItem('skinAstronautaComprado') === 'true';
+    const skinTemporal = localStorage.getItem('skinTemporalActivo') === 'true';
+  
+    if (skinPermamente || skinTemporal) {
+      skinAstronautaActivo = true;
+      doge.img.src = skinAstronauta.src;
+      showConfirmation('👨‍🚀 Skin Astronauta Activo');
+    }
+  }
+  
+  // Llamamos a precargar ítems al iniciar
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      precargarItems();
+    }, 2000);
+  });
+  </script>
+    
+
   
 
 </body>
