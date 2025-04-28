@@ -114,6 +114,12 @@
     <p style="color:#faa;">🛡️ Escudo Protector</p>
     <p style="color:#bbb;">Inmune 13s</p>
     <button id="comprarEscudo" class="btn">Comprar 1,000 🪙</button>
+    <div style="padding:10px;background:#111;border:1px solid #0ff;border-radius:10px;margin-top:10px;">
+  <p style="color:#bbb;">👨‍🚀 Skin Astronauta</p>
+  <p style="color:#888;font-size:12px;">Desbloquéalo por 3,500 monedas</p>
+  <button id="comprarSkinAstronauta" class="btn">Comprar Skin Astronauta</button>
+</div>
+
   </div>
 </div>
 
@@ -216,7 +222,15 @@ window.mostrarTopRanking = async () => {
   // Skins
   const skinAstronauta = new Image();
   skinAstronauta.src = 'cosmodoge-skin-astronauta.png';
-  
+  let skinAstronautaActivo = false;
+let skinAstronautaComprado = localStorage.getItem('skinAstronautaComprado') === 'true';
+let skinAstronautaExpiracion = parseInt(localStorage.getItem('skinAstronautaExpiracion')) || 0;
+
+// Verificar si el skin gratuito sigue activo
+if (!skinAstronautaComprado && Date.now() < skinAstronautaExpiracion) {
+  skinAstronautaActivo = true;
+}
+
   // Imágenes y sonidos
   const coinImg = new Image(); coinImg.src = 'coin-cosmodoge.png';
   const cdogeImg = new Image(); cdogeImg.src = 'moneda-cosmodoge.png';
@@ -525,10 +539,15 @@ function loop(ts) {
   updDiff(sec);
 
   // Activar skin astronauta si llega al nivel 25
-  if (!skinAstronautaActivo && score >= 25) {
+  // Activar skin si llega a nivel 25
+if (!skinAstronautaActivo && score >= 25 && !skinAstronautaComprado) {
     skinAstronautaActivo = true;
-    showMsg('👨‍🚀 Skin Astronauta desbloqueado!', canvas.width/2, 60);
-  }
+    const ahora = Date.now();
+    const tresDias = 3 * 24 * 60 * 60 * 1000; // 3 días en milisegundos
+    const expiracion = ahora + tresDias;
+    localStorage.setItem('skinAstronautaExpiracion', expiracion.toString());
+    showMsg('🚀 Skin Astronauta desbloqueado por 3 días!', canvas.width/2, 60);
+}
 
   requestAnimationFrame(loop);
 }
@@ -700,6 +719,54 @@ async function comprarImanBCOSMO() {
     alert('Compra de imán BCOSMO fallida');
   }
 }
+async function comprarSkinAstronauta() {
+  try {
+    const walletConnected = !!window.ethereum || !!window.solana?.isPhantom;
+    if (!walletConnected) {
+      alert('🚀 Conecta primero tu Wallet para comprar el Skin Astronauta.');
+      return;
+    }
+
+    const precio = 3500;
+    const usarBCOSMO = confirm('¿Deseas pagar con BCOSMO? (Aceptar = BCOSMO / Cancelar = CDOGE)');
+
+    if (usarBCOSMO) {
+      // Compra con BCOSMO (Phantom)
+      const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+      const provider = window.solana;
+      const wallet = provider.publicKey;
+      const transaction = new solanaWeb3.Transaction().add(
+        solanaWeb3.SystemProgram.transfer({
+          fromPubkey: wallet,
+          toPubkey: new solanaWeb3.PublicKey('A6dnVgGaS1scC2m6hmPdK15D5gs5vDsHS8PEq3xtJKNx'), // Wallet de BCOSMO
+          lamports: precio * valorBCOSMO, // Conversión a lamports
+        })
+      );
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = wallet;
+      const signed = await provider.signTransaction(transaction);
+      await connection.sendRawTransaction(signed.serialize());
+    } else {
+      // Compra con CDOGE (MetaMask)
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(CDOGE_CON, CDOGE_ABI, signer);
+      const dec = await contract.decimals();
+      const amount = ethers.utils.parseUnits('3500', dec);
+      await contract.transfer('0x1980dCdDA07071970dEAa69c975F590976Ee667D', amount);
+    }
+
+    // Actualizar estado de compra
+    localStorage.setItem('skinAstronautaComprado', 'true');
+    localStorage.setItem('skinAstronautaExpiracion', '0');
+    skinAstronautaActivo = true;
+    alert('✅ ¡Skin Astronauta comprado exitosamente y activado!');
+  } catch (e) {
+    console.error(e);
+    alert('❌ Error al intentar comprar el Skin Astronauta.');
+  }
+}
 
 // Inicialización
 window.addEventListener('DOMContentLoaded', () => {
@@ -721,6 +788,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('comprarImanCDOGE').addEventListener('click', comprarImanCDOGE);
   document.getElementById('comprarImanBCOSMO').addEventListener('click', comprarImanBCOSMO);
   document.getElementById('comprarEscudo').addEventListener('click', buyShield);
+  document.getElementById('comprarSkinAstronauta').addEventListener('click', comprarSkinAstronauta);
   document.getElementById('closeRanking').addEventListener('click', toggleRanking);
   
   document.getElementById('startButton').addEventListener('click', () => {
