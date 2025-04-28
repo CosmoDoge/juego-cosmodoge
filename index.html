@@ -542,20 +542,27 @@ function gameOver() {
   go.style.display = 'flex';
   setTimeout(() => go.classList.add('show'), 10);
   setTimeout(() => document.getElementById('reiniciarBtn').style.display = 'block', 1500);
+
   if (score > highScore) {
     localStorage.setItem('cdogeFloatHighScore', score);
     highScore = score;
     document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
     document.getElementById('newRecordMessage').style.display = 'flex';
     play(sndRecord);
-    const u = localStorage.getItem('cosmodogeliveUserName');
-    if (!u) {
+
+    const nombreGuardado = localStorage.getItem('cosmodogeliveUserName');
+    if (!nombreGuardado) {
+      // No hay nombre guardado, mostrar formulario
       document.getElementById('playerNameForm').style.display = 'flex';
     } else {
-      guardarJugadorAutomatic(u, score, coins).then(mostrarTopRanking);
+      // Ya hay nombre guardado, actualizar directamente
+      guardarJugadorAutomatic(nombreGuardado, score, coins).then(mostrarTopRanking);
     }
-  } else play(sndBoom);
+  } else {
+    play(sndBoom);
+  }
 }
+
 
 // UI handlers
 function toggleTienda() {
@@ -710,13 +717,30 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('reiniciarBtn').addEventListener('click', () => location.reload());
-  document.getElementById('saveScoreButton').addEventListener('click', () => {
-    const n = document.getElementById('playerName').value.trim();
-    if (!n) return alert('Ingresa tu nombre');
-    localStorage.setItem('cosmodogeliveUserName', n);
-    document.getElementById('playerNameForm').style.display = 'none';
-    guardarJugadorAutomatic(n, score, coins).then(mostrarTopRanking);
-  });
+  document.getElementById('saveScoreButton').addEventListener('click', async () => {
+  const nombre = document.getElementById('playerName').value.trim();
+  if (!nombre) {
+    alert('🚨 Ingresa tu nombre para guardar tu récord.');
+    return;
+  }
+
+  // Guardamos el nombre localmente para siguientes partidas
+  localStorage.setItem('cosmodogeliveUserName', nombre);
+
+  document.getElementById('playerNameForm').style.display = 'none';
+  document.getElementById('newRecordMessage').style.display = 'none';
+
+  const puntaje = score;
+  const monedas = coins;
+
+ 
+  await guardarJugadorAutomatic(nombre, puntaje, monedas);
+mostrarTopRanking();
+showMsg('✅ ¡Tu récord se guardó exitosamente!', canvas.width/2, 100);
+
+});
+
+
 
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
