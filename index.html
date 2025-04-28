@@ -585,26 +585,37 @@ function mostrarSelectorWallet() {
 // Wallets
 async function conectarMetaMask() {
   if (!window.ethereum) {
-    if (/Mobi|Android/i.test(navigator.userAgent)) window.location.href = `https://metamask.app.link/dapp/${encodeURIComponent(location.href)}`;
-    else window.open('https://metamask.io/download.html','_blank');
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+      window.location.href = `https://metamask.app.link/dapp/${encodeURIComponent(location.href)}`;
+    } else {
+      window.open('https://metamask.io/download/', '_blank');
+    }
     return;
   }
   try {
-    const accounts = await ethereum.request({method:'eth_requestAccounts'});
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const network = await provider.getNetwork();
+    if (network.chainId !== 56) {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x38' }], // BNB Chain ID (hexadecimal)
+      });
+    }
+    const accounts = await provider.send('eth_requestAccounts', []);
     const acct = accounts[0];
     document.getElementById('conectarWalletBtn').textContent = `🔗 ${acct.slice(0,6)}…${acct.slice(-4)}`;
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
     const contract = new ethers.Contract(CDOGE_CON, ERC20_ABI, provider);
     const raw = await contract.balanceOf(acct);
     const dec = await contract.decimals();
-    const formatted = Number(raw/10**dec).toLocaleString();
-    document.getElementById('balanceCDOGE').innerHTML = `🚀 ${formatted} CDOGE`;
+    const balance = Number(raw / 10 ** dec).toLocaleString();
+    document.getElementById('balanceCDOGE').innerHTML = `🚀 ${balance} CDOGE`;
     document.getElementById('balanceCDOGE').style.display = 'block';
-  } catch(e) {
+  } catch (e) {
     console.error(e);
-    alert('Error al conectar MetaMask');
+    alert('❌ Error al conectar MetaMask.');
   }
 }
+
 
 async function conectarPhantom() {
   const p = window.solana;
@@ -617,8 +628,13 @@ async function conectarPhantom() {
     const resp = await p.connect();
     const pub = resp.publicKey.toString();
     showMsg(`🌐 Phantom: ${pub.slice(0,6)}…${pub.slice(-4)}`, canvas.width/2, 80);
-    const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-    const parsed = await conn.getParsedTokenAccountsByOwner(resp.publicKey, {programId: solanaWeb3.TOKEN_PROGRAM_ID});
+    const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', {
+  commitment: 'confirmed',
+});
+const parsed = await conn.getParsedTokenAccountsByOwner(
+  new solanaWeb3.PublicKey(pub),
+  { programId: new solanaWeb3.PublicKey(solanaWeb3.TOKEN_PROGRAM_ID) }
+);
     let balance = 0;
     parsed.value.forEach(({account}) => {
       const info = account.data.parsed.info;
