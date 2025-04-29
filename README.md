@@ -1,6 +1,6 @@
 # 🛰️ CosmoDoge Floating Game 🚀
 
-<!-- Banner opcional (puedes subir una imagen luego y ponerla aquí)
+
 ![Welcome to CosmoDoge Floating Game](banner-cosmodoge.png)
 -->
 
