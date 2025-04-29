@@ -1,8 +1,7 @@
 # 🛰️ CosmoDoge Floating Game 🚀
 
 <!-- Banner opcional (puedes subir una imagen luego y ponerla aquí)
-![Welcome to CosmoDoge Floating Game](banner-cosmodoge.png
-)
+![Welcome to CosmoDoge Floating Game](banner-cosmodoge.png)
 -->
 
 Welcome to the official repository of **CosmoDoge Floating Game**, an epic space adventure where you control CosmoDoge on an endless galactic flight, collecting tokens and dodging cosmic obstacles!
