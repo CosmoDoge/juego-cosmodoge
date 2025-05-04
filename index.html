@@ -770,12 +770,38 @@ async function comprarSkinAstronauta() {
 
 // Inicialización
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    document.getElementById('pantallaCarga').style.display = 'none';
-    document.getElementById('startScreen').style.display = 'flex';
-    if (Date.now() < parseInt(localStorage.getItem('imanExpiracion'))) checkIman();
-    if (Date.now() < parseInt(localStorage.getItem('shieldExpiration'))) checkShield();
-  }, 3000);
+  const imagenesParaPrecargar = [
+  'coin-cosmodoge.png',
+  'moneda-cosmodoge.png',
+  'moneda-bcosmo.png',
+  'cosmodoge-cohete-juego.png',
+  'cosmodoge-skin-astronauta.png',
+  'obstaculo-estelar.png',
+  'obstaculo-explosion.png',
+  'obstaculo-explosion-aire.png',
+  'fondo-cosmodoge-v2.png',
+  'fondo-cosmodoge-v3.png',
+  'fondo-cosmodoge-v4.png',
+  'cofre-espacial.png'
+];
+
+let cargadas = 0;
+const total = imagenesParaPrecargar.length;
+
+imagenesParaPrecargar.forEach(src => {
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    cargadas++;
+    if (cargadas === total) {
+      document.getElementById('pantallaCarga').style.display = 'none';
+      document.getElementById('Pantalla de inicio').style.display = 'flex';
+      precargarItems();
+      if (Date.now() < parseInt(localStorage.getItem('imanExpiracion'))) checkIman();
+      if (Date.now() < parseInt(localStorage.getItem('shieldExpiration'))) checkShield();
+    }
+  };
+});
 
   document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
   document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
