@@ -769,128 +769,79 @@ async function comprarSkinAstronauta() {
 }
 
 // Inicialización
-<script>
 window.addEventListener('DOMContentLoaded', () => {
-  const pantallaCarga = document.getElementById('pantallaCarga');
-  const startScreen = document.getElementById('startScreen');
-
-  // Lista de recursos a precargar
-  const imagenesParaPrecargar = [
-    'fondo-cosmodoge-v2.png',
-    'fondo-cosmodoge-v3.png',
-    'fondo-cosmodoge-v4.png',
-    'cosmodoge-cohete-juego.png',
-    'cosmodoge-skin-astronauta.png',
-    'coin-cosmodoge.png',
-    'moneda-cosmodoge.png',
-    'moneda-bcosmo.png',
-    'obstaculo-estelar.png',
-    'obstaculo-explosion.png',
-    'obstaculo-explosion-aire.png',
-    'cofre-espacial.png'
-  ];
-
-  const sonidosParaPrecargar = [
-    'jump.mp3',
-    'coin.mp3',
-    'boom.mp3',
-    'record.mp3',
-    'sonido-moneda-cdoge.mp3',
-    'sonido-moneda-bcosmo.mp3',
-    'music-cosmodoge-theme.mp3'
-  ];
-
-  let cargados = 0;
-  const total = imagenesParaPrecargar.length + sonidosParaPrecargar.length;
-
-  function recursoCargado() {
-    cargados++;
-    if (cargados === total) iniciarJuego();
-  }
-
-  // Precargar imágenes
-  imagenesParaPrecargar.forEach(src => {
-    const img = new Image();
-    img.src = src;
-    img.onload = recursoCargado;
-    img.onerror = recursoCargado;
-  });
-
-  // Precargar sonidos
-  sonidosParaPrecargar.forEach(src => {
-    const audio = new Audio();
-    audio.src = src;
-    audio.oncanplaythrough = recursoCargado;
-    audio.onerror = recursoCargado;
-  });
-
-  function iniciarJuego() {
-    // Ocultar pantalla de carga y mostrar pantalla de inicio
-    pantallaCarga.style.display = 'none';
-    startScreen.style.display = 'flex';
-
-    // Actualizar contadores
-    document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
-    document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
-    updCDOGE();
-    updBCOSMO();
-
-    // Verificar ítems activos
+  setTimeout(() => {
+    document.getElementById('pantallaCarga').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'flex';
     if (Date.now() < parseInt(localStorage.getItem('imanExpiracion'))) checkIman();
     if (Date.now() < parseInt(localStorage.getItem('shieldExpiration'))) checkShield();
+  }, 3000);
 
-    // Activar escudo pendiente desde cofre
-    aplicarEscudoPendiente();
+  document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
+  document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
+  updCDOGE();
+  updBCOSMO();
 
-    // Configurar botones
-    document.getElementById('conectarWalletBtn').addEventListener('click', mostrarSelectorWallet);
-    document.getElementById('btnTienda').addEventListener('click', toggleTienda);
-    document.getElementById('btnRanking').addEventListener('click', toggleRanking);
-    document.getElementById('comprarImanCDOGE').addEventListener('click', comprarImanCDOGE);
-    document.getElementById('comprarImanBCOSMO').addEventListener('click', comprarImanBCOSMO);
-    document.getElementById('comprarEscudo').addEventListener('click', buyShield);
-    document.getElementById('comprarSkinAstronauta').addEventListener('click', comprarSkinAstronauta);
-    document.getElementById('closeRanking').addEventListener('click', toggleRanking);
-    
-    document.getElementById('startButton').addEventListener('click', () => {
-      startScreen.style.display = 'none';
-      document.getElementById('conectarWalletBtn').classList.add('hiddenUI');
-      document.getElementById('menuPrincipal').classList.add('hiddenUI');
-      gameStarted = true;
-      music.play();
-      requestAnimationFrame(loop);
-    });
+  document.getElementById('conectarWalletBtn').addEventListener('click', mostrarSelectorWallet);
+  document.getElementById('btnTienda').addEventListener('click', toggleTienda);
+  document.getElementById('btnRanking').addEventListener('click', toggleRanking);
+  document.getElementById('comprarImanCDOGE').addEventListener('click', comprarImanCDOGE);
+  document.getElementById('comprarImanBCOSMO').addEventListener('click', comprarImanBCOSMO);
+  document.getElementById('comprarEscudo').addEventListener('click', buyShield);
+  document.getElementById('comprarSkinAstronauta').addEventListener('click', comprarSkinAstronauta);
+  document.getElementById('closeRanking').addEventListener('click', toggleRanking);
+  
+  document.getElementById('startButton').addEventListener('click', () => {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('conectarWalletBtn').classList.add('hiddenUI');
+    document.getElementById('menuPrincipal').classList.add('hiddenUI');
+    gameStarted = true;
+    music.play();
+    requestAnimationFrame(loop);
+  });
 
-    document.getElementById('reiniciarBtn').addEventListener('click', () => location.reload());
-    document.getElementById('saveScoreButton').addEventListener('click', async () => {
-      const nombre = document.getElementById('playerName').value.trim();
-      if (!nombre) return alert('🚨 Ingresa tu nombre para guardar tu récord.');
-      localStorage.setItem('cosmodogeliveUserName', nombre);
-      document.getElementById('playerNameForm').style.display = 'none';
-      document.getElementById('newRecordMessage').style.display = 'none';
-      await guardarJugadorAutomatic(nombre, score, coins);
-      mostrarTopRanking();
-      showMsg('✅ ¡Tu récord se guardó exitosamente!', canvas.width/2, 100);
-    });
-
-    canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      if (!gameStarted) document.getElementById('startButton').click();
-      else if (!isGameOver) {
-        doge.v = jumpPower;
-        play(sndJump);
-      }
-    });
-
-    document.addEventListener('keydown', e => {
-      if (e.code === 'Space' && gameStarted && !isGameOver) {
-        doge.v = jumpPower;
-        play(sndJump);
-      }
-    });
+  document.getElementById('reiniciarBtn').addEventListener('click', () => location.reload());
+  document.getElementById('saveScoreButton').addEventListener('click', async () => {
+  const nombre = document.getElementById('playerName').value.trim();
+  if (!nombre) {
+    alert('🚨 Ingresa tu nombre para guardar tu récord.');
+    return;
   }
+
+  // Guardamos el nombre localmente para siguientes partidas
+  localStorage.setItem('cosmodogeliveUserName', nombre);
+
+  document.getElementById('playerNameForm').style.display = 'none';
+  document.getElementById('newRecordMessage').style.display = 'none';
+
+  const puntaje = score;
+  const monedas = coins;
+
+ 
+  await guardarJugadorAutomatic(nombre, puntaje, monedas);
+mostrarTopRanking();
+showMsg('✅ ¡Tu récord se guardó exitosamente!', canvas.width/2, 100);
+
 });
-</script>
+
+
+
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (!gameStarted) document.getElementById('startButton').click();
+    else if (!isGameOver) {
+      doge.v = jumpPower;
+      play(sndJump);
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && gameStarted && !isGameOver) {
+      doge.v = jumpPower;
+      play(sndJump);
+    }
+  });
+});
 
 // --- Sistema de Monedas Reales para Reclamar Tokens ---
 
