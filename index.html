@@ -794,8 +794,12 @@ imagenesParaPrecargar.forEach(src => {
   img.onload = () => {
     cargadas++;
     if (cargadas === total) {
-      document.getElementById('pantallaCarga').style.display = 'none';
-      document.getElementById('Pantalla de inicio').style.display = 'flex';
+     if (document.getElementById('pantallaCarga')) {
+  document.getElementById('pantallaCarga').style.display = 'none';
+}
+if (document.getElementById('Pantalla de inicio')) {
+  document.getElementById('Pantalla de inicio').style.display = 'flex';
+}
       precargarItems();
       if (Date.now() < parseInt(localStorage.getItem('imanExpiracion'))) checkIman();
       if (Date.now() < parseInt(localStorage.getItem('shieldExpiration'))) checkShield();
