@@ -584,6 +584,9 @@ function gameOver() {
     if (!nombreGuardado) {
       document.getElementById('playerNameForm').style.display = 'flex';
     } else {
+      // Ocultar formularios para liberar botón de reinicio
+      document.getElementById('newRecordMessage').style.display = 'none';
+      document.getElementById('playerNameForm').style.display = 'none';
       guardarJugadorAutomatic(nombreGuardado, score, coins).then(mostrarTopRanking);
     }
 
