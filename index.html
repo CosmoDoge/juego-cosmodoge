@@ -564,10 +564,14 @@ function gameOver() {
   const go = document.getElementById('gameOverScreen');
   go.style.display = 'flex';
   setTimeout(() => go.classList.add('show'), 10);
-  setTimeout(() => {
-    document.getElementById('reiniciarBtn').style.display = 'block';
-  }, 1500);
 
+  // Mostrar botón de reinicio siempre
+  setTimeout(() => {
+    const reiniciar = document.getElementById('reiniciarBtn');
+    if (reiniciar) reiniciar.style.display = 'block';
+  }, 1000);
+
+  // Si es nuevo récord
   if (score > highScore) {
     localStorage.setItem('cdogeFloatHighScore', score);
     highScore = score;
@@ -575,16 +579,19 @@ function gameOver() {
     play(sndRecord);
 
     const nombreGuardado = localStorage.getItem('cosmodogeliveUserName');
+    document.getElementById('newRecordMessage').style.display = 'flex';
+
     if (!nombreGuardado) {
-      document.getElementById('newRecordMessage').style.display = 'flex';
       document.getElementById('playerNameForm').style.display = 'flex';
     } else {
       guardarJugadorAutomatic(nombreGuardado, score, coins).then(mostrarTopRanking);
     }
+
   } else {
     play(sndBoom);
   }
 }
+
 
 // UI handlers
 function toggleTienda() {
