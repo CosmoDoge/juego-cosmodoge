@@ -200,56 +200,50 @@ import { setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-
 
 window.guardarJugadorAutomatic = async (nombre, puntaje, monedas) => {
   try {
-    await setDoc(doc(db, "jugadores", nombre), {
+    await addDoc(collection(db, "jugadores"), {
       nombre,
       puntaje,
       monedas,
       fecha: serverTimestamp()
-    }, { merge: true }); // No sobrescribe, solo actualiza si ya existe
+    });
+    console.log("✅ Puntaje guardado correctamente");
   } catch (e) {
     console.warn("❌ Error al guardar jugador:", e);
   }
 };
 
 
+
 window.mostrarTopRanking = async () => {
   const lista = document.getElementById("topRanking");
+  lista.innerHTML = "<p>🔄 Cargando ranking...</p>";
 
-  // Si hay datos cacheados localmente, los mostramos primero
-  const cache = localStorage.getItem('rankingCache');
-  if (cache) {
-    const datos = JSON.parse(cache);
-    let html = "<h2>🏆 Top 5 CosmoDoge</h2><ul style='list-style:none;padding:0;'>";
-    datos.forEach((d, i) => {
-      html += `<li>#${i + 1} <strong>${d.nombre}</strong> – ${d.puntaje} pts – ${d.monedas} 🪙</li>`;
-    });
-    lista.innerHTML = html + "</ul>";
-  } else {
-    lista.innerHTML = "<p>🔄 Cargando ranking...</p>";
-  }
-
-  // Intentamos actualizar desde Firestore
   try {
-    const snap = await getDocs(query(collection(db, "jugadores"), orderBy("puntaje", "desc"), limit(5)));
-    const ranking = [];
+    const snap = await getDocs(query(
+      collection(db, "jugadores"),
+      orderBy("puntaje", "desc"),
+      limit(5)
+    ));
+
+    if (snap.empty) {
+      lista.innerHTML = "<p>⚠️ No hay jugadores aún en el ranking.</p>";
+      return;
+    }
 
     let html = "<h2>🏆 Top 5 CosmoDoge</h2><ul style='list-style:none;padding:0;'>";
     snap.forEach((doc, i) => {
       const d = doc.data();
-      ranking.push(d);
       html += `<li>#${i + 1} <strong>${d.nombre}</strong> – ${d.puntaje} pts – ${d.monedas} 🪙</li>`;
     });
-    lista.innerHTML = html + "</ul>";
+    html += "</ul>";
+    lista.innerHTML = html;
 
-    // Cacheamos los datos localmente
-    localStorage.setItem('rankingCache', JSON.stringify(ranking));
   } catch (e) {
     console.warn('⚠️ Error al cargar ranking desde Firebase:', e);
-    if (!cache) {
-      lista.innerHTML = "<p>⚠️ Error de conexión. Ranking no disponible.</p>";
-    }
+    lista.innerHTML = "<p>❌ Error de conexión con Firebase. Intenta más tarde.</p>";
   }
 };
+
 
 </script>
 
