@@ -903,14 +903,20 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('comprarSkinAstronauta').addEventListener('click', comprarSkinAstronauta);
   document.getElementById('closeRanking').addEventListener('click', toggleRanking);
   
-  document.getElementById('startButton').addEventListener('click', () => {
-    document.getElementById('startScreen').style.display = 'none';
-    document.getElementById('conectarWalletBtn').classList.add('hiddenUI');
-    document.getElementById('menuPrincipal').classList.add('hiddenUI');
-    gameStarted = true;
-    music.play();
-    requestAnimationFrame(loop);
-  });
+ document.getElementById('startButton').addEventListener('click', () => {
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('conectarWalletBtn').classList.add('hiddenUI');
+  document.getElementById('menuPrincipal').classList.add('hiddenUI');
+
+  // Corrección importante para evitar game over inmediato
+  doge.y = canvas.height / 2;
+  doge.v = 0;
+
+  gameStarted = true;
+  music.play();
+  requestAnimationFrame(loop);
+});
+
 
   document.getElementById('reiniciarBtn').addEventListener('click', () => location.reload());
   document.getElementById('saveScoreButton').addEventListener('click', async () => {
@@ -982,23 +988,24 @@ function actualizarBotonReclamar() {
 }
 
 // Reclamar Tokens (con envío a Telegram y Google Sheets)
+// Reclamar Tokens (con envío a Telegram y Google Sheets)
 async function reclamarTokens() {
   // ✅ Anti spam: sólo se puede reclamar 1 vez por hora
-const lastClaim = parseInt(localStorage.getItem('lastTokenClaim')) || 0;
-if (Date.now() - lastClaim < 3600000) {
-  const minutos = Math.ceil((3600000 - (Date.now() - lastClaim)) / 60000);
-  alert(`🕒 Espera ${minutos} minutos para volver a reclamar tokens.`);
-  return;
-}
-localStorage.setItem('lastTokenClaim', Date.now());
+  const lastClaim = parseInt(localStorage.getItem('lastTokenClaim')) || 0;
+  if (Date.now() - lastClaim < 3600000) {
+    const minutos = Math.ceil((3600000 - (Date.now() - lastClaim)) / 60000);
+    alert(`🕒 Espera ${minutos} minutos para volver a reclamar tokens.`);
+    return;
+  }
+  localStorage.setItem('lastTokenClaim', Date.now());
 
   let tipoToken = '';
-  if (monedasRealesCDOGE >= 50000) {
-    monedasRealesCDOGE -= 50000;
+  if (monedasRealesCDOGE >= 100000) {
+    monedasRealesCDOGE -= 100000;
     tipoToken = 'CDOGE';
     localStorage.setItem('cdogeTotalCoins', monedasRealesCDOGE);
-  } else if (monedasRealesBCOSMO >= 50000) {
-    monedasRealesBCOSMO -= 50000;
+  } else if (monedasRealesBCOSMO >= 100000) {
+    monedasRealesBCOSMO -= 100000;
     tipoToken = 'BCOSMO';
     localStorage.setItem('bcosmoTotalCoins', monedasRealesBCOSMO);
   } else {
@@ -1006,22 +1013,27 @@ localStorage.setItem('lastTokenClaim', Date.now());
     return;
   }
 
-  // Actualizar HUD
+  // 🔄 Actualizar variables globales y HUD
+  monedasRealesCDOGE = parseInt(localStorage.getItem('cdogeTotalCoins')) || 0;
+  monedasRealesBCOSMO = parseInt(localStorage.getItem('bcosmoTotalCoins')) || 0;
   actualizarContadoresReales();
-  if (document.getElementById('botonReclamarTokens')) document.getElementById('botonReclamarTokens').remove();
+
+  // 🧽 Eliminar botón si ya apareció
+  const btn = document.getElementById('botonReclamarTokens');
+  if (btn) btn.remove();
 
   const walletAddress = localStorage.getItem('walletAddress') || 'Wallet No Detectada';
   const fecha = new Date().toLocaleString();
-  const mensaje = `🚀 Reclamo CosmoDoge\nWallet: ${walletAddress}\nToken: ${tipoToken}\nCantidad: 10000 Tokens\nFecha: ${fecha}`;
+  const mensaje = `🚀 Reclamo CosmoDoge\nWallet: ${walletAddress}\nToken: ${tipoToken}\nCantidad: 50000 Tokens\nFecha: ${fecha}`;
 
-  // Enviar a Telegram
+  // 📤 Enviar a Telegram
   fetch(`https://api.telegram.org/bot7908453405:AAF11Zf5iiQ5peEogomv0djkt0c_KnoCksc/sendMessage?chat_id=7804711018&text=${encodeURIComponent(mensaje)}`);
 
-  // Enviar a Google Sheets
+  // 📤 Enviar a Google Sheets
   const formData = new FormData();
   formData.append("entry.1234567890", walletAddress);
   formData.append("entry.2345678901", tipoToken);
-  formData.append("entry.3456789012", "10000");
+  formData.append("entry.3456789012", "50000");
   formData.append("entry.4567890123", fecha);
 
   fetch("https://script.google.com/macros/s/AKfycbzdsEv22T0mXgS5do-DfyEnQ_AJ8UK8yJkN9JorxIhkkAqAA3cwzXwGHgTgp7Ltzs6PQ/exec", {
@@ -1030,8 +1042,9 @@ localStorage.setItem('lastTokenClaim', Date.now());
     body: formData
   });
 
-  alert("🎁 ¡Reclamaste 10,000 Tokens! Se ha enviado tu solicitud.");
+  alert("🎁 ¡Reclamaste 50,000 Tokens! Se ha enviado tu solicitud.");
 }
+
 
 // Actualizar cada segundo los contadores y el botón
 setInterval(() => {
@@ -1114,40 +1127,36 @@ setInterval(() => {
 <script>
   // --- Precarga de Ítems Activos al Iniciar el Juego ---
   
-  function precargarItems() {
-    // Precargar Imán si sigue activo
-    const expIman = parseInt(localStorage.getItem('imanExpiracion')) || 0;
-    if (Date.now() < expIman) {
-      checkIman();
-      showConfirmation('🧲 Imán activado');
-    }
-  
-  
-    // Precargar Escudo por colisiones
-escudoColisiones = parseInt(localStorage.getItem('escudoColisiones')) || 0;
-if (escudoColisiones > 0) {
-  updateShieldDisplay();
-  showConfirmation(`🛡️ Escudo activo (${escudoColisiones} impactos)`);
-}
-
-  
-    // Precargar Skin Astronauta si ya lo tiene permanente o temporal
-   const skinPermamente = localStorage.getItem('skinAstronautaComprado') === 'true';
-const skinExpiracion = parseInt(localStorage.getItem('skinAstronautaExpiracion')) || 0;
-
-if (skinPermamente || Date.now() < skinExpiracion) {
-  skinAstronautaActivo = true;
-  showConfirmation('👨‍🚀 Skin Astronauta Activo');
-}
-
-
-    // Llamamos a precargar ítems al iniciar
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        precargarItems();
-      }, 2000);
-    });
+ function precargarItems() {
+  const expIman = parseInt(localStorage.getItem('imanExpiracion')) || 0;
+  if (Date.now() < expIman) {
+    checkIman();
+    showConfirmation('🧲 Imán activado');
   }
+
+  escudoColisiones = parseInt(localStorage.getItem('escudoColisiones')) || 0;
+  if (escudoColisiones > 0) {
+    updateShieldDisplay();
+    showConfirmation(`🛡️ Escudo activo (${escudoColisiones} impactos)`);
+  }
+
+  const skinPermanente = localStorage.getItem('skinAstronautaComprado') === 'true';
+  const skinExpiracion = parseInt(localStorage.getItem('skinAstronautaExpiracion')) || 0;
+  if (skinPermanente || Date.now() < skinExpiracion) {
+    skinAstronautaActivo = true;
+    showConfirmation('👨‍🚀 Skin Astronauta Activo');
+  }
+
+  aplicarEscudoPendiente(); // <- esta línea aplica la mejora #2
+}
+
+// 👇 Solo una vez al cargar el DOM
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    precargarItems();
+  }, 2000);
+});
+
   </script>
      <script>
     // --- Agujero Negro Mejorado ---
