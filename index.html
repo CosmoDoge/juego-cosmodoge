@@ -331,41 +331,42 @@ function checkIman() {
 }
 
 // Escudo activo
+let escudoColisiones = parseInt(localStorage.getItem('escudoColisiones')) || 0;
+
 function buyShield() {
   if (coins < 1000) return alert('No tienes suficientes 🪙');
   coins -= 1000;
   localStorage.setItem('cdogeCoins', coins);
   document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
-  const exp = Date.now() + 13000;
-  localStorage.setItem('shieldExpiration', exp);
-  showMsg('🛡️ Escudo activo 13s', canvas.width/2, 140);
-  checkShield();
-}
-function checkShield() {
-  const id = setInterval(() => {
-    const exp = parseInt(localStorage.getItem('shieldExpiration')) || 0, now = Date.now(), d = document.getElementById('shieldDisplay');
-    if (now < exp) {
-      const s = Math.ceil((exp-now)/1000);
-      d.textContent = `🛡️ Escudo: ${s}s`;
-      d.style.display = 'block';
-    } else {
-      d.style.display = 'none';
-      localStorage.removeItem('shieldExpiration');
-      clearInterval(id);
-      showMsg('🛡️ Escudo expirado', canvas.width/2, 140);
-    }
-  }, 250);
+  
+  escudoColisiones = 3;
+  localStorage.setItem('escudoColisiones', escudoColisiones);
+  updateShieldDisplay();
+  showMsg('🛡️ Escudo con 3 colisiones activado', canvas.width/2, 140);
 }
 
-// Manejar colisiones
-function handleCollision() {
-  const exp = parseInt(localStorage.getItem('shieldExpiration')) || 0;
-  if (Date.now() < exp) {
-    showMsg('🛡️ Bloqueado!', canvas.width/2, 160);
-    return true;
+function updateShieldDisplay() {
+  const d = document.getElementById('shieldDisplay');
+  if (escudoColisiones > 0) {
+    d.textContent = `🛡️ Escudo: ${escudoColisiones} impactos`;
+    d.style.display = 'block';
+  } else {
+    d.style.display = 'none';
+    localStorage.removeItem('escudoColisiones');
   }
-  return false;
 }
+
+function handleCollision() {
+  if (escudoColisiones > 0) {
+    escudoColisiones--;
+    localStorage.setItem('escudoColisiones', escudoColisiones);
+    updateShieldDisplay();
+    showMsg('🛡️ Colisión bloqueada!', canvas.width/2, 160);
+    return true; // no perder
+  }
+  return false; // perder
+}
+
 // Monedas normales
 function spawnCoinGroup() {
   const amt = Math.floor(Math.random() * 6) + 5;
@@ -997,12 +998,14 @@ setInterval(() => {
       showConfirmation('🧲 Imán activado');
     }
   
-    // Precargar Escudo si sigue activo
-    const expShield = parseInt(localStorage.getItem('shieldExpiration')) || 0;
-    if (Date.now() < expShield) {
-      checkShield();
-      showConfirmation('🛡️ Escudo activado');
-    }
+  
+    // Precargar Escudo por colisiones
+escudoColisiones = parseInt(localStorage.getItem('escudoColisiones')) || 0;
+if (escudoColisiones > 0) {
+  updateShieldDisplay();
+  showConfirmation(`🛡️ Escudo activo (${escudoColisiones} impactos)`);
+}
+
   
     // Precargar Skin Astronauta si ya lo tiene permanente o temporal
     const skinPermamente = localStorage.getItem('skinAstronautaComprado') === 'true';
