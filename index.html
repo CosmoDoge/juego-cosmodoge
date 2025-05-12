@@ -567,11 +567,14 @@ function collectBCOSMO() {
 // Main loop
 let lastTs = 0;
 function loop(ts) {
+  // 🔒 Protección: solo seguir si el juego comenzó y no ha terminado
   if (!gameStarted || isGameOver) return;
+
   if (!lastTs) lastTs = ts;
   const dt = ts - lastTs;
   lastTs = ts;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   drawBackground();
   doge.v += gravity * (dt/16);
@@ -622,42 +625,7 @@ if (!skinAstronautaActivo && score >= 25 && !skinAstronautaComprado) {
 
   requestAnimationFrame(loop);
 }
-  // Mostrar puntaje en pantalla
-  document.getElementById('finalScore').textContent = score;
-
-  // Mostrar pantalla de Game Over
-  const go = document.getElementById('gameOverScreen');
-  go.style.display = 'flex';
-  setTimeout(() => go.classList.add('show'), 10);
-
-  // Mostrar botón de reinicio siempre
-  setTimeout(() => {
-    const reiniciar = document.getElementById('reiniciarBtn');
-    if (reiniciar) reiniciar.style.display = 'block';
-  }, 1000);
-
-  // Si es nuevo récord
-  if (score > highScore) {
-    localStorage.setItem('cdogeFloatHighScore', score);
-    highScore = score;
-    document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
-    play(sndRecord);
-
-    const nombreGuardado = localStorage.getItem('cosmodogeliveUserName');
-    document.getElementById('newRecordMessage').style.display = 'flex';
-
-    if (!nombreGuardado) {
-      document.getElementById('playerNameForm').style.display = 'flex';
-    } else {
-      // Ocultar formularios para liberar botón de reinicio
-      document.getElementById('newRecordMessage').style.display = 'none';
-      document.getElementById('playerNameForm').style.display = 'none';
-      guardarJugadorAutomatic(nombreGuardado, score, coins).then(mostrarTopRanking);
-    }
-
-  } else {
-    play(sndBoom);
-  }
+  
 
 // UI handlers
 function toggleTienda() {
@@ -875,25 +843,23 @@ async function comprarSkinAstronauta() {
 
 // Inicialización
 window.addEventListener('DOMContentLoaded', () => {
-    // 🔄 Limpiar rankingCache cada 24h
-  const lastClean = parseInt(localStorage.getItem('rankingCacheCleanedAt')) || 0;
-  if (Date.now() - lastClean > 86400000) { // 24 horas
-    localStorage.removeItem('rankingCache');
-    localStorage.setItem('rankingCacheCleanedAt', Date.now());
-  }
-
-  setTimeout(() => {
-    document.getElementById('pantallaCarga').style.display = 'none';
-    document.getElementById('startScreen').style.display = 'flex';
-    if (Date.now() < parseInt(localStorage.getItem('imanExpiracion'))) checkIman();
-    if (Date.now() < parseInt(localStorage.getItem('shieldExpiration'))) checkShield();
-  }, 3000);
-
+  // Mostrar valores iniciales
   document.getElementById('coinDisplay').textContent = `💰 x ${coins}`;
   document.getElementById('highScoreDisplay').textContent = `🔝 Máx: ${highScore}`;
   updCDOGE();
   updBCOSMO();
 
+  // Centrar doge en pantalla y sin velocidad antes de iniciar
+  doge.y = canvas.height / 2;
+  doge.v = 0;
+
+  // Mostrar pantalla de carga y luego el menú inicial
+  setTimeout(() => {
+    document.getElementById('pantallaCarga').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'flex';
+  }, 2000);
+
+  // Eventos
   document.getElementById('conectarWalletBtn').addEventListener('click', mostrarSelectorWallet);
   document.getElementById('btnTienda').addEventListener('click', toggleTienda);
   document.getElementById('btnRanking').addEventListener('click', toggleRanking);
@@ -902,47 +868,43 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('comprarEscudo').addEventListener('click', buyShield);
   document.getElementById('comprarSkinAstronauta').addEventListener('click', comprarSkinAstronauta);
   document.getElementById('closeRanking').addEventListener('click', toggleRanking);
-  
- document.getElementById('startButton').addEventListener('click', () => {
-  document.getElementById('startScreen').style.display = 'none';
-  document.getElementById('conectarWalletBtn').classList.add('hiddenUI');
-  document.getElementById('menuPrincipal').classList.add('hiddenUI');
 
-  // Corrección importante para evitar game over inmediato
-  doge.y = canvas.height / 2;
-  doge.v = 0;
+  // Iniciar juego solo al hacer clic en "¡Comenzar!"
+  document.getElementById('startButton').addEventListener('click', () => {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('conectarWalletBtn').classList.add('hiddenUI');
+    document.getElementById('menuPrincipal').classList.add('hiddenUI');
+    document.getElementById('gameOverScreen').style.display = 'none';
+document.getElementById('gameOverScreen').classList.remove('show');
+document.getElementById('reiniciarBtn').style.display = 'none';
+    gameStarted = true;
+    music.play();
+    requestAnimationFrame(loop);
+  });
 
-  gameStarted = true;
-  music.play();
-  requestAnimationFrame(loop);
-});
-
-
+  // Reinicio
   document.getElementById('reiniciarBtn').addEventListener('click', () => location.reload());
+
+  // Guardar récord
   document.getElementById('saveScoreButton').addEventListener('click', async () => {
-  const nombre = document.getElementById('playerName').value.trim();
-  if (!nombre) {
-    alert('🚨 Ingresa tu nombre para guardar tu récord.');
-    return;
-  }
+    const nombre = document.getElementById('playerName').value.trim();
+    if (!nombre) {
+      alert('🚨 Ingresa tu nombre para guardar tu récord.');
+      return;
+    }
 
-  // Guardamos el nombre localmente para siguientes partidas
-  localStorage.setItem('cosmodogeliveUserName', nombre);
+    localStorage.setItem('cosmodogeliveUserName', nombre);
+    document.getElementById('playerNameForm').style.display = 'none';
+    document.getElementById('newRecordMessage').style.display = 'none';
 
-  document.getElementById('playerNameForm').style.display = 'none';
-  document.getElementById('newRecordMessage').style.display = 'none';
+    const puntaje = score;
+    const monedas = coins;
 
-  const puntaje = score;
-  const monedas = coins;
-
- 
-  await guardarJugadorAutomatic(nombre, puntaje, monedas);
-mostrarTopRanking();
-showMsg('✅ ¡Tu récord se guardó exitosamente!', canvas.width/2, 100);
-
+    await guardarJugadorAutomatic(nombre, puntaje, monedas);
+    mostrarTopRanking();
+    showMsg('✅ ¡Tu récord se guardó exitosamente!', canvas.width / 2, 100);
+  });
 });
-
-
 
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
@@ -959,7 +921,7 @@ showMsg('✅ ¡Tu récord se guardó exitosamente!', canvas.width/2, 100);
       play(sndJump);
     }
   });
-});
+
 
 // --- Sistema de Monedas Reales para Reclamar Tokens ---
 
