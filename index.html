@@ -198,21 +198,21 @@ mostrarEstadoFirebase();
 
 import { setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+// Guardar jugador con fecha como string ISO para que cumpla reglas de seguridad
 window.guardarJugadorAutomatic = async (nombre, puntaje, monedas) => {
   try {
-    await addDoc(collection(db, "jugadores"), {
+    await setDoc(doc(db, "jugadores", nombre), {
       nombre,
       puntaje,
       monedas,
-      fecha: serverTimestamp()
-    });
-    console.log("✅ Puntaje guardado correctamente");
+      fecha: new Date().toISOString() // formato válido para la regla: string o timestamp
+    }, { merge: true }); // merge para no sobreescribir campos anteriores
+
   } catch (e) {
     console.warn("❌ Error al guardar jugador:", e);
+    alert("❌ No se pudo guardar el récord. Intenta más tarde.");
   }
 };
-
-
 
 window.mostrarTopRanking = async () => {
   const lista = document.getElementById("topRanking");
