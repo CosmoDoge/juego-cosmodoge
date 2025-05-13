@@ -154,98 +154,106 @@
 
 <!-- Firebase Configuración -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getFirestore, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
-  authDomain: "cosmodogelive.firebaseapp.com",
-  projectId: "cosmodogelive",
-  storageBucket: "cosmodogelive.appspot.com",
-  messagingSenderId: "648227069914",
-  appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
-};
-initializeApp(firebaseConfig);
-const db = getFirestore();
-function mostrarEstadoFirebase() {
-  const estado = document.createElement('div');
-  estado.id = 'estadoFirebase';
-  estado.style.position = 'fixed';
-  estado.style.bottom = '10px';
-  estado.style.left = '10px';
-  estado.style.color = '#0f0';
-  estado.style.font = '14px Orbitron, sans-serif';
-  estado.style.zIndex = '9999';
-  estado.textContent = '🔗 Firebase: conectado';
-  document.body.appendChild(estado);
-
-  const actualizarEstado = (online) => {
-    estado.textContent = online ? '🔗 Firebase: conectado' : '⚠️ Firebase: desconectado';
-    estado.style.color = online ? '#0f0' : '#f00';
+  const firebaseConfig = {
+    apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
+    authDomain: "cosmodogelive.firebaseapp.com",
+    projectId: "cosmodogelive",
+    storageBucket: "cosmodogelive.appspot.com",
+    messagingSenderId: "648227069914",
+    appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
   };
 
-  window.addEventListener('online', () => actualizarEstado(true));
-  window.addEventListener('offline', () => actualizarEstado(false));
+  // ✅ Inicializa correctamente Firebase
+  const app = initializeApp(firebaseConfig);
 
-  setInterval(() => {
-    fetch('https://firestore.googleapis.com', { mode: 'no-cors' })
-      .then(() => actualizarEstado(true))
-      .catch(() => actualizarEstado(false));
-  }, 5000);
-}
+  // ✅ Inicializa Firestore de forma explícita
+  const db = getFirestore(app);
 
-mostrarEstadoFirebase();
+  // Mostrar estado de conexión con Firebase (opcional)
+  function mostrarEstadoFirebase() {
+    const estado = document.createElement('div');
+    estado.id = 'estadoFirebase';
+    estado.style.position = 'fixed';
+    estado.style.bottom = '10px';
+    estado.style.left = '10px';
+    estado.style.color = '#0f0';
+    estado.style.font = '14px Orbitron, sans-serif';
+    estado.style.zIndex = '9999';
+    estado.textContent = '🔗 Firebase: conectado';
+    document.body.appendChild(estado);
 
-import { setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    const actualizarEstado = (online) => {
+      estado.textContent = online ? '🔗 Firebase: conectado' : '⚠️ Firebase: desconectado';
+      estado.style.color = online ? '#0f0' : '#f00';
+    };
 
-// Guardar jugador con fecha como string ISO para que cumpla reglas de seguridad
-window.guardarJugadorAutomatic = async (nombre, puntaje, monedas) => {
-  try {
-    await setDoc(doc(db, "jugadores", nombre), {
-      nombre,
-      puntaje,
-      monedas,
-      fecha: new Date().toISOString() // formato válido para la regla: string o timestamp
-    }, { merge: true }); // merge para no sobreescribir campos anteriores
+    window.addEventListener('online', () => actualizarEstado(true));
+    window.addEventListener('offline', () => actualizarEstado(false));
 
-  } catch (e) {
-    console.warn("❌ Error al guardar jugador:", e);
-    alert("❌ No se pudo guardar el récord. Intenta más tarde.");
+    setInterval(() => {
+      fetch('https://firestore.googleapis.com', { mode: 'no-cors' })
+        .then(() => actualizarEstado(true))
+        .catch(() => actualizarEstado(false));
+    }, 5000);
   }
-};
 
-window.mostrarTopRanking = async () => {
-  const lista = document.getElementById("topRanking");
-  lista.innerHTML = "<p>🔄 Cargando ranking...</p>";
+  mostrarEstadoFirebase();
 
-  try {
-    const snap = await getDocs(query(
-      collection(db, "jugadores"),
-      orderBy("puntaje", "desc"),
-      limit(5)
-    ));
+  // Guardar jugador
+  window.guardarJugadorAutomatic = async (nombre, puntaje, monedas) => {
+    try {
+      await setDoc(doc(db, "jugadores", nombre), {
+        nombre,
+        puntaje,
+        monedas,
+        fecha: serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      console.warn("❌ Error al guardar jugador:", e);
+    }
+  };
 
-    if (snap.empty) {
-      lista.innerHTML = "<p>⚠️ No hay jugadores aún en el ranking.</p>";
-      return;
+  // Mostrar top ranking
+  window.mostrarTopRanking = async () => {
+    const lista = document.getElementById("topRanking");
+
+    const cache = localStorage.getItem('rankingCache');
+    if (cache) {
+      const datos = JSON.parse(cache);
+      let html = "<h2>🏆 Top 5 CosmoDoge</h2><ul style='list-style:none;padding:0;'>";
+      datos.forEach((d, i) => {
+        html += `<li>#${i + 1} <strong>${d.nombre}</strong> – ${d.puntaje} pts – ${d.monedas} 🪙</li>`;
+      });
+      lista.innerHTML = html + "</ul>";
+    } else {
+      lista.innerHTML = "<p>🔄 Cargando ranking...</p>";
     }
 
-    let html = "<h2>🏆 Top 5 CosmoDoge</h2><ul style='list-style:none;padding:0;'>";
-    snap.forEach((doc, i) => {
-      const d = doc.data();
-      html += `<li>#${i + 1} <strong>${d.nombre}</strong> – ${d.puntaje} pts – ${d.monedas} 🪙</li>`;
-    });
-    html += "</ul>";
-    lista.innerHTML = html;
+    try {
+      const snap = await getDocs(query(collection(db, "jugadores"), orderBy("puntaje", "desc"), limit(5)));
+      const ranking = [];
 
-  } catch (e) {
-    console.warn('⚠️ Error al cargar ranking desde Firebase:', e);
-    lista.innerHTML = "<p>❌ Error de conexión con Firebase. Intenta más tarde.</p>";
-  }
-};
+      let html = "<h2>🏆 Top 5 CosmoDoge</h2><ul style='list-style:none;padding:0;'>";
+      snap.forEach((doc, i) => {
+        const d = doc.data();
+        ranking.push(d);
+        html += `<li>#${i + 1} <strong>${d.nombre}</strong> – ${d.puntaje} pts – ${d.monedas} 🪙</li>`;
+      });
+      lista.innerHTML = html + "</ul>";
 
-
+      localStorage.setItem('rankingCache', JSON.stringify(ranking));
+    } catch (e) {
+      console.warn('⚠️ Error al cargar ranking desde Firebase:', e);
+      if (!cache) {
+        lista.innerHTML = "<p>⚠️ Error de conexión. Ranking no disponible.</p>";
+      }
+    }
+  };
 </script>
+
 
 <!-- Scripts de Juego -->
 <script>
