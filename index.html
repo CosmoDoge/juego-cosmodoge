@@ -37,6 +37,7 @@
       width: 100%;
       height: 100%;
       display: block;
+      object-fit: cover;
     }
 
     /* Pantallas */
@@ -320,12 +321,6 @@
       display: none;
       font-size: 11px;
     }
-
-    .restart-btn {
-      background: #ffaa44;
-      color: #000;
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
@@ -439,7 +434,7 @@
   <div class="menu-container" style="border-color:#ffaa44;">
     <h1 style="color:#ffaa44;">🌟 NUEVO RÉCORD!</h1>
     <div id="recordScore" style="margin:10px; font-size:18px;"></div>
-    <button id="continueAfterRecord" class="menu-btn restart-btn">🔄 CONTINUAR</button>
+    <button id="continueAfterRecord" class="menu-btn">🔄 CONTINUAR</button>
     <button id="menuAfterRecord" class="menu-btn secondary">🏠 MENÚ</button>
   </div>
 </div>
@@ -580,34 +575,6 @@ function mostrarSelectorWallet() {
   document.getElementById('closeModal').onclick = () => modal.remove();
 }
 
-// ==================== SISTEMA DE ESTRELLAS (FONDO DINÁMICO) ====================
-let stars = [];
-function initStars() {
-  stars = [];
-  for(let i = 0; i < 150; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      size: 2 + Math.random() * 3,
-      alpha: 0.5 + Math.random() * 0.5,
-      speed: 0.2 + Math.random() * 0.5
-    });
-  }
-}
-
-function drawStars() {
-  for(let s of stars) {
-    ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * (0.5 + Math.sin(Date.now() / 1000 * s.speed) * 0.3)})`;
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Movimiento sutil de estrellas
-    s.x -= 0.3;
-    if(s.x < 0) s.x = canvas.width;
-  }
-}
-
 // ==================== CONFIGURACIÓN DEL JUEGO ====================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -615,7 +582,6 @@ const ctx = canvas.getContext('2d');
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  initStars();
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -629,13 +595,12 @@ let gameActive = false;
 let gameLoopId = null;
 let score = 0, coins = 0, highScore = 0;
 let totalCDOGE = 0, totalBCOSMO = 0;
-let timeElapsed = 0, lastScoreTime = 0, lastObs = 0;
+let timeElapsed = 0, lastScoreTime = 0, lastObs = 0, lastFondoChange = 0;
 let isShieldActive = false, shieldHits = 0;
 let skinActivo = 'normal';
 let imanExpiration = 0;
 let comboCounter = 0, lastObstaclePassed = 0;
 let difficultyLevel = 1;
-let frameSkip = 0;
 
 // Elementos
 let coinsArr = [], obsArr = [], cdogeArr = [], bcosmoArr = [];
@@ -644,8 +609,13 @@ let faseAgujero = 0;
 
 const doge = { x: 100, y: 200, w: 48, h: 48, v: 0 };
 
-// Imágenes
+// Imágenes fondo originales
 const fondoImg = new Image();
+const fondosList = ['fondo-cosmodoge-v2.png', 'fondo-cosmodoge-v3.png', 'fondo-cosmodoge-v4.png'];
+let fondoIndex = 0;
+fondoImg.src = fondosList[0];
+
+// Imágenes del juego
 const dogeImg = new Image();
 const dogeGoldImg = new Image();
 const skinAstronautaImg = new Image();
@@ -721,6 +691,7 @@ function resetGame() {
   comboCounter = 0;
   timeElapsed = 0;
   lastScoreTime = 0;
+  lastFondoChange = 0;
   difficultyLevel = 1;
   coins = parseInt(localStorage.getItem('cdogeCoins')) || 0;
   totalCDOGE = parseInt(localStorage.getItem('cdogeTotalCoins')) || 0;
@@ -760,12 +731,12 @@ function spawnObstacle() {
   difficultyLevel = Math.min(5, 1 + Math.floor(score / 400));
   
   const obstacleTypes = [
-    { type: 'normal', weight: 30, speed: 2.0, desc: 'Lineal' },
-    { type: 'zigzag', weight: 22, speed: 1.9, desc: 'Ondulatorio' },
-    { type: 'chaser', weight: 18, speed: 1.7, desc: 'Perseguidor' },
-    { type: 'meteor', weight: 15, speed: 2.3, desc: 'Meteorito' },
-    { type: 'homing', weight: 10, speed: 2.0, desc: 'Homing' },
-    { type: 'spiral', weight: 5, speed: 1.8, desc: 'Espiral' }
+    { type: 'normal', weight: 30, speed: 2.0 },
+    { type: 'zigzag', weight: 22, speed: 1.9 },
+    { type: 'chaser', weight: 18, speed: 1.7 },
+    { type: 'meteor', weight: 15, speed: 2.3 },
+    { type: 'homing', weight: 10, speed: 2.0 },
+    { type: 'spiral', weight: 5, speed: 1.8 }
   ];
   
   if(difficultyLevel >= 3) obstacleTypes.find(t => t.type === 'homing').weight = 15;
@@ -827,7 +798,7 @@ function updateObstacles() {
     
     o.y = Math.min(Math.max(o.y, 20), canvas.height - o.h - 20);
     
-    // Colisión con hitbox precisa
+    // Colisión
     if(doge.x < o.x + o.w - 6 && doge.x + doge.w - 6 > o.x + 6 && 
        doge.y < o.y + o.h - 6 && doge.y + doge.h - 6 > o.y + 6) {
       if(!handleCollision()) gameOver();
@@ -943,7 +914,9 @@ function gameOver() {
 }
 
 // ==================== DIBUJADO ====================
-function drawBackground() { drawStars(); }
+function drawBackground() { 
+  ctx.drawImage(fondoImg, 0, 0, canvas.width, canvas.height);
+}
 
 function drawDoge() {
   let img = skinActivo === 'astronauta' ? skinAstronautaImg : (skinActivo === 'dorado' ? dogeGoldImg : dogeImg);
@@ -1074,9 +1047,8 @@ function drawCofreEspacial() {
   if(cofreEspacial.x + cofreEspacial.w < 0) cofreEspacial = null;
 }
 
-// ==================== LOOP PRINCIPAL OPTIMIZADO ====================
+// ==================== LOOP PRINCIPAL ====================
 let lastTimestamp = 0;
-let frameCounter = 0;
 
 function updateGame(dt) {
   if(!gameActive) return;
@@ -1101,7 +1073,14 @@ function updateGame(dt) {
     updateUI(); 
   }
   
-  // Spawners con dificultad progresiva
+  // Cambio de fondo cada 30 segundos
+  if(sec - lastFondoChange >= 30) {
+    fondoIndex = (fondoIndex + 1) % fondosList.length;
+    fondoImg.src = fondosList[fondoIndex];
+    lastFondoChange = sec;
+  }
+  
+  // Spawners
   if(Math.random() < 0.022) spawnCoinGroup();
   let obsDelay = Math.max(700, 2000 - Math.floor(score / 20) * 8);
   if(Date.now() - lastObs > obsDelay) { 
@@ -1276,7 +1255,7 @@ window.addEventListener('DOMContentLoaded', () => {
     shieldHits = savedShield;
   }
   
-  // Registrar usuario con persistencia
+  // Registrar usuario persistente
   const savedName = localStorage.getItem('cosmodogeUserName');
   if(savedName) {
     document.getElementById('userNameDisplay').textContent = `✨ ${savedName}`;
@@ -1332,7 +1311,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('claimTokensBtn').onclick = canjearTokens;
   document.getElementById('claimLevelBonusBtn').onclick = reclamarBonusNivel;
   
-  // Controles táctiles y teclado
+  // Controles
   canvas.addEventListener('touchstart', (e) => { 
     e.preventDefault(); 
     if(gameActive) { 
