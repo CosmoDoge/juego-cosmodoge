@@ -36,8 +36,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      background: #000;
+      display: block;
     }
 
     /* Pantallas */
@@ -63,17 +62,17 @@
       text-align: center;
       max-width: 480px;
       width: 90%;
-      padding: 30px 25px;
+      padding: 25px 20px;
       background: linear-gradient(135deg, rgba(0, 20, 50, 0.98), rgba(0, 5, 20, 0.98));
       border-radius: 50px;
       border: 2px solid #0ff;
-      box-shadow: 0 0 50px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1);
+      box-shadow: 0 0 50px rgba(0, 255, 255, 0.4);
       backdrop-filter: blur(5px);
     }
 
     .logo {
-      width: 110px;
-      height: 110px;
+      width: 100px;
+      height: 100px;
       margin: 0 auto 15px;
       background: url('cosmodoge-cohete-juego.png') center/contain no-repeat;
       animation: floatLogo 3s ease-in-out infinite;
@@ -82,45 +81,37 @@
 
     @keyframes floatLogo {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-12px); }
+      50% { transform: translateY(-10px); }
     }
 
     .game-title {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       font-weight: 900;
       background: linear-gradient(135deg, #0ff, #f0f, #ff0);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      margin-bottom: 8px;
-      text-shadow: 0 0 30px rgba(0,255,255,0.5);
+      margin-bottom: 5px;
     }
 
     .menu-buttons {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin: 25px 0;
+      gap: 10px;
+      margin: 20px 0;
     }
 
     .menu-btn {
       background: linear-gradient(135deg, #0ff, #0aa);
       border: none;
-      padding: 14px 25px;
-      border-radius: 60px;
-      font-size: 1rem;
+      padding: 12px 20px;
+      border-radius: 50px;
+      font-size: 0.9rem;
       font-weight: bold;
       font-family: 'Orbitron', monospace;
       cursor: pointer;
       transition: all 0.2s;
       color: #000;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .menu-btn:hover {
-      transform: scale(1.02);
-      box-shadow: 0 0 25px #0ff;
     }
 
     .menu-btn.secondary {
@@ -129,7 +120,6 @@
       border: 1px solid #0ff;
     }
 
-    /* Selector de idioma */
     .lang-selector {
       position: absolute;
       top: 15px;
@@ -148,34 +138,40 @@
       cursor: pointer;
       font-family: 'Orbitron', monospace;
       font-size: 11px;
-      transition: all 0.2s;
     }
 
     .lang-btn.active {
       background: #0ff;
       color: #000;
-      box-shadow: 0 0 10px #0ff;
     }
 
-    .register-form {
-      margin-top: 20px;
-      padding: 15px;
-      background: rgba(0, 255, 255, 0.1);
-      border-radius: 30px;
-      border: 1px solid rgba(0,255,255,0.3);
-    }
-
-    .register-form input {
-      width: 100%;
+    .register-section {
+      margin-top: 15px;
       padding: 12px;
-      border-radius: 40px;
+      background: rgba(0, 255, 255, 0.1);
+      border-radius: 25px;
+    }
+
+    .register-section input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 30px;
       border: 1px solid #0ff;
       background: #111;
       color: #0ff;
       font-family: 'Orbitron', monospace;
       text-align: center;
-      margin-bottom: 10px;
-      font-size: 14px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .user-greeting {
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(0, 255, 255, 0.2);
+      border-radius: 20px;
+      color: #ffaa44;
+      font-size: 11px;
     }
 
     /* HUD */
@@ -184,91 +180,94 @@
       z-index: 50;
       background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(8px);
-      padding: 6px 14px;
-      border-radius: 25px;
+      padding: 5px 12px;
+      border-radius: 20px;
       font-family: 'Orbitron', monospace;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
       color: #0ff;
       pointer-events: none;
       white-space: nowrap;
       border: 1px solid rgba(0,255,255,0.3);
-      letter-spacing: 1px;
     }
     
     @media (min-width: 768px) {
-      .hud { font-size: 14px; padding: 8px 18px; }
+      .hud { font-size: 12px; padding: 6px 15px; }
     }
 
     #scoreDisplay { top: 10px; left: 10px; color: #ffaa44; }
-    #coinDisplay { top: 50px; left: 10px; color: #ffaa44; }
-    #highScoreDisplay { top: 90px; left: 10px; color: #ff66cc; }
-    #contadorCDOGE { top: 130px; left: 10px; color: #0ff; }
-    #contadorBCOSMO { top: 170px; left: 10px; color: #ffaa44; }
-    #shieldDisplay { top: 210px; left: 10px; color: #ff6666; display: none; }
-    #imanContador { top: 250px; right: 10px; left: auto; background: #000000aa; display: none; font-size: 10px; }
-    #comboDisplay { top: 290px; left: 10px; color: #ff0; display: none; font-size: 12px; }
-    #difficultyDisplay { top: 330px; left: 10px; color: #f66; font-size: 10px; display: none; }
-    #balanceCDOGE, #balanceBCOSMO { right: 10px; left: auto; display: none; font-size: 10px; background: #000000cc; }
+    #coinDisplay { top: 45px; left: 10px; color: #ffaa44; }
+    #highScoreDisplay { top: 80px; left: 10px; color: #ff66cc; }
+    #contadorCDOGE { top: 115px; left: 10px; color: #0ff; }
+    #contadorBCOSMO { top: 150px; left: 10px; color: #ffaa44; }
+    #shieldDisplay { top: 185px; left: 10px; color: #ff6666; display: none; }
+    #imanContador { top: 220px; right: 10px; left: auto; display: none; font-size: 9px; }
+    #comboDisplay { top: 255px; left: 10px; color: #ff0; display: none; font-size: 10px; }
+    #difficultyDisplay { top: 290px; left: 10px; color: #f66; font-size: 9px; display: none; }
+    #balanceCDOGE, #balanceBCOSMO { right: 10px; left: auto; display: none; font-size: 9px; background: #000000cc; }
     #balanceCDOGE { top: 10px; }
     #balanceBCOSMO { top: 45px; }
     #userNameDisplay { top: 10px; right: 10px; left: auto; background: #000000aa; color: #ffaa44; }
 
-    /* Paneles flotantes */
+    /* Paneles */
     .floating-panel {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: 90%;
-      max-width: 480px;
-      max-height: 85vh;
+      max-width: 450px;
+      max-height: 80vh;
       background: linear-gradient(135deg, #0a0a2a, #000);
       border: 2px solid #0ff;
-      border-radius: 35px;
-      padding: 25px;
+      border-radius: 30px;
+      padding: 20px;
       z-index: 200;
       overflow-y: auto;
       display: none;
-      box-shadow: 0 0 60px rgba(0,255,255,0.3);
-    }
-
-    .panel-title {
-      text-align: center;
-      font-size: 1.6rem;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, #0ff, #f0f);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
     }
 
     .shop-item {
       background: rgba(0, 255, 255, 0.1);
-      margin: 12px 0;
-      padding: 15px;
-      border-radius: 25px;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
-      border: 1px solid rgba(0,255,255,0.2);
+      gap: 8px;
+    }
+
+    .shop-item-info {
+      flex: 1;
+    }
+
+    .shop-item-info strong { font-size: 0.9rem; color: #0ff; }
+    .shop-item-info small { font-size: 9px; color: #aaa; }
+
+    .skin-preview {
+      width: 35px;
+      height: 35px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      margin-right: 8px;
     }
 
     .shop-item button {
       background: linear-gradient(135deg, #0ff, #0aa);
       border: none;
-      padding: 8px 18px;
-      border-radius: 30px;
+      padding: 6px 15px;
+      border-radius: 25px;
       cursor: pointer;
       font-weight: bold;
       font-family: 'Orbitron', monospace;
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .ranking-list {
-      max-height: 400px;
+      max-height: 350px;
       overflow-y: auto;
       margin: 15px 0;
     }
@@ -276,28 +275,28 @@
     .ranking-item {
       display: flex;
       justify-content: space-between;
-      padding: 10px;
+      padding: 8px;
       border-bottom: 1px solid #0ff33;
-      font-size: 13px;
+      font-size: 11px;
       background: rgba(0,0,0,0.3);
-      margin: 5px 0;
-      border-radius: 10px;
+      margin: 4px 0;
+      border-radius: 8px;
     }
 
     .toast-msg {
       position: fixed;
-      bottom: 100px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
       background: linear-gradient(135deg, #0ff, #0aa);
       color: #000;
-      padding: 10px 20px;
-      border-radius: 40px;
+      padding: 8px 16px;
+      border-radius: 30px;
       font-weight: bold;
       z-index: 300;
       animation: fadeOut 2s ease forwards;
-      font-size: 13px;
-      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     @keyframes fadeOut {
@@ -308,25 +307,24 @@
 
     #menuFloatBtn {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 15px;
+      right: 15px;
       z-index: 150;
       background: linear-gradient(135deg, #0ff, #0aa);
       border: none;
-      padding: 10px 20px;
-      border-radius: 40px;
+      padding: 8px 16px;
+      border-radius: 30px;
       font-family: 'Orbitron', monospace;
       font-weight: bold;
       cursor: pointer;
       display: none;
+      font-size: 11px;
     }
 
-    .warning-line {
-      position: fixed;
-      background: rgba(255, 0, 0, 0.8);
-      box-shadow: 0 0 15px red;
-      z-index: 45;
-      pointer-events: none;
+    .restart-btn {
+      background: #ffaa44;
+      color: #000;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -348,8 +346,8 @@
 <div id="contadorBCOSMO" class="hud">🐕 BCOSMO: 0</div>
 <div id="shieldDisplay" class="hud">🛡️</div>
 <div id="imanContador" class="hud">🧲</div>
-<div id="comboDisplay" class="hud">🔥 COMBO x0</div>
-<div id="difficultyDisplay" class="hud">⚠️ DIFICULTAD: NORMAL</div>
+<div id="comboDisplay" class="hud">🔥 COMBO</div>
+<div id="difficultyDisplay" class="hud">⚠️ DIFICULTAD</div>
 <div id="balanceCDOGE" class="hud"></div>
 <div id="balanceBCOSMO" class="hud"></div>
 <div id="userNameDisplay" class="hud"></div>
@@ -360,57 +358,77 @@
 <div id="mainMenu" class="screen">
   <div class="menu-container">
     <div class="logo"></div>
-    <h1 class="game-title" data-key="title">COSMODOGE</h1>
-    <p style="color:#0ff; font-size:12px; margin-bottom:10px;" data-key="subtitle">🚀 TOCA PARA VOLAR | ESQUIVA LOS OBSTÁCULOS 🌟</p>
+    <h1 class="game-title">COSMODOGE</h1>
+    <p style="color:#0ff; font-size:10px; margin-bottom:10px;">🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟</p>
     
     <div class="menu-buttons">
-      <button id="playBtn" class="menu-btn" data-key="play">🎮 JUGAR</button>
-      <button id="shopBtn" class="menu-btn secondary" data-key="shop">🛒 TIENDA</button>
-      <button id="rewardsBtn" class="menu-btn secondary" data-key="rewards">🎁 RECOMPENSAS</button>
-      <button id="rankingBtn" class="menu-btn secondary" data-key="ranking">🏆 RANKING</button>
-      <button id="walletBtn" class="menu-btn secondary" data-key="connectWallet">🔗 CONECTAR WALLET</button>
+      <button id="playBtn" class="menu-btn">🎮 JUGAR</button>
+      <button id="shopBtn" class="menu-btn secondary">🛒 TIENDA</button>
+      <button id="rewardsBtn" class="menu-btn secondary">🎁 RECOMPENSAS</button>
+      <button id="rankingBtn" class="menu-btn secondary">🏆 RANKING</button>
+      <button id="walletBtn" class="menu-btn secondary">🔗 CONECTAR WALLET</button>
     </div>
     
-    <div class="register-form">
+    <div class="register-section">
       <input type="text" id="registerName" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20">
-      <button id="registerBtn" class="menu-btn" style="padding:10px; font-size:0.8rem;" data-key="register">📝 REGISTRARSE</button>
+      <button id="registerBtn" class="menu-btn" style="padding:8px; font-size:0.8rem;">📝 REGISTRARSE</button>
+      <div id="userGreeting" class="user-greeting" style="display:none;"></div>
     </div>
     
-    <div id="walletStatus" style="margin-top:12px; font-size:9px; color:#0ff;"></div>
+    <div id="walletStatus" style="margin-top:10px; font-size:9px; color:#0ff;"></div>
   </div>
 </div>
 
-<!-- Tienda (simplificada pero funcional) -->
+<!-- Tienda -->
 <div id="shopPanel" class="floating-panel">
-  <h2 class="panel-title" data-key="shopTitle">🛒 TIENDA</h2>
-  <div class="shop-item"><div><strong>🧲 IMÁN</strong><br><small>Atrae todo 1h</small></div><button id="buyMagnetCDOGE">1,500 CDOGE</button><button id="buyMagnetBCOSMO">2,500 BCOSMO</button></div>
-  <div class="shop-item"><div><strong>🛡️ ESCUDO</strong><br><small>3 impactos</small></div><button id="buyShieldBtn">1,000 🪙</button></div>
-  <div class="shop-item"><div><strong>👨‍🚀 SKIN ASTRONAUTA</strong></div><button id="buySkinBtn">3,500 🪙</button></div>
-  <div class="shop-item"><div><strong>⚡ SKIN DORADO</strong></div><button id="buyGoldSkinBtn">8,000 🪙</button></div>
-  <button id="closeShopBtn" class="menu-btn" style="margin-top:20px; background:#333;">✖️ CERRAR</button>
+  <h2 style="color:#0ff; text-align:center; font-size:1.3rem;">🛒 TIENDA</h2>
+  <div class="shop-item">
+    <div class="shop-item-info"><strong>🧲 IMÁN ESPACIAL</strong><br><small>Atrae todo 1h</small></div>
+    <button id="buyMagnetCDOGE">1,500 CDOGE</button>
+    <button id="buyMagnetBCOSMO">2,500 BCOSMO</button>
+  </div>
+  <div class="shop-item">
+    <div class="shop-item-info"><strong>🛡️ ESCUDO</strong><br><small>3 impactos (persistente)</small></div>
+    <button id="buyShieldBtn">1,000 🪙</button>
+  </div>
+  <div class="shop-item">
+    <div style="display:flex; align-items:center;">
+      <div class="skin-preview" style="background-image: url('cosmodoge-skin-astronauta.png');"></div>
+      <div class="shop-item-info"><strong>👨‍🚀 ASTRONAUTA</strong></div>
+    </div>
+    <button id="buySkinBtn">3,500 🪙</button>
+  </div>
+  <div class="shop-item">
+    <div style="display:flex; align-items:center;">
+      <div class="skin-preview" style="background-image: url('cosmodoge-cohete-dorado.png');"></div>
+      <div class="shop-item-info"><strong>⚡ COHETE DORADO</strong><br><small>Efecto brillante</small></div>
+    </div>
+    <button id="buyGoldSkinBtn">8,000 🪙</button>
+  </div>
+  <button id="closeShopBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
 </div>
 
 <!-- Recompensas -->
 <div id="rewardsPanel" class="floating-panel">
-  <h2 class="panel-title">🎁 RECOMPENSAS</h2>
-  <div class="shop-item"><div><strong>📅 RECOMPENSA DIARIA</strong></div><button id="dailyRewardBtn">RECLAMAR</button></div>
+  <h2 style="color:#ffaa44; text-align:center;">🎁 RECOMPENSAS</h2>
+  <div class="shop-item"><div><strong>📅 RECOMPENSA DIARIA</strong><br><small>+500 🪙 +50 CDOGE</small></div><button id="dailyRewardBtn">RECLAMAR</button></div>
   <div class="shop-item"><div><strong>🏆 CANJE DE TOKENS</strong><br><small>100,000 → Tokens Reales</small></div><button id="claimTokensBtn">CANJEAR</button></div>
-  <div class="shop-item"><div><strong>🎯 BONUS POR NIVEL</strong></div><button id="claimLevelBonusBtn">RECLAMAR</button></div>
-  <button id="closeRewardsBtn" class="menu-btn" style="margin-top:20px; background:#333;">✖️ CERRAR</button>
+  <div class="shop-item"><div><strong>🎯 BONUS POR NIVEL</strong><br><small>Cada 1000 pts</small></div><button id="claimLevelBonusBtn">RECLAMAR</button></div>
+  <button id="closeRewardsBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
 </div>
 
 <!-- Ranking -->
 <div id="rankingPanel" class="floating-panel">
-  <h2 class="panel-title">🏆 TOP 10</h2>
+  <h2 style="color:#0ff; text-align:center;">🏆 TOP 10</h2>
   <div id="rankingList" class="ranking-list">🔄 Cargando...</div>
-  <button id="closeRankingBtn" class="menu-btn" style="margin-top:20px; background:#333;">✖️ CERRAR</button>
+  <button id="closeRankingBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
 </div>
 
 <!-- Game Over -->
 <div id="gameOverScreen" class="screen hidden">
   <div class="menu-container" style="border-color:#f66;">
     <h1 style="color:#f66;">💀 GAME OVER</h1>
-    <div id="finalScoreDisplay" style="margin:20px; font-size:15px;"></div>
+    <div id="finalScoreDisplay" style="margin:15px; font-size:13px;"></div>
     <button id="restartBtn" class="menu-btn">🔄 JUGAR DE NUEVO</button>
     <button id="menuFromGameOver" class="menu-btn secondary">🏠 MENÚ</button>
   </div>
@@ -420,7 +438,9 @@
 <div id="newRecordScreen" class="screen hidden">
   <div class="menu-container" style="border-color:#ffaa44;">
     <h1 style="color:#ffaa44;">🌟 NUEVO RÉCORD!</h1>
-    <button id="saveRecordBtn" class="menu-btn">💾 GUARDAR</button>
+    <div id="recordScore" style="margin:10px; font-size:18px;"></div>
+    <button id="continueAfterRecord" class="menu-btn restart-btn">🔄 CONTINUAR</button>
+    <button id="menuAfterRecord" class="menu-btn secondary">🏠 MENÚ</button>
   </div>
 </div>
 
@@ -455,10 +475,10 @@
 </script>
 
 <script>
-// ==================== TRADUCCIONES BÁSICAS ====================
+// ==================== TRADUCCIONES ====================
 const translations = {
-  es: { title: "COSMODOGE", subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA LOS OBSTÁCULOS 🌟", play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING", connectWallet: "🔗 CONECTAR WALLET", register: "📝 REGISTRARSE", close: "✖️ CERRAR", shopTitle: "🛒 TIENDA" },
-  en: { title: "COSMODOGE", subtitle: "🚀 TAP TO FLY | DODGE OBSTACLES 🌟", play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING", connectWallet: "🔗 CONNECT WALLET", register: "📝 REGISTER", close: "✖️ CLOSE", shopTitle: "🛒 SHOP" }
+  es: { title: "COSMODOGE", play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING", connectWallet: "🔗 CONECTAR WALLET", register: "📝 REGISTRARSE", close: "✖️ CERRAR" },
+  en: { title: "COSMODOGE", play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING", connectWallet: "🔗 CONNECT WALLET", register: "📝 REGISTER", close: "✖️ CLOSE" }
 };
 let currentLang = 'es';
 function updateLanguage() {
@@ -485,7 +505,10 @@ const WalletManager = {
     } catch(e) { this._showError(e.message); return false; }
   },
   async _connectMM() {
-    if(!window.ethereum) { window.open('https://metamask.io/download/', '_blank'); return false; }
+    if(!window.ethereum) { 
+      if(confirm('Instalar MetaMask?')) window.open('https://metamask.io/download/', '_blank');
+      return false; 
+    }
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send('eth_requestAccounts', []);
     const signer = provider.getSigner();
@@ -500,7 +523,10 @@ const WalletManager = {
     return true;
   },
   async _connectPhantom() {
-    if(!window.solana?.isPhantom) { window.open('https://phantom.app/', '_blank'); return false; }
+    if(!window.solana?.isPhantom) { 
+      if(confirm('Instalar Phantom?')) window.open('https://phantom.app/', '_blank');
+      return false; 
+    }
     const resp = await window.solana.connect();
     this.address = resp.publicKey.toString();
     this.type = 'phantom';
@@ -547,11 +573,39 @@ const WalletManager = {
 function mostrarSelectorWallet() {
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:10000;';
-  modal.innerHTML = `<div style="background:#111;padding:25px;border-radius:35px;border:2px solid #0ff;text-align:center;"><h2 style="color:#0ff;">Conectar Wallet</h2><button id="mmBtn" style="margin:10px;padding:12px 25px;background:#f6851b;border:none;border-radius:25px;">🦊 MetaMask</button><button id="phBtn" style="margin:10px;padding:12px 25px;background:#ab9ff2;border:none;border-radius:25px;">🌀 Phantom</button><button id="closeModal" style="margin:10px;padding:12px 25px;background:#333;">Cerrar</button></div>`;
+  modal.innerHTML = `<div style="background:#111;padding:20px;border-radius:30px;border:2px solid #0ff;text-align:center;"><h2 style="color:#0ff; font-size:1.2rem;">Conectar Wallet</h2><button id="mmBtn" style="margin:8px;padding:12px 20px;background:#f6851b;border:none;border-radius:25px;font-size:1rem;">🦊 MetaMask</button><button id="phBtn" style="margin:8px;padding:12px 20px;background:#ab9ff2;border:none;border-radius:25px;font-size:1rem;">🌀 Phantom</button><button id="closeModal" style="margin:8px;padding:12px 20px;background:#333;border:none;border-radius:25px;">Cerrar</button></div>`;
   document.body.appendChild(modal);
   document.getElementById('mmBtn').onclick = async () => { await WalletManager.connect('metamask'); modal.remove(); };
   document.getElementById('phBtn').onclick = async () => { await WalletManager.connect('phantom'); modal.remove(); };
   document.getElementById('closeModal').onclick = () => modal.remove();
+}
+
+// ==================== SISTEMA DE ESTRELLAS (FONDO DINÁMICO) ====================
+let stars = [];
+function initStars() {
+  stars = [];
+  for(let i = 0; i < 150; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: 2 + Math.random() * 3,
+      alpha: 0.5 + Math.random() * 0.5,
+      speed: 0.2 + Math.random() * 0.5
+    });
+  }
+}
+
+function drawStars() {
+  for(let s of stars) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * (0.5 + Math.sin(Date.now() / 1000 * s.speed) * 0.3)})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Movimiento sutil de estrellas
+    s.x -= 0.3;
+    if(s.x < 0) s.x = canvas.width;
+  }
 }
 
 // ==================== CONFIGURACIÓN DEL JUEGO ====================
@@ -561,11 +615,12 @@ const ctx = canvas.getContext('2d');
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  initStars();
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Constantes del juego
+// Constantes
 const GRAVITY_LEVELS = [0.48, 0.62, 0.82, 1.02];
 let gravity = 0.48;
 const JUMP_POWER = -9.2;
@@ -574,18 +629,18 @@ let gameActive = false;
 let gameLoopId = null;
 let score = 0, coins = 0, highScore = 0;
 let totalCDOGE = 0, totalBCOSMO = 0;
-let timeElapsed = 0, lastScoreTime = 0, lastFondoChange = 0, lastObs = 0;
+let timeElapsed = 0, lastScoreTime = 0, lastObs = 0;
 let isShieldActive = false, shieldHits = 0;
 let skinActivo = 'normal';
 let imanExpiration = 0;
 let comboCounter = 0, lastObstaclePassed = 0;
-let difficultyLevel = 1; // 1-5 para control de dificultad
+let difficultyLevel = 1;
+let frameSkip = 0;
 
-// Elementos del juego
+// Elementos
 let coinsArr = [], obsArr = [], cdogeArr = [], bcosmoArr = [];
 let agujeroNegro = null, cofreEspacial = null;
 let faseAgujero = 0;
-let laserWarnings = []; // Para obstáculos tipo láser
 
 const doge = { x: 100, y: 200, w: 48, h: 48, v: 0 };
 
@@ -618,10 +673,6 @@ obstaculoExplosionImg.src = 'obstaculo-explosion.png';
 obstaculoExplosionAireImg.src = 'obstaculo-explosion-aire.png';
 homingImg.src = 'obstaculo-perseguidor.png';
 
-const fondosList = ['fondo-cosmodoge-v2.png', 'fondo-cosmodoge-v3.png', 'fondo-cosmodoge-v4.png'];
-let fondoIndex = 0;
-fondoImg.src = fondosList[0];
-
 // Sonidos
 const sndJump = new Audio('jump.mp3');
 const sndCoin = new Audio('coin.mp3');
@@ -645,13 +696,7 @@ function updateUI() {
   document.getElementById('comboDisplay').style.display = comboCounter > 1 ? 'block' : 'none';
   document.getElementById('comboDisplay').textContent = `🔥 COMBO x${comboCounter}`;
   
-  // Mostrar nivel de dificultad
-  let diffText = '';
-  if(difficultyLevel === 1) diffText = '🌙 FÁCIL';
-  else if(difficultyLevel === 2) diffText = '⭐ NORMAL';
-  else if(difficultyLevel === 3) diffText = '⚡ DIFÍCIL';
-  else if(difficultyLevel === 4) diffText = '💀 EXPERTO';
-  else diffText = '👹 INSANO';
+  let diffText = difficultyLevel === 1 ? '🌙 FÁCIL' : difficultyLevel === 2 ? '⭐ NORMAL' : difficultyLevel === 3 ? '⚡ DIFÍCIL' : difficultyLevel === 4 ? '💀 EXPERTO' : '👹 INSANO';
   document.getElementById('difficultyDisplay').textContent = `⚠️ ${diffText}`;
   document.getElementById('difficultyDisplay').style.display = 'block';
   
@@ -676,7 +721,6 @@ function resetGame() {
   comboCounter = 0;
   timeElapsed = 0;
   lastScoreTime = 0;
-  lastFondoChange = 0;
   difficultyLevel = 1;
   coins = parseInt(localStorage.getItem('cdogeCoins')) || 0;
   totalCDOGE = parseInt(localStorage.getItem('cdogeTotalCoins')) || 0;
@@ -700,7 +744,6 @@ function resetGame() {
   bcosmoArr = [];
   agujeroNegro = null;
   cofreEspacial = null;
-  laserWarnings = [];
   updateUI();
 }
 
@@ -712,192 +755,103 @@ function saveShieldPersistent() {
   }
 }
 
-// ==================== SPAWN DE OBSTÁCULOS MEJORADO ====================
+// ==================== OBSTÁCULOS MEJORADOS ====================
 function spawnObstacle() {
-  // Dificultad aumenta con el puntaje
-  difficultyLevel = Math.min(5, 1 + Math.floor(score / 500));
+  difficultyLevel = Math.min(5, 1 + Math.floor(score / 400));
   
-  // Tipos de obstáculos con diferentes comportamientos
   const obstacleTypes = [
-    { type: 'normal', weight: 30, speed: 2.2, desc: 'Movimiento lineal' },
-    { type: 'zigzag', weight: 20, speed: 2.0, desc: 'Movimiento ondulatorio' },
-    { type: 'chaser', weight: 18, speed: 1.8, desc: 'Persigue al jugador' },
-    { type: 'meteor', weight: 15, speed: 2.5, desc: 'Cae diagonalmente' },
-    { type: 'homing', weight: 10, speed: 2.2, desc: 'Se dirige hacia ti' },
-    { type: 'laser', weight: 7, speed: 0, desc: 'Advertencia + disparo' }
+    { type: 'normal', weight: 30, speed: 2.0, desc: 'Lineal' },
+    { type: 'zigzag', weight: 22, speed: 1.9, desc: 'Ondulatorio' },
+    { type: 'chaser', weight: 18, speed: 1.7, desc: 'Perseguidor' },
+    { type: 'meteor', weight: 15, speed: 2.3, desc: 'Meteorito' },
+    { type: 'homing', weight: 10, speed: 2.0, desc: 'Homing' },
+    { type: 'spiral', weight: 5, speed: 1.8, desc: 'Espiral' }
   ];
   
-  // Ajustar pesos según dificultad
-  let availableTypes = [...obstacleTypes];
-  if(difficultyLevel >= 3) {
-    // Más obstáculos difíciles
-    availableTypes.find(t => t.type === 'homing').weight = 15;
-    availableTypes.find(t => t.type === 'laser').weight = 12;
-  }
-  if(difficultyLevel >= 4) {
-    availableTypes.find(t => t.type === 'chaser').weight = 22;
-    availableTypes.find(t => t.type === 'meteor').weight = 20;
-  }
+  if(difficultyLevel >= 3) obstacleTypes.find(t => t.type === 'homing').weight = 15;
+  if(difficultyLevel >= 4) obstacleTypes.find(t => t.type === 'spiral').weight = 12;
   
-  // Seleccionar tipo basado en peso
-  let totalWeight = availableTypes.reduce((sum, t) => sum + t.weight, 0);
+  let totalWeight = obstacleTypes.reduce((sum, t) => sum + t.weight, 0);
   let random = Math.random() * totalWeight;
-  let selected = availableTypes[0];
+  let selected = obstacleTypes[0];
   let accum = 0;
-  for(let t of availableTypes) {
+  for(let t of obstacleTypes) {
     accum += t.weight;
-    if(random <= accum) {
-      selected = t;
-      break;
-    }
+    if(random <= accum) { selected = t; break; }
   }
   
   const imgMap = {
-    normal: obstaculoNormalImg,
-    zigzag: obstaculoExplosionImg,
-    chaser: obstaculoExplosionAireImg,
-    meteor: obstaculoExplosionImg,
-    homing: homingImg,
-    laser: obstaculoNormalImg
+    normal: obstaculoNormalImg, zigzag: obstaculoExplosionImg,
+    chaser: obstaculoExplosionAireImg, meteor: obstaculoExplosionImg,
+    homing: homingImg, spiral: obstaculoNormalImg
   };
   
-  let baseY = 50 + Math.random() * (canvas.height - 120);
-  let speed = selected.speed + (difficultyLevel * 0.15);
+  let speed = selected.speed + (difficultyLevel * 0.12);
   
-  let obstacle = {
-    x: canvas.width,
-    y: baseY,
-    w: 48, h: 48,
-    sX: speed,
-    img: imgMap[selected.type] || obstaculoNormalImg,
-    type: selected.type,
-    startY: baseY,
-    angle: 0,
-    amplitude: 25,
-    frequency: 0.08,
-    homingTarget: doge.y + doge.h/2,
-    laserTimer: 0,
-    warned: false
-  };
-  
-  // Configuración específica por tipo
-  if(selected.type === 'zigzag') {
-    obstacle.amplitude = 20 + difficultyLevel * 3;
-    obstacle.frequency = 0.06 + difficultyLevel * 0.01;
-  }
-  if(selected.type === 'meteor') {
-    obstacle.sY = 2 + difficultyLevel * 0.5;
-  }
-  if(selected.type === 'laser') {
-    obstacle.sX = 0; // No se mueve horizontalmente hasta disparar
-    obstacle.laserTimer = 30; // 30 frames de advertencia
-  }
-  
-  obsArr.push(obstacle);
+  obsArr.push({
+    x: canvas.width, y: 50 + Math.random() * (canvas.height - 120),
+    w: 48, h: 48, sX: speed, img: imgMap[selected.type],
+    type: selected.type, startY: 0, angle: 0, amplitude: 25,
+    frequency: 0.07, spiralAngle: 0
+  });
 }
 
 function updateObstacles() {
   for(let i = 0; i < obsArr.length; i++) {
     let o = obsArr[i];
+    o.x -= o.sX;
     
-    // Movimiento según tipo
     switch(o.type) {
-      case 'normal':
-        o.x -= o.sX;
-        break;
+      case 'normal': break;
       case 'zigzag':
-        o.x -= o.sX;
         o.angle += o.frequency;
-        o.y = o.startY + Math.sin(o.angle) * o.amplitude;
+        o.y = (o.startY || o.y) + Math.sin(o.angle) * o.amplitude;
         break;
       case 'chaser':
-        o.x -= o.sX;
-        if(doge.y + doge.h/2 > o.y + o.h/2) o.y += 1.2 + difficultyLevel * 0.3;
-        else o.y -= 1.2 + difficultyLevel * 0.3;
-        o.y = Math.min(Math.max(o.y, 20), canvas.height - o.h - 20);
+        if(doge.y + doge.h/2 > o.y + o.h/2) o.y += 1.2 + difficultyLevel * 0.2;
+        else o.y -= 1.2 + difficultyLevel * 0.2;
         break;
       case 'meteor':
-        o.x -= o.sX;
-        o.y += (o.sY || 1.5);
+        o.y += 1.8 + difficultyLevel * 0.3;
         break;
       case 'homing':
-        o.x -= o.sX;
         let targetY = doge.y + doge.h/2 - o.h/2;
         let diff = targetY - o.y;
-        o.y += Math.min(Math.max(diff * 0.08, -2.5), 2.5);
-        o.y = Math.min(Math.max(o.y, 20), canvas.height - o.h - 20);
+        o.y += Math.min(Math.max(diff * 0.07, -2), 2);
         break;
-      case 'laser':
-        o.laserTimer--;
-        if(o.laserTimer <= 0 && !o.warned) {
-          o.warned = true;
-          o.laserTimer = 10;
-        }
-        if(o.laserTimer <= 0 && o.warned) {
-          // Disparo instantáneo
-          o.sX = 8;
-          o.x -= o.sX;
-          if(o.laserTimer < -5) {
-            obsArr.splice(i,1);
-            i--;
-            continue;
-          }
-        } else if(!o.warned) {
-          // Mostrar advertencia visual
-          o.warningX = o.x;
-          o.warningY = o.y;
-        }
+      case 'spiral':
+        o.spiralAngle = (o.spiralAngle || 0) + 0.1;
+        o.y = (o.startY || canvas.height/2) + Math.sin(o.spiralAngle) * 30;
         break;
     }
     
-    // Limitar posición Y
     o.y = Math.min(Math.max(o.y, 20), canvas.height - o.h - 20);
-  }
-}
-
-function drawObstacles() {
-  for(let i = 0; i < obsArr.length; i++) {
-    let o = obsArr[i];
     
-    // Dibujar advertencia de láser
-    if(o.type === 'laser' && !o.warned && o.laserTimer > 0) {
-      ctx.fillStyle = `rgba(255, 0, 0, ${0.5 + Math.sin(Date.now() / 100) * 0.3})`;
-      ctx.fillRect(o.x, o.y - 5, o.w, o.h + 10);
-      ctx.fillStyle = 'rgba(255, 100, 0, 0.6)';
-      ctx.fillRect(o.x, o.y, o.w, o.h);
-    }
-    
-    ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
-    
-    // Hitbox más precisa para colisión
-    const hitboxPadding = 6;
-    if(doge.x < o.x + o.w - hitboxPadding && 
-       doge.x + doge.w - hitboxPadding > o.x + hitboxPadding && 
-       doge.y < o.y + o.h - hitboxPadding && 
-       doge.y + doge.h - hitboxPadding > o.y + hitboxPadding) {
+    // Colisión con hitbox precisa
+    if(doge.x < o.x + o.w - 6 && doge.x + doge.w - 6 > o.x + 6 && 
+       doge.y < o.y + o.h - 6 && doge.y + doge.h - 6 > o.y + 6) {
       if(!handleCollision()) gameOver();
       obsArr.splice(i,1);
       i--;
     }
   }
-  obsArr = obsArr.filter(o => o.x + o.w > 0 && o.y + o.h > 0 && o.y < canvas.height);
+  obsArr = obsArr.filter(o => o.x + o.w > 0 && o.y + o.h > 0);
 }
 
-// ==================== SISTEMA DE COMBO ====================
 function onObstaclePassed() {
   let now = Date.now();
   if(now - lastObstaclePassed < 1500) {
     comboCounter = Math.min(20, comboCounter + 1);
-    if(comboCounter === 5) toast('🔥 COMBO x5! +25% puntos');
-    if(comboCounter === 10) toast('⚡ COMBO x10! +50% puntos');
-    if(comboCounter === 15) toast('💫 COMBO x15! +100% puntos');
+    if(comboCounter === 5) toast('🔥 COMBO x5!');
+    if(comboCounter === 10) toast('⚡ COMBO x10!');
+    if(comboCounter === 15) toast('💫 COMBO x15!');
   } else {
     comboCounter = 1;
   }
   lastObstaclePassed = now;
 }
 
-// ==================== RESTO DEL JUEGO (COINS, TOKENS, ETC) ====================
+// ==================== SPAWNERS ====================
 function spawnCoinGroup() {
   let count = Math.floor(Math.random() * 5) + 3;
   for(let i = 0; i < count; i++) {
@@ -958,8 +912,8 @@ function handleCollision() {
     if(shieldHits <= 0) isShieldActive = false;
     updateUI();
     saveShieldPersistent();
-    comboCounter = 0; // Reset combo al recibir golpe
-    toast('🛡️ Escudo bloqueó impacto!');
+    comboCounter = 0;
+    toast('🛡️ Escudo!');
     return true;
   }
   return false;
@@ -979,6 +933,7 @@ function gameOver() {
     if(userName) {
       guardarPuntaje(userName, score, coins);
     }
+    document.getElementById('recordScore').innerHTML = `🚀 ${score} pts`;
     document.getElementById('newRecordScreen').classList.remove('hidden');
     return;
   }
@@ -987,28 +942,24 @@ function gameOver() {
   document.getElementById('gameOverScreen').classList.remove('hidden');
 }
 
-// Dibujado
-function drawBackground() { ctx.drawImage(fondoImg, 0, 0, canvas.width, canvas.height); }
+// ==================== DIBUJADO ====================
+function drawBackground() { drawStars(); }
 
 function drawDoge() {
-  let img = dogeImg;
-  if(skinActivo === 'astronauta') img = skinAstronautaImg;
-  else if(skinActivo === 'dorado') img = dogeGoldImg;
+  let img = skinActivo === 'astronauta' ? skinAstronautaImg : (skinActivo === 'dorado' ? dogeGoldImg : dogeImg);
   ctx.drawImage(img, doge.x, doge.y, doge.w, doge.h);
-  
   if(isShieldActive) {
     ctx.beginPath();
     ctx.arc(doge.x + doge.w/2, doge.y + doge.h/2, doge.w * 0.9, 0, Math.PI*2);
     ctx.strokeStyle = '#ffaa44';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.stroke();
   }
-  
   if(skinActivo === 'dorado') {
     for(let i = 0; i < 3; i++) {
       ctx.fillStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(Date.now() / 200 + i) * 0.3})`;
       ctx.beginPath();
-      ctx.arc(doge.x + doge.w/2 + (Math.sin(Date.now() / 100 + i) * 5), doge.y + doge.h/2 + (Math.cos(Date.now() / 150 + i) * 3), 6, 0, Math.PI*2);
+      ctx.arc(doge.x + doge.w/2 + Math.sin(Date.now() / 100 + i) * 5, doge.y + doge.h/2 + Math.cos(Date.now() / 150 + i) * 3, 5, 0, Math.PI*2);
       ctx.fill();
     }
   }
@@ -1029,6 +980,12 @@ function drawCoins() {
       coinsArr.splice(i,1);
       i--;
     }
+  }
+}
+
+function drawObstacles() {
+  for(let o of obsArr) {
+    ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
   }
 }
 
@@ -1080,9 +1037,9 @@ function drawAgujeroNegro() {
   if(!agujeroNegro) return;
   agujeroNegro.x -= agujeroNegro.vel;
   
-  for(let i = 0; i < 8; i++) {
+  for(let i = 0; i < 6; i++) {
     ctx.beginPath();
-    ctx.arc(agujeroNegro.x + agujeroNegro.w/2 + (Math.sin(Date.now() / 200 + i) * 10), agujeroNegro.y + agujeroNegro.h/2 + (Math.cos(Date.now() / 180 + i) * 10), 4, 0, Math.PI*2);
+    ctx.arc(agujeroNegro.x + agujeroNegro.w/2 + Math.sin(Date.now() / 200 + i) * 8, agujeroNegro.y + agujeroNegro.h/2 + Math.cos(Date.now() / 180 + i) * 8, 3, 0, Math.PI*2);
     ctx.fillStyle = `rgba(255, 0, 255, ${0.6 + Math.sin(Date.now() / 100 + i) * 0.3})`;
     ctx.fill();
   }
@@ -1098,9 +1055,7 @@ function drawAgujeroNegro() {
   
   let dx = (agujeroNegro.x + agujeroNegro.w/2) - (doge.x + doge.w/2);
   let dy = (agujeroNegro.y + agujeroNegro.h/2) - (doge.y + doge.h/2);
-  let dist = Math.hypot(dx, dy);
-  if(dist < agujeroNegro.w/2) gameOver();
-  
+  if(Math.hypot(dx, dy) < agujeroNegro.w/2) gameOver();
   if(agujeroNegro.x + agujeroNegro.w < 0) agujeroNegro = null;
 }
 
@@ -1119,8 +1074,10 @@ function drawCofreEspacial() {
   if(cofreEspacial.x + cofreEspacial.w < 0) cofreEspacial = null;
 }
 
-// Loop del juego
+// ==================== LOOP PRINCIPAL OPTIMIZADO ====================
 let lastTimestamp = 0;
+let frameCounter = 0;
+
 function updateGame(dt) {
   if(!gameActive) return;
   
@@ -1138,32 +1095,24 @@ function updateGame(dt) {
   gravity = sec > 75 ? GRAVITY_LEVELS[3] : sec > 45 ? GRAVITY_LEVELS[2] : sec > 30 ? GRAVITY_LEVELS[1] : GRAVITY_LEVELS[0];
   
   if(sec - lastScoreTime >= 5) { 
-    let addScore = 1;
-    if(comboCounter >= 15) addScore = 3;
-    else if(comboCounter >= 10) addScore = 2;
-    else if(comboCounter >= 5) addScore = 1;
+    let addScore = comboCounter >= 15 ? 3 : (comboCounter >= 10 ? 2 : 1);
     score += addScore;
     lastScoreTime = sec; 
     updateUI(); 
   }
   
-  if(sec - lastFondoChange >= 30) { 
-    fondoIndex = (fondoIndex + 1) % fondosList.length; 
-    fondoImg.src = fondosList[fondoIndex]; 
-    lastFondoChange = sec; 
-  }
-  
-  // Spawners con dificultad ajustada
-  if(Math.random() < 0.02 + (score / 6000)) spawnCoinGroup();
-  let obsDelay = Math.max(800, 2200 - Math.floor(score / 25) * 8);
+  // Spawners con dificultad progresiva
+  if(Math.random() < 0.022) spawnCoinGroup();
+  let obsDelay = Math.max(700, 2000 - Math.floor(score / 20) * 8);
   if(Date.now() - lastObs > obsDelay) { 
     spawnObstacle(); 
     lastObs = Date.now(); 
+    onObstaclePassed();
   }
-  if(Math.random() < 0.004) spawnGroupCDOGE();
-  if(Math.random() < 0.004) spawnGroupBCOSMO();
-  if(!agujeroNegro && sec > 40 && Math.random() < 0.001) spawnAgujeroNegro();
-  if(!cofreEspacial && sec > 80 && Math.random() < 0.0007) spawnCofreEspacial();
+  if(Math.random() < 0.005) spawnGroupCDOGE();
+  if(Math.random() < 0.005) spawnGroupBCOSMO();
+  if(!agujeroNegro && sec > 45 && Math.random() < 0.0012) spawnAgujeroNegro();
+  if(!cofreEspacial && sec > 85 && Math.random() < 0.0008) spawnCofreEspacial();
   
   updateObstacles();
   updateUI();
@@ -1182,7 +1131,10 @@ function drawFrame() {
 
 let frameTime = 0;
 function gameLoop(ts) {
-  if(frameTime) { let dt = Math.min(32, ts - frameTime); updateGame(dt); }
+  if(frameTime) {
+    let dt = Math.min(32, ts - frameTime);
+    updateGame(dt);
+  }
   drawFrame();
   frameTime = ts;
   gameLoopId = requestAnimationFrame(gameLoop);
@@ -1202,7 +1154,7 @@ function stopGame() {
   document.getElementById('menuFloatBtn').style.display = 'none';
 }
 
-// ==================== RECOMPENSAS Y COMPRAS ====================
+// ==================== RECOMPENSAS ====================
 function reclamarRecompensaDiaria() {
   const lastDaily = localStorage.getItem('lastDailyReward');
   const today = new Date().toDateString();
@@ -1227,7 +1179,7 @@ function reclamarBonusNivel() {
     localStorage.setItem('cdogeTotalCoins', totalCDOGE);
     localStorage.setItem('levelBonusClaimed', nivelActual);
     updateUI();
-    toast(`🎯 BONUS NIVEL: +${bonus}🪙!`);
+    toast(`🎯 BONUS: +${bonus}🪙!`);
   } else {
     toast('📈 Sigue jugando para subir de nivel!');
   }
@@ -1267,7 +1219,7 @@ async function mostrarRanking() {
   } catch(e) { container.innerHTML = '<p>⚠️ Error de conexión</p>'; }
 }
 
-// Compras
+// ==================== COMPRAS ====================
 function buyMagnetCDOGE() { if(WalletManager.type === 'metamask') { imanExpiration = Date.now() + 3600000; toast('🧲 Imán 1h!'); } else toast('🔗 Conecta MetaMask'); }
 function buyMagnetBCOSMO() { if(WalletManager.type === 'phantom') { imanExpiration = Date.now() + 3600000; toast('🧲 Imán 1h!'); } else toast('🔗 Conecta Phantom'); }
 function buyShield() { 
@@ -1304,6 +1256,7 @@ function buyGoldSkin() {
 
 // ==================== INICIALIZACIÓN ====================
 window.addEventListener('DOMContentLoaded', () => {
+  // Idioma
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       currentLang = btn.getAttribute('data-lang');
@@ -1312,6 +1265,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   updateLanguage();
   
+  // Cargar datos guardados
   const savedSkin = localStorage.getItem('skinActivo');
   if(savedSkin === 'astronauta') skinActivo = 'astronauta';
   if(savedSkin === 'dorado') skinActivo = 'dorado';
@@ -1322,8 +1276,15 @@ window.addEventListener('DOMContentLoaded', () => {
     shieldHits = savedShield;
   }
   
+  // Registrar usuario con persistencia
   const savedName = localStorage.getItem('cosmodogeUserName');
-  if(savedName) document.getElementById('userNameDisplay').textContent = `✨ ${savedName}`;
+  if(savedName) {
+    document.getElementById('userNameDisplay').textContent = `✨ ${savedName}`;
+    document.getElementById('userGreeting').innerHTML = `✨ ¡Bienvenido ${savedName}! ✨`;
+    document.getElementById('userGreeting').style.display = 'block';
+    document.getElementById('registerName').style.display = 'none';
+    document.getElementById('registerBtn').style.display = 'none';
+  }
   
   // Eventos
   document.getElementById('playBtn').onclick = startGame;
@@ -1337,23 +1298,27 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('restartBtn').onclick = startGame;
   document.getElementById('menuFromGameOver').onclick = () => { document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden'); };
   document.getElementById('menuFloatBtn').onclick = () => { stopGame(); document.getElementById('mainMenu').classList.remove('hidden'); };
-  document.getElementById('saveRecordBtn').onclick = async () => {
-    const userName = localStorage.getItem('cosmodogeUserName');
-    if(userName) {
-      await guardarPuntaje(userName, score, coins);
-      document.getElementById('newRecordScreen').classList.add('hidden');
-      document.getElementById('gameOverScreen').classList.remove('hidden');
-    } else {
-      document.getElementById('newRecordScreen').classList.add('hidden');
-      document.getElementById('mainMenu').classList.remove('hidden');
-    }
+  document.getElementById('continueAfterRecord').onclick = () => { 
+    document.getElementById('newRecordScreen').classList.add('hidden'); 
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+    document.getElementById('finalScoreDisplay').innerHTML = `🚀 ${score} pts<br>💰 ${coins} 🪙<br>💎 ${totalCDOGE} CDOGE<br>🐕 ${totalBCOSMO} BCOSMO<br>🔥 NUEVO RÉCORD!`;
   };
+  document.getElementById('menuAfterRecord').onclick = () => { 
+    document.getElementById('newRecordScreen').classList.add('hidden'); 
+    document.getElementById('mainMenu').classList.remove('hidden'); 
+  };
+  
+  // Registro persistente
   document.getElementById('registerBtn').onclick = () => {
     const name = document.getElementById('registerName').value.trim();
     if(name && name.length >= 3) {
       localStorage.setItem('cosmodogeUserName', name);
       document.getElementById('userNameDisplay').textContent = `✨ ${name}`;
-      toast(`✅ Bienvenido ${name}!`);
+      document.getElementById('userGreeting').innerHTML = `✨ ¡Bienvenido ${name}! ✨`;
+      document.getElementById('userGreeting').style.display = 'block';
+      document.getElementById('registerName').style.display = 'none';
+      document.getElementById('registerBtn').style.display = 'none';
+      toast(`✅ ¡Bienvenido ${name}! Tu nombre ha sido registrado`);
     } else toast('✨ Nombre mínimo 3 caracteres');
   };
   
@@ -1367,12 +1332,24 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('claimTokensBtn').onclick = canjearTokens;
   document.getElementById('claimLevelBonusBtn').onclick = reclamarBonusNivel;
   
-  // Controles
-  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(gameActive) { doge.v = JUMP_POWER; playSound(sndJump); } });
-  document.addEventListener('keydown', (e) => { if(e.code === 'Space' && gameActive) { doge.v = JUMP_POWER; playSound(sndJump); } });
+  // Controles táctiles y teclado
+  canvas.addEventListener('touchstart', (e) => { 
+    e.preventDefault(); 
+    if(gameActive) { 
+      doge.v = JUMP_POWER; 
+      playSound(sndJump); 
+    } 
+  });
+  document.addEventListener('keydown', (e) => { 
+    if(e.code === 'Space' && gameActive) { 
+      doge.v = JUMP_POWER; 
+      playSound(sndJump); 
+    } 
+  });
   
+  // Iniciar loop
   gameLoopId = requestAnimationFrame(gameLoop);
 });
 </script>
 </body>
-  </html>
+</html>
