@@ -28,6 +28,8 @@
       width: 100%;
       height: 100%;
       position: fixed;
+      top: 0;
+      left: 0;
     }
 
     canvas {
@@ -551,7 +553,7 @@ function updateLanguage() {
   });
 }
 
-// ==================== SISTEMA DE PRECARGA CORREGIDO ====================
+// ==================== SISTEMA DE PRECARGA ====================
 const imagesToLoad = [
   'cosmodoge-cohete-juego.png',
   'cosmodoge-cohete-dorado.png',
@@ -588,14 +590,13 @@ function preloadImages() {
         const progressBar = document.getElementById('loadingProgress');
         const loadingText = document.getElementById('loadingText');
         if(progressBar) progressBar.style.width = percent + '%';
-        if(loadingText) loadingText.textContent = `Cargando ${src}... (${loadedImages}/${imagesToLoad.length})`;
+        if(loadingText) loadingText.textContent = `Cargando... ${loadedImages}/${imagesToLoad.length}`;
         if(loadedImages === imagesToLoad.length) {
-          if(loadingText) loadingText.textContent = '¡Listo! Cargando juego...';
           setTimeout(resolve, 300);
         }
       };
       img.onerror = () => {
-        console.warn(`⚠️ No se pudo cargar: ${src} - Se usará imagen por defecto`);
+        console.warn(`⚠️ No se pudo cargar: ${src}`);
         loadedImages++;
         const percent = (loadedImages / imagesToLoad.length) * 100;
         const progressBar = document.getElementById('loadingProgress');
@@ -609,7 +610,6 @@ function preloadImages() {
       images[key] = img;
     });
     
-    // Timeout de seguridad por si alguna imagen nunca responde
     setTimeout(() => {
       if(loadedImages < imagesToLoad.length) {
         console.warn('Timeout de carga, forzando inicio...');
@@ -749,6 +749,7 @@ let comboCounter = 0, lastObstaclePassed = 0;
 let difficultyLevel = 1;
 let currentWave = 1;
 let particles = [];
+let frameSkip = 0;
 
 let activePowerups = {
   turbo: { active: false, endTime: 0 },
@@ -924,8 +925,8 @@ function drawPowerups() {
 const obstacleTypes = {
   normal: { name: '🌀 Estelar', speed: (s) => 2 + Math.floor(s/500)*0.2, weight: 35 },
   zigzag: { name: '🌊 Ondulante', speed: (s) => 1.9 + Math.floor(s/600)*0.15, weight: 25, amplitude: 18, frequency: 0.06 },
-  chaser: { name: '🎯 Perseguidor', speed: (s) => 1.6 + Math.floor(s/400)*0.15, weight: 20, chaseSpeed: 1 },
-  meteor: { name: '💥 Meteorito', speed: (s) => 2.4 + Math.floor(s/300)*0.25, weight: 18, fallSpeed: 1.5 },
+  chaser: { name: '🎯 Perseguidor', speed: (s) => 1.6 + Math.floor(s/400)*0.15, weight: 20, chaseSpeed: 0.9 },
+  meteor: { name: '💥 Meteorito', speed: (s) => 2.4 + Math.floor(s/300)*0.25, weight: 18, fallSpeed: 1.2 },
   homing: { name: '🔫 Homing', speed: (s) => 2.1 + Math.floor(s/400)*0.15, weight: 12, unlockAt: 1000 },
   spiral: { name: '🌀 Espiral', speed: (s) => 1.9, weight: 10, amplitude: 35, unlockAt: 2000 }
 };
@@ -962,8 +963,8 @@ function spawnObstacle() {
     type: typeKey, startY: 0, angle: 0,
     amplitude: typeDef.amplitude || 25,
     frequency: typeDef.frequency || 0.07,
-    spiralAngle: 0, chaseSpeed: typeDef.chaseSpeed || 1.2,
-    fallSpeed: typeDef.fallSpeed || 1.5
+    spiralAngle: 0, chaseSpeed: typeDef.chaseSpeed || 1,
+    fallSpeed: typeDef.fallSpeed || 1.2
   });
 }
 
@@ -1029,8 +1030,8 @@ function trySpawnPattern() {
           angle: 0, spiralAngle: 0,
           amplitude: typeDef.amplitude || 25,
           frequency: typeDef.frequency || 0.07,
-          chaseSpeed: typeDef.chaseSpeed || 1.2,
-          fallSpeed: typeDef.fallSpeed || 1.5
+          chaseSpeed: typeDef.chaseSpeed || 1,
+          fallSpeed: typeDef.fallSpeed || 1.2
         });
       }
     });
@@ -1059,7 +1060,7 @@ function updateObstacles() {
       case 'homing':
         let targetY = doge.y + doge.h/2 - o.h/2;
         let diff = targetY - o.y;
-        o.y += Math.min(Math.max(diff * 0.07, -2), 2);
+        o.y += Math.min(Math.max(diff * 0.07, -1.5), 1.5);
         break;
       case 'spiral':
         o.spiralAngle = (o.spiralAngle || 0) + 0.08;
@@ -1407,15 +1408,18 @@ function drawCofreEspacial() {
   if(cofreEspacial.x + cofreEspacial.w < 0) cofreEspacial = null;
 }
 
-// ==================== LOOP PRINCIPAL ====================
+// ==================== LOOP PRINCIPAL OPTIMIZADO ====================
 let lastTimestamp = 0;
+let frameCount = 0;
 
 function updateGame(dt) {
   if(!gameActive) return;
   
+  // Física
   doge.v += gravity * (dt / 16);
   doge.y += doge.v * (dt / 16);
   
+  // Límites
   if(doge.y + doge.h >= canvas.height || doge.y <= 0) {
     if(!handleCollision()) gameOver();
     doge.y = Math.min(Math.max(doge.y, 0), canvas.height - doge.h);
@@ -1426,6 +1430,7 @@ function updateGame(dt) {
   let sec = timeElapsed / 1000;
   gravity = sec > 75 ? GRAVITY_LEVELS[3] : sec > 45 ? GRAVITY_LEVELS[2] : sec > 30 ? GRAVITY_LEVELS[1] : GRAVITY_LEVELS[0];
   
+  // Puntuación
   if(sec - lastScoreTime >= 5) { 
     let addScore = comboCounter >= 15 ? 3 : (comboCounter >= 10 ? 2 : 1);
     if(activePowerups.star.active) addScore *= activePowerups.star.multiplier;
@@ -1434,6 +1439,7 @@ function updateGame(dt) {
     updateUI(); 
   }
   
+  // Oleadas
   const newWave = Math.floor(score / 2000) + 1;
   if(newWave > currentWave) {
     currentWave = newWave;
@@ -1450,6 +1456,7 @@ function updateGame(dt) {
   
   difficultyLevel = Math.min(5, currentWave);
   
+  // Cambio de fondo
   if(sec - lastFondoChange >= 30) {
     const fondos = ['fondo-cosmodoge-v2.png', 'fondo-cosmodoge-v3.png', 'fondo-cosmodoge-v4.png'];
     const idx = Math.floor(Math.random() * fondos.length);
@@ -1459,6 +1466,7 @@ function updateGame(dt) {
     lastFondoChange = sec;
   }
   
+  // Spawners
   if(Math.random() < 0.022) spawnCoinGroup();
   
   let obsDelay = Math.max(700, 1800 - Math.floor(score / 20) * 5);
@@ -1620,14 +1628,12 @@ function buyGoldSkin() {
 
 // ==================== INICIALIZACIÓN ====================
 async function initGame() {
-  // Mostrar pantalla de carga
   document.getElementById('loadingScreen').classList.remove('hidden');
   document.getElementById('mainMenu').classList.add('hidden');
   
-  // Precargar imágenes
   await preloadImages();
   
-  // Asignar imágenes precargadas (con fallbacks)
+  // Asignar imágenes
   fondoImg = images['fondo_cosmodoge_v2'] || new Image();
   if(!fondoImg.src) fondoImg.src = 'fondo-cosmodoge-v2.png';
   
@@ -1708,10 +1714,11 @@ async function initGame() {
   document.getElementById('restartBtn').onclick = startGame;
   document.getElementById('menuFromGameOver').onclick = () => { document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden'); };
   document.getElementById('menuFloatBtn').onclick = () => { stopGame(); document.getElementById('mainMenu').classList.remove('hidden'); };
+  
+  // Botón de continuar después del récord - CORREGIDO
   document.getElementById('continueAfterRecord').onclick = () => { 
     document.getElementById('newRecordScreen').classList.add('hidden'); 
-    document.getElementById('gameOverScreen').classList.remove('hidden');
-    document.getElementById('finalScoreDisplay').innerHTML = `🚀 ${score} pts<br>💰 ${coins} 🪙<br>💎 ${totalCDOGE} CDOGE<br>🐕 ${totalBCOSMO} BCOSMO<br>🔥 NUEVO RÉCORD!<br>🌊 OLEADA ${currentWave}`;
+    startGame();
   };
   document.getElementById('menuAfterRecord').onclick = () => { 
     document.getElementById('newRecordScreen').classList.add('hidden'); 
@@ -1741,7 +1748,7 @@ async function initGame() {
   document.getElementById('claimTokensBtn').onclick = canjearTokens;
   document.getElementById('claimLevelBonusBtn').onclick = reclamarBonusNivel;
   
-  // Controles
+  // Controles táctiles y teclado
   canvas.addEventListener('touchstart', (e) => { 
     e.preventDefault(); 
     if(gameActive) { 
@@ -1758,7 +1765,7 @@ async function initGame() {
     } 
   });
   
-  // Ocultar pantalla de carga y mostrar menú
+  // Mostrar menú
   document.getElementById('loadingScreen').classList.add('hidden');
   document.getElementById('mainMenu').classList.remove('hidden');
   
@@ -1766,8 +1773,7 @@ async function initGame() {
   gameLoopId = requestAnimationFrame(gameLoop);
 }
 
-// Iniciar todo
 initGame();
 </script>
 </body>
-  </html>
+</html>
