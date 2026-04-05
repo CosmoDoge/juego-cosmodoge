@@ -3,227 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Edición Definitiva Optimizada</title>
+  <title>CosmoDoge 🚀 | Edición Definitiva - Estable</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   
-  <!-- Web3 Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.41.0/lib/index.iife.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/lib/index.iife.min.js"></script>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      font-family: 'Orbitron', monospace;
-      overflow: hidden;
-      background: #000;
-      width: 100%;
-      height: 100%;
-      position: fixed;
-      top: 0;
-      left: 0;
-    }
-
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-    }
-
-    .screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at center, #0a0a2a, #000000);
-      transition: all 0.3s ease;
-    }
-
-    .screen.hidden {
-      display: none;
-    }
-
-    #loadingScreen {
-      z-index: 1000;
-      background: #000;
-    }
-    
-    .loading-container {
-      text-align: center;
-      color: #0ff;
-    }
-    
-    .loading-bar {
-      width: 80%;
-      max-width: 300px;
-      height: 20px;
-      background: #333;
-      border-radius: 10px;
-      margin: 20px auto;
-      overflow: hidden;
-    }
-    
-    .loading-progress {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, #0ff, #f0f);
-      transition: width 0.1s;
-    }
-
-    .menu-container {
-      text-align: center;
-      max-width: 480px;
-      width: 90%;
-      padding: 25px 20px;
-      background: linear-gradient(135deg, rgba(0, 20, 50, 0.98), rgba(0, 5, 20, 0.98));
-      border-radius: 50px;
-      border: 2px solid #0ff;
-      box-shadow: 0 0 50px rgba(0, 255, 255, 0.4);
-      backdrop-filter: blur(5px);
-    }
-
-    .logo {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 15px;
-      background: url('cosmodoge-cohete-juego.png') center/contain no-repeat;
-      animation: floatLogo 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 10px #0ff);
-    }
-
-    @keyframes floatLogo {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-    }
-
-    .game-title {
-      font-size: 2.2rem;
-      font-weight: 900;
-      background: linear-gradient(135deg, #0ff, #f0f, #ff0);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 5px;
-    }
-
-    .menu-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin: 20px 0;
-    }
-
-    .menu-btn {
-      background: linear-gradient(135deg, #0ff, #0aa);
-      border: none;
-      padding: 12px 20px;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: bold;
-      font-family: 'Orbitron', monospace;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: #000;
-    }
-
-    .menu-btn.secondary {
-      background: linear-gradient(135deg, #2a2a4a, #0a0a2a);
-      color: #0ff;
-      border: 1px solid #0ff;
-    }
-
-    .lang-selector {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      z-index: 200;
-      display: flex;
-      gap: 8px;
-    }
-
-    .lang-btn {
-      background: rgba(0, 255, 255, 0.2);
-      border: 1px solid #0ff;
-      color: #0ff;
-      padding: 5px 12px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-family: 'Orbitron', monospace;
-      font-size: 11px;
-    }
-
-    .lang-btn.active {
-      background: #0ff;
-      color: #000;
-      box-shadow: 0 0 10px #0ff;
-    }
-
-    .register-section {
-      margin-top: 15px;
-      padding: 12px;
-      background: rgba(0, 255, 255, 0.1);
-      border-radius: 25px;
-    }
-
-    .register-section input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 30px;
-      border: 1px solid #0ff;
-      background: #111;
-      color: #0ff;
-      font-family: 'Orbitron', monospace;
-      text-align: center;
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-
-    .user-greeting {
-      margin-top: 10px;
-      padding: 8px;
-      background: rgba(0, 255, 255, 0.2);
-      border-radius: 20px;
-      color: #ffaa44;
-      font-size: 11px;
-    }
-
-    .hud {
-      position: fixed;
-      z-index: 50;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-family: 'Orbitron', monospace;
-      font-size: 10px;
-      font-weight: bold;
-      color: #0ff;
-      pointer-events: none;
-      white-space: nowrap;
-      border: 1px solid rgba(0,255,255,0.3);
-    }
-    
-    @media (min-width: 768px) {
-      .hud { font-size: 12px; padding: 6px 15px; }
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Orbitron', monospace; overflow: hidden; background: #000; width: 100%; height: 100%; position: fixed; top: 0; left: 0; }
+    canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+    .screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #0a0a2a, #000000); transition: all 0.3s ease; }
+    .screen.hidden { display: none; }
+    #loadingScreen { z-index: 1000; background: #000; }
+    .loading-container { text-align: center; color: #0ff; }
+    .loading-bar { width: 80%; max-width: 300px; height: 20px; background: #333; border-radius: 10px; margin: 20px auto; overflow: hidden; }
+    .loading-progress { width: 0%; height: 100%; background: linear-gradient(90deg, #0ff, #f0f); transition: width 0.1s; }
+    .menu-container { text-align: center; max-width: 480px; width: 90%; padding: 25px 20px; background: linear-gradient(135deg, rgba(0, 20, 50, 0.98), rgba(0, 5, 20, 0.98)); border-radius: 50px; border: 2px solid #0ff; box-shadow: 0 0 50px rgba(0, 255, 255, 0.4); backdrop-filter: blur(5px); }
+    .logo { width: 100px; height: 100px; margin: 0 auto 15px; background: url('cosmodoge-cohete-juego.png') center/contain no-repeat; animation: floatLogo 3s ease-in-out infinite; filter: drop-shadow(0 0 10px #0ff); }
+    @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    .game-title { font-size: 2.2rem; font-weight: 900; background: linear-gradient(135deg, #0ff, #f0f, #ff0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 5px; }
+    .menu-buttons { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+    .menu-btn { background: linear-gradient(135deg, #0ff, #0aa); border: none; padding: 12px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: bold; font-family: 'Orbitron', monospace; cursor: pointer; transition: all 0.2s; color: #000; }
+    .menu-btn.secondary { background: linear-gradient(135deg, #2a2a4a, #0a0a2a); color: #0ff; border: 1px solid #0ff; }
+    .lang-selector { position: absolute; top: 15px; right: 15px; z-index: 200; display: flex; gap: 8px; }
+    .lang-btn { background: rgba(0, 255, 255, 0.2); border: 1px solid #0ff; color: #0ff; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-family: 'Orbitron', monospace; font-size: 11px; }
+    .lang-btn.active { background: #0ff; color: #000; box-shadow: 0 0 10px #0ff; }
+    .register-section { margin-top: 15px; padding: 12px; background: rgba(0, 255, 255, 0.1); border-radius: 25px; }
+    .register-section input { width: 100%; padding: 10px; border-radius: 30px; border: 1px solid #0ff; background: #111; color: #0ff; font-family: 'Orbitron', monospace; text-align: center; margin-bottom: 8px; font-size: 12px; }
+    .user-greeting { margin-top: 10px; padding: 8px; background: rgba(0, 255, 255, 0.2); border-radius: 20px; color: #ffaa44; font-size: 11px; }
+    .hud { position: fixed; z-index: 50; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 20px; font-family: 'Orbitron', monospace; font-size: 10px; font-weight: bold; color: #0ff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(0,255,255,0.3); }
+    @media (min-width: 768px) { .hud { font-size: 12px; padding: 6px 15px; } }
     #scoreDisplay { top: 10px; left: 10px; color: #ffaa44; }
     #coinDisplay { top: 45px; left: 10px; color: #ffaa44; }
     #highScoreDisplay { top: 80px; left: 10px; color: #ff66cc; }
@@ -239,117 +51,18 @@
     #balanceBCOSMO { top: 45px; }
     #userNameDisplay { top: 10px; right: 10px; left: auto; background: #000000aa; color: #ffaa44; }
     #powerupDisplay { top: 360px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
-
-    .floating-panel {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      max-width: 450px;
-      max-height: 80vh;
-      background: linear-gradient(135deg, #0a0a2a, #000);
-      border: 2px solid #0ff;
-      border-radius: 30px;
-      padding: 20px;
-      z-index: 200;
-      overflow-y: auto;
-      display: none;
-    }
-
-    .shop-item {
-      background: rgba(0, 255, 255, 0.1);
-      margin: 10px 0;
-      padding: 12px;
-      border-radius: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .shop-item-info {
-      flex: 1;
-    }
-
+    .floating-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; max-height: 80vh; background: linear-gradient(135deg, #0a0a2a, #000); border: 2px solid #0ff; border-radius: 30px; padding: 20px; z-index: 200; overflow-y: auto; display: none; }
+    .shop-item { background: rgba(0, 255, 255, 0.1); margin: 10px 0; padding: 12px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .shop-item-info { flex: 1; }
     .shop-item-info strong { font-size: 0.9rem; color: #0ff; }
     .shop-item-info small { font-size: 9px; color: #aaa; }
-
-    .skin-preview {
-      width: 35px;
-      height: 35px;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      margin-right: 8px;
-    }
-
-    .shop-item button {
-      background: linear-gradient(135deg, #0ff, #0aa);
-      border: none;
-      padding: 6px 15px;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      font-family: 'Orbitron', monospace;
-      font-size: 10px;
-    }
-
-    .ranking-list {
-      max-height: 350px;
-      overflow-y: auto;
-      margin: 15px 0;
-    }
-
-    .ranking-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px;
-      border-bottom: 1px solid #0ff33;
-      font-size: 11px;
-      background: rgba(0,0,0,0.3);
-      margin: 4px 0;
-      border-radius: 8px;
-    }
-
-    .toast-msg {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, #0ff, #0aa);
-      color: #000;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-weight: bold;
-      z-index: 300;
-      animation: fadeOut 2s ease forwards;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    @keyframes fadeOut {
-      0% { opacity: 1; transform: translateX(-50%) translateY(0); }
-      70% { opacity: 1; }
-      100% { opacity: 0; transform: translateX(-50%) translateY(-20px); display: none; }
-    }
-
-    #menuFloatBtn {
-      position: fixed;
-      bottom: 15px;
-      right: 15px;
-      z-index: 150;
-      background: linear-gradient(135deg, #0ff, #0aa);
-      border: none;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-family: 'Orbitron', monospace;
-      font-weight: bold;
-      cursor: pointer;
-      display: none;
-      font-size: 11px;
-    }
+    .skin-preview { width: 35px; height: 35px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-right: 8px; }
+    .shop-item button { background: linear-gradient(135deg, #0ff, #0aa); border: none; padding: 6px 15px; border-radius: 25px; cursor: pointer; font-weight: bold; font-family: 'Orbitron', monospace; font-size: 10px; }
+    .ranking-list { max-height: 350px; overflow-y: auto; margin: 15px 0; }
+    .ranking-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #0ff33; font-size: 11px; background: rgba(0,0,0,0.3); margin: 4px 0; border-radius: 8px; }
+    .toast-msg { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #0ff, #0aa); color: #000; padding: 8px 16px; border-radius: 30px; font-weight: bold; z-index: 300; animation: fadeOut 2s ease forwards; font-size: 11px; white-space: nowrap; }
+    @keyframes fadeOut { 0% { opacity: 1; transform: translateX(-50%) translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); display: none; } }
+    #menuFloatBtn { position: fixed; bottom: 15px; right: 15px; z-index: 150; background: linear-gradient(135deg, #0ff, #0aa); border: none; padding: 8px 16px; border-radius: 30px; font-family: 'Orbitron', monospace; font-weight: bold; cursor: pointer; display: none; font-size: 11px; }
   </style>
 </head>
 <body>
@@ -360,9 +73,7 @@
   <div class="loading-container">
     <div class="logo" style="width:80px; height:80px;"></div>
     <h2 style="color:#0ff;">CARGANDO COSMODOGE</h2>
-    <div class="loading-bar">
-      <div id="loadingProgress" class="loading-progress"></div>
-    </div>
+    <div class="loading-bar"><div id="loadingProgress" class="loading-progress"></div></div>
     <p id="loadingText" style="color:#0ff; margin-top:10px;">Iniciando...</p>
   </div>
 </div>
@@ -394,7 +105,6 @@
     <div class="logo"></div>
     <h1 class="game-title" id="gameTitle">COSMODOGE</h1>
     <p id="gameSubtitle" style="color:#0ff; font-size:10px; margin-bottom:10px;">🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟</p>
-    
     <div class="menu-buttons">
       <button id="playBtn" class="menu-btn">🎮 JUGAR</button>
       <button id="shopBtn" class="menu-btn secondary">🛒 TIENDA</button>
@@ -402,42 +112,21 @@
       <button id="rankingBtn" class="menu-btn secondary">🏆 RANKING</button>
       <button id="walletBtn" class="menu-btn secondary">🔗 CONECTAR WALLET</button>
     </div>
-    
     <div class="register-section">
       <input type="text" id="registerName" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20">
       <button id="registerBtn" class="menu-btn" style="padding:8px; font-size:0.8rem;">📝 REGISTRARSE</button>
       <div id="userGreeting" class="user-greeting" style="display:none;"></div>
     </div>
-    
     <div id="walletStatus" style="margin-top:10px; font-size:9px; color:#0ff;"></div>
   </div>
 </div>
 
 <div id="shopPanel" class="floating-panel">
   <h2 style="color:#0ff; text-align:center; font-size:1.3rem;">🛒 TIENDA</h2>
-  <div class="shop-item">
-    <div class="shop-item-info"><strong>🧲 IMÁN ESPACIAL</strong><br><small>Atrae todo 1h</small></div>
-    <button id="buyMagnetCDOGE">1,500 CDOGE</button>
-    <button id="buyMagnetBCOSMO">2,500 BCOSMO</button>
-  </div>
-  <div class="shop-item">
-    <div class="shop-item-info"><strong>🛡️ ESCUDO</strong><br><small>3 impactos (persistente)</small></div>
-    <button id="buyShieldBtn">1,000 🪙</button>
-  </div>
-  <div class="shop-item">
-    <div style="display:flex; align-items:center;">
-      <div class="skin-preview" style="background-image: url('cosmodoge-skin-astronauta.png');"></div>
-      <div class="shop-item-info"><strong>👨‍🚀 ASTRONAUTA</strong></div>
-    </div>
-    <button id="buySkinBtn">3,500 🪙</button>
-  </div>
-  <div class="shop-item">
-    <div style="display:flex; align-items:center;">
-      <div class="skin-preview" style="background-image: url('cosmodoge-cohete-dorado.png');"></div>
-      <div class="shop-item-info"><strong>⚡ COHETE DORADO</strong><br><small>Efecto brillante</small></div>
-    </div>
-    <button id="buyGoldSkinBtn">8,000 🪙</button>
-  </div>
+  <div class="shop-item"><div class="shop-item-info"><strong>🧲 IMÁN ESPACIAL</strong><br><small>Atrae todo 1h</small></div><button id="buyMagnetCDOGE">1,500 CDOGE</button><button id="buyMagnetBCOSMO">2,500 BCOSMO</button></div>
+  <div class="shop-item"><div class="shop-item-info"><strong>🛡️ ESCUDO</strong><br><small>3 impactos (persistente)</small></div><button id="buyShieldBtn">1,000 🪙</button></div>
+  <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-skin-astronauta.png');"></div><div class="shop-item-info"><strong>👨‍🚀 ASTRONAUTA</strong></div></div><button id="buySkinBtn">3,500 🪙</button></div>
+  <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-cohete-dorado.png');"></div><div class="shop-item-info"><strong>⚡ COHETE DORADO</strong><br><small>Efecto brillante</small></div></div><button id="buyGoldSkinBtn">8,000 🪙</button></div>
   <button id="closeShopBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
 </div>
 
@@ -506,32 +195,19 @@
 <script>
 // ==================== TRADUCCIONES ====================
 const translations = {
-  es: {
-    title: "COSMODOGE", subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟",
-    play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING",
-    connectWallet: "🔗 CONECTAR WALLET", register: "📝 REGISTRARSE", close: "✖️ CERRAR",
-    gameOver: "💀 GAME OVER", playAgain: "🔄 JUGAR DE NUEVO", menu: "🏠 MENÚ",
-    newRecord: "🌟 NUEVO RÉCORD!", continue: "🔄 CONTINUAR"
-  },
-  en: {
-    title: "COSMODOGE", subtitle: "🚀 TAP TO FLY | DODGE AND COLLECT 🌟",
-    play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING",
-    connectWallet: "🔗 CONNECT WALLET", register: "📝 REGISTER", close: "✖️ CLOSE",
-    gameOver: "💀 GAME OVER", playAgain: "🔄 PLAY AGAIN", menu: "🏠 MENU",
-    newRecord: "🌟 NEW RECORD!", continue: "🔄 CONTINUE"
-  }
+  es: { title: "COSMODOGE", subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟", play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING", connectWallet: "🔗 CONECTAR WALLET", register: "📝 REGISTRARSE", close: "✖️ CERRAR", gameOver: "💀 GAME OVER", playAgain: "🔄 JUGAR DE NUEVO", menu: "🏠 MENÚ", newRecord: "🌟 NUEVO RÉCORD!", continue: "🔄 CONTINUAR" },
+  en: { title: "COSMODOGE", subtitle: "🚀 TAP TO FLY | DODGE AND COLLECT 🌟", play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING", connectWallet: "🔗 CONNECT WALLET", register: "📝 REGISTER", close: "✖️ CLOSE", gameOver: "💀 GAME OVER", playAgain: "🔄 PLAY AGAIN", menu: "🏠 MENU", newRecord: "🌟 NEW RECORD!", continue: "🔄 CONTINUE" }
 };
 
 let currentLang = 'es';
-
 function updateLanguage() {
   document.getElementById('gameTitle').textContent = translations[currentLang].title;
   document.getElementById('gameSubtitle').textContent = translations[currentLang].subtitle;
-  const btns = ['playBtn', 'shopBtn', 'rewardsBtn', 'rankingBtn', 'walletBtn'];
-  btns.forEach(id => {
-    const btn = document.getElementById(id);
-    if(btn) btn.textContent = translations[currentLang][id.replace('Btn', '')] || btn.textContent;
-  });
+  document.getElementById('playBtn').textContent = translations[currentLang].play;
+  document.getElementById('shopBtn').textContent = translations[currentLang].shop;
+  document.getElementById('rewardsBtn').textContent = translations[currentLang].rewards;
+  document.getElementById('rankingBtn').textContent = translations[currentLang].ranking;
+  document.getElementById('walletBtn').textContent = translations[currentLang].connectWallet;
   document.getElementById('registerBtn').textContent = translations[currentLang].register;
   document.querySelectorAll('.lang-btn').forEach(btn => {
     if(btn.getAttribute('data-lang') === currentLang) btn.classList.add('active');
@@ -702,8 +378,9 @@ let comboCounter = 0, lastObstaclePassed = 0;
 let difficultyLevel = 1;
 let currentWave = 1;
 let particles = [];
-let lastFrameTime = 0;
-let uiUpdateCounter = 0; // OPTIMIZACIÓN: reducir frecuencia de updateUI
+let frameTime = 0;
+let uiUpdateCounter = 0;
+let lastTimestamp = 0;
 
 let activePowerups = {
   turbo: { active: false, endTime: 0 },
@@ -740,22 +417,26 @@ music.volume = 0.3;
 function playSound(snd) { snd.currentTime = 0; snd.play().catch(()=>{}); }
 function toast(msg) { WalletManager.toast(msg); }
 
-// ==================== OPTIMIZACIÓN: LIMPIEZA DE ARRAYS ====================
-function cleanArrays() {
-  // Limitar tamaño máximo de arrays
+// ==================== FUNCIONES DE LIMPIEZA ====================
+function clearArrays() {
+  // Limitar tamaño máximo de arrays para evitar memory leak
   const MAX_COINS = 30;
-  const MAX_OBSTACLES = 25;
+  const MAX_OBSTACLES = 20;
   const MAX_POWERUPS = 5;
-  const MAX_PARTICLES = 100;
+  const MAX_PARTICLES = 80;
+  const MAX_CDOGE = 12;
+  const MAX_BCOSMO = 12;
   
   if(coinsArr.length > MAX_COINS) coinsArr = coinsArr.slice(0, MAX_COINS);
   if(obsArr.length > MAX_OBSTACLES) obsArr = obsArr.slice(0, MAX_OBSTACLES);
   if(powerupsArr.length > MAX_POWERUPS) powerupsArr = powerupsArr.slice(0, MAX_POWERUPS);
   if(particles.length > MAX_PARTICLES) particles = particles.slice(0, MAX_PARTICLES);
+  if(cdogeArr.length > MAX_CDOGE) cdogeArr = cdogeArr.slice(0, MAX_CDOGE);
+  if(bcosmoArr.length > MAX_BCOSMO) bcosmoArr = bcosmoArr.slice(0, MAX_BCOSMO);
 }
 
 function addParticles(x, y, color, count = 3) {
-  for(let i = 0; i < count && particles.length < 100; i++) {
+  for(let i = 0; i < count && particles.length < 80; i++) {
     particles.push({
       x: x, y: y,
       vx: (Math.random() - 0.5) * 3,
@@ -803,7 +484,7 @@ function drawWarnings() {
     const alpha = 1 - (elapsed / w.duration);
     ctx.font = 'bold 28px Orbitron';
     ctx.textAlign = 'center';
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 10;
     ctx.shadowColor = '#f00';
     ctx.fillStyle = `rgba(255, ${Math.floor(100 * alpha)}, 0, ${alpha * 0.9})`;
     ctx.fillText(w.message, canvas.width/2, canvas.height/2);
@@ -827,7 +508,7 @@ function applyPowerup(type) {
   switch(type) {
     case 'turbo': activePowerups.turbo = { active: true, endTime: now + 5000 }; toast('🚀 TURBO!'); break;
     case 'freeze': activePowerups.freeze = { active: true, endTime: now + 3000 }; toast('❄️ FREEZE!'); break;
-    case 'bomb': obsArr = []; addParticles(canvas.width/2, canvas.height/2, '#ff0', 20); toast('💥 BOMBA!'); break;
+    case 'bomb': obsArr = []; addParticles(canvas.width/2, canvas.height/2, '#ff0', 15); toast('💥 BOMBA!'); break;
     case 'totalShield': activePowerups.totalShield = { active: true, endTime: now + 5000 }; toast('🛡️ ESCUDO TOTAL!'); break;
     case 'star': activePowerups.star = { active: true, endTime: now + 10000, multiplier: 5 }; toast('⭐ x5 PUNTOS!'); break;
   }
@@ -961,21 +642,19 @@ function trySpawnPattern() {
     const obstacles = patternFn(canvas, doge.y + doge.h/2);
     obstacles.forEach(obs => {
       const typeDef = obstacleTypes[obs.type];
-      if(typeDef) {
+      if(typeDef && obsArr.length < 20) {
         let img = obstaculoNormalImg;
         if(obs.type === 'zigzag') img = obstaculoExplosionImg;
         if(obs.type === 'chaser') img = obstaculoExplosionAireImg;
         if(obs.type === 'meteor') img = obstaculoExplosionImg;
         if(obs.type === 'homing') img = homingImg;
-        if(obsArr.length < 20) {
-          obsArr.push({
-            x: obs.x, y: obs.y, w: 48, h: 48,
-            sX: typeDef.speed(score), img: img, type: obs.type,
-            startY: obs.startY || obs.y, angle: 0, spiralAngle: 0,
-            amplitude: typeDef.amplitude || 25, frequency: typeDef.frequency || 0.07,
-            chaseSpeed: typeDef.chaseSpeed || 0.8, fallSpeed: typeDef.fallSpeed || 1.0
-          });
-        }
+        obsArr.push({
+          x: obs.x, y: obs.y, w: 48, h: 48,
+          sX: typeDef.speed(score), img: img, type: obs.type,
+          startY: obs.startY || obs.y, angle: 0, spiralAngle: 0,
+          amplitude: typeDef.amplitude || 25, frequency: typeDef.frequency || 0.07,
+          chaseSpeed: typeDef.chaseSpeed || 0.8, fallSpeed: typeDef.fallSpeed || 1.0
+        });
       }
     });
     return true;
@@ -1018,7 +697,6 @@ function updateObstacles() {
       i--;
     }
   }
-  // LIMPIEZA OPTIMIZADA
   for(let i=obsArr.length-1; i>=0; i--) {
     if(obsArr[i].x + obsArr[i].w < 0 || obsArr[i].y + obsArr[i].h < 0 || obsArr[i].y > canvas.height) {
       obsArr.splice(i,1);
@@ -1039,7 +717,7 @@ function onObstaclePassed() {
   lastObstaclePassed = now;
 }
 
-// ==================== SPAWNERS OPTIMIZADOS ====================
+// ==================== SPAWNERS ====================
 function spawnCoinGroup() {
   if(coinsArr.length >= 25) return;
   let count = Math.floor(Math.random() * 3) + 2;
@@ -1049,14 +727,14 @@ function spawnCoinGroup() {
 }
 
 function spawnGroupCDOGE() {
-  if(cdogeArr.length >= 15) return;
+  if(cdogeArr.length >= 12) return;
   for(let i=0; i<3; i++) {
     cdogeArr.push({ x: canvas.width + i*70, y: 40 + Math.random()*(canvas.height-100), w: 32, h: 32, got: false });
   }
 }
 
 function spawnGroupBCOSMO() {
-  if(bcosmoArr.length >= 15) return;
+  if(bcosmoArr.length >= 12) return;
   for(let i=0; i<3; i++) {
     bcosmoArr.push({ x: canvas.width + i*70, y: 40 + Math.random()*(canvas.height-100), w: 32, h: 32, got: false });
   }
@@ -1082,7 +760,7 @@ function applyMagnet(obj, objX, objY, size = 16) {
     let distSq = dx*dx + dy*dy;
     if(distSq < 280*280) {
       let dist = Math.sqrt(distSq);
-      let fuerza = (280 - dist) / 280 * 0.12;
+      let fuerza = (280 - dist) / 280 * 0.1;
       obj.x -= dx * fuerza;
       obj.y -= dy * fuerza;
     }
@@ -1095,9 +773,9 @@ function applyBlackHoleAttraction(obj, objX, objY, size = 16) {
   let dy = (agujeroNegro.y + agujeroNegro.h/2) - (objY + size/2);
   let distSq = dx*dx + dy*dy;
   let radioSq = agujeroNegro.radio * agujeroNegro.radio;
-  if(distSq < radioSq) {
+  if(distSq < radioSq && distSq > 100) {
     let dist = Math.sqrt(distSq);
-    let fuerza = (agujeroNegro.radio - dist) / agujeroNegro.radio * 0.12;
+    let fuerza = (agujeroNegro.radio - dist) / agujeroNegro.radio * 0.1;
     obj.x += dx * fuerza;
     obj.y += dy * fuerza;
   }
@@ -1260,7 +938,6 @@ function drawCoins() {
       i--;
     }
   }
-  // Limpieza
   for(let i=coinsArr.length-1; i>=0; i--) {
     if(coinsArr[i].x + coinsArr[i].w < 0) coinsArr.splice(i,1);
   }
@@ -1326,8 +1003,8 @@ function drawAgujeroNegro() {
   let dy = (agujeroNegro.y + agujeroNegro.h/2) - (doge.y + doge.h/2);
   let dist = Math.hypot(dx, dy);
   if(dist < agujeroNegro.radio && dist > 30) {
-    doge.x += dx * 0.025;
-    doge.y += dy * 0.025;
+    doge.x += dx * 0.02;
+    doge.y += dy * 0.02;
   }
   
   for(let i=0; i<6; i++) {
@@ -1357,9 +1034,9 @@ function drawCofreEspacial() {
   if(!cofreEspacial.recogido && doge.x < cofreEspacial.x + cofreEspacial.w && doge.x + doge.w > cofreEspacial.x && doge.y < cofreEspacial.y + cofreEspacial.h && doge.y + doge.h > cofreEspacial.y) {
     cofreEspacial.recogido = true;
     let r = Math.random();
-    if(r < 0.33) { imanExpiration = Date.now() + 300000; toast('🧲 IMÁN 5min!'); addParticles(cofreEspacial.x+cofreEspacial.w/2, cofreEspacial.y+cofreEspacial.h/2, '#0ff', 8); }
-    else if(r < 0.66) { isShieldActive = true; shieldHits = 3; saveShieldPersistent(); updateUI(); toast('🛡️ ESCUDO!'); addParticles(cofreEspacial.x+cofreEspacial.w/2, cofreEspacial.y+cofreEspacial.h/2, '#ffaa44', 8); }
-    else { coins += 1000; localStorage.setItem('cdogeCoins', coins); updateUI(); toast('💰 +1000 COINS!'); addParticles(cofreEspacial.x+cofreEspacial.w/2, cofreEspacial.y+cofreEspacial.h/2, '#ff0', 8); }
+    if(r < 0.33) { imanExpiration = Date.now() + 300000; toast('🧲 IMÁN 5min!'); addParticles(cofreEspacial.x+cofreEspacial.w/2, cofreEspacial.y+cofreEspacial.h/2, '#0ff', 6); }
+    else if(r < 0.66) { isShieldActive = true; shieldHits = 3; saveShieldPersistent(); updateUI(); toast('🛡️ ESCUDO!'); addParticles(cofreEspacial.x+cofreEspacial.w/2, cofreEspacial.y+cofreEspacial.h/2, '#ffaa44', 6); }
+    else { coins += 1000; localStorage.setItem('cdogeCoins', coins); updateUI(); toast('💰 +1000 COINS!'); addParticles(cofreEspacial.x+cofreEspacial.w/2, cofreEspacial.y+cofreEspacial.h/2, '#ff0', 6); }
     setTimeout(() => cofreEspacial = null, 100);
   }
   if(cofreEspacial.x + cofreEspacial.w < 0) cofreEspacial = null;
@@ -1394,7 +1071,7 @@ function updateGame(dt) {
     currentWave = newWave;
     showWarning(`🌊 OLEADA ${currentWave} 🌊`, 1000);
     if(currentWave % 2 === 0) { spawnPowerup(); toast(`✨ POWER-UP!`); }
-    if(currentWave >= 5) { spawnAgujeroNegro(); toast(`🌀 AGUJERO NEGRO!`); }
+    if(currentWave >= 5 && !agujeroNegro) { spawnAgujeroNegro(); toast(`🌀 AGUJERO NEGRO!`); }
   }
   
   difficultyLevel = Math.min(5, currentWave);
@@ -1409,9 +1086,9 @@ function updateGame(dt) {
   }
   
   // SPAWNERS CON LÍMITES
-  if(coinsArr.length < 20 && Math.random() < 0.018) spawnCoinGroup();
-  if(cdogeArr.length < 12 && Math.random() < 0.006) spawnGroupCDOGE();
-  if(bcosmoArr.length < 12 && Math.random() < 0.006) spawnGroupBCOSMO();
+  if(coinsArr.length < 20 && Math.random() < 0.015) spawnCoinGroup();
+  if(cdogeArr.length < 10 && Math.random() < 0.005) spawnGroupCDOGE();
+  if(bcosmoArr.length < 10 && Math.random() < 0.005) spawnGroupBCOSMO();
   
   let obsDelay = Math.max(700, 1800 - Math.floor(score / 20) * 5);
   if(obsArr.length < 15 && Date.now() - lastObs > obsDelay) { 
@@ -1420,14 +1097,14 @@ function updateGame(dt) {
     onObstaclePassed();
   }
   
-  if(powerupsArr.length < 4 && Math.random() < 0.003 && score > 500) spawnPowerup();
+  if(powerupsArr.length < 4 && Math.random() < 0.0025 && score > 500) spawnPowerup();
+  if(!cofreEspacial && sec > 85 && Math.random() < 0.001) spawnCofreEspacial();
   
   updateObstacles();
   updatePowerups();
   updateParticles();
-  cleanArrays();
+  clearArrays();
   
-  // OPTIMIZACIÓN: updateUI solo cada 6 frames
   uiUpdateCounter++;
   if(uiUpdateCounter >= 6) {
     updateUI();
@@ -1449,28 +1126,45 @@ function drawFrame() {
   drawWarnings();
 }
 
-// LOOP PRINCIPAL CORREGIDO - CON CONTROL DE gameActive
-let frameTime = 0;
-function gameLoop(currentTime) {
-  // SOLUCIÓN #1: Si el juego no está activo, solo dibujar el frame sin actualizar
-  if(!gameActive) {
+// LOOP PRINCIPAL - CON CONTROL DE gameActive y manejo de errores
+let lastTimestampLoop = 0;
+
+function gameLoop(currentTimestamp) {
+  try {
+    if(!gameActive) {
+      drawFrame();
+      animationId = requestAnimationFrame(gameLoop);
+      return;
+    }
+    
+    if(lastTimestampLoop === 0) {
+      lastTimestampLoop = currentTimestamp;
+      animationId = requestAnimationFrame(gameLoop);
+      return;
+    }
+    
+    let dt = Math.min(32, currentTimestamp - lastTimestampLoop);
+    if(dt > 0 && dt < 100) {
+      updateGame(dt);
+    }
+    
     drawFrame();
+    lastTimestampLoop = currentTimestamp;
     animationId = requestAnimationFrame(gameLoop);
-    return;
+  } catch(error) {
+    console.error('Error en gameLoop:', error);
+    // Intentar recuperar el loop
+    setTimeout(() => {
+      animationId = requestAnimationFrame(gameLoop);
+    }, 100);
   }
-  
-  if(!frameTime) frameTime = currentTime;
-  let dt = Math.min(32, currentTime - frameTime);
-  if(dt > 0) updateGame(dt);
-  drawFrame();
-  frameTime = currentTime;
-  animationId = requestAnimationFrame(gameLoop);
 }
 
 function startGame() {
   resetGame();
   gameActive = true;
-  frameTime = 0; // Resetear el timestamp para evitar dt enorme
+  lastTimestampLoop = 0; // Resetear timestamp
+  frameTime = 0;
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('menuFloatBtn').style.display = 'block';
   music.play();
