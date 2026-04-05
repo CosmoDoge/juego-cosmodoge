@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Edición Definitiva</title>
+  <title>CosmoDoge 🚀 | Juego Definitivo</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   
@@ -43,14 +43,10 @@
     #contadorBCOSMO { top: 150px; left: 10px; color: #ffaa44; }
     #shieldDisplay { top: 185px; left: 10px; color: #ff6666; display: none; }
     #imanContador { top: 220px; right: 10px; left: auto; display: none; font-size: 9px; }
-    #comboDisplay { top: 255px; left: 10px; color: #ff0; display: none; font-size: 10px; }
-    #difficultyDisplay { top: 290px; left: 10px; color: #f66; font-size: 9px; display: none; }
-    #waveDisplay { top: 325px; left: 10px; color: #0ff; font-size: 9px; display: none; }
     #balanceCDOGE, #balanceBCOSMO { right: 10px; left: auto; display: none; font-size: 9px; background: #000000cc; }
     #balanceCDOGE { top: 10px; }
     #balanceBCOSMO { top: 45px; }
     #userNameDisplay { top: 10px; right: 10px; left: auto; background: #000000aa; color: #ffaa44; }
-    #powerupDisplay { top: 360px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
     .floating-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; max-height: 80vh; background: linear-gradient(135deg, #0a0a2a, #000); border: 2px solid #0ff; border-radius: 30px; padding: 20px; z-index: 200; overflow-y: auto; display: none; }
     .shop-item { background: rgba(0, 255, 255, 0.1); margin: 10px 0; padding: 12px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
     .shop-item-info { flex: 1; }
@@ -90,10 +86,6 @@
 <div id="contadorBCOSMO" class="hud">🐕 BCOSMO: 0</div>
 <div id="shieldDisplay" class="hud">🛡️</div>
 <div id="imanContador" class="hud">🧲</div>
-<div id="comboDisplay" class="hud">🔥 COMBO</div>
-<div id="difficultyDisplay" class="hud">⚠️ DIFICULTAD</div>
-<div id="waveDisplay" class="hud">🌊 OLEADA</div>
-<div id="powerupDisplay" class="hud">✨ POWER-UP</div>
 <div id="balanceCDOGE" class="hud"></div>
 <div id="balanceBCOSMO" class="hud"></div>
 <div id="userNameDisplay" class="hud"></div>
@@ -361,8 +353,7 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Constantes del juego (basadas en el original)
-const GRAVITY_LEVELS = [0.5, 0.6, 0.8, 1.0];
+// Constantes del juego
 let gravity = 0.5;
 const JUMP_POWER = -10;
 
@@ -374,21 +365,9 @@ let timeElapsed = 0, lastScoreTime = 0, lastObs = 0, lastFondoChange = 0;
 let isShieldActive = false, shieldHits = 0;
 let skinActivo = 'normal';
 let imanExpiration = 0;
-let comboCounter = 0;
-let difficultyLevel = 1;
 let currentWave = 1;
 let particles = [];
 let frameTime = 0;
-let uiUpdateCounter = 0;
-
-let activePowerups = {
-  turbo: { active: false, endTime: 0 },
-  freeze: { active: false, endTime: 0 },
-  bomb: { active: false },
-  totalShield: { active: false, endTime: 0 },
-  star: { active: false, endTime: 0, multiplier: 5 }
-};
-let powerupsArr = [];
 
 let coinsArr = [], obsArr = [], cdogeArr = [], bcosmoArr = [];
 let agujeroNegro = null, cofreEspacial = null;
@@ -399,7 +378,7 @@ const doge = { x: 80, y: 200, w: 50, h: 50, v: 0 };
 
 // Imágenes
 let fondoImg, dogeImg, dogeGoldImg, skinAstronautaImg, coinImg, cdogeImg, bcosmoImg, cofreImg;
-let obstaculoNormalImg, obstaculoExplosionImg, obstaculoExplosionAireImg, homingImg;
+let obstaculoNormalImg, obstaculoExplosionImg, obstaculoExplosionAireImg;
 
 // Sonidos
 const sndJump = new Audio('jump.mp3');
@@ -408,7 +387,6 @@ const sndBoom = new Audio('boom.mp3');
 const sndRecord = new Audio('record.mp3');
 const sndCdoge = new Audio('sonido-moneda-cdoge.mp3');
 const sndBcosmo = new Audio('sonido-moneda-bcosmo.mp3');
-const sndPowerup = new Audio('powerup.mp3');
 const music = new Audio('music-cosmodoge-theme.mp3');
 music.loop = true;
 music.volume = 0.3;
@@ -418,27 +396,19 @@ function toast(msg) { WalletManager.toast(msg); }
 
 // ==================== FUNCIONES DE LIMPIEZA ====================
 function clearArrays() {
-  const MAX_COINS = 25;
-  const MAX_OBSTACLES = 18;
-  const MAX_POWERUPS = 4;
-  const MAX_PARTICLES = 60;
-  const MAX_CDOGE = 10;
-  const MAX_BCOSMO = 10;
-  
-  if(coinsArr.length > MAX_COINS) coinsArr = coinsArr.slice(0, MAX_COINS);
-  if(obsArr.length > MAX_OBSTACLES) obsArr = obsArr.slice(0, MAX_OBSTACLES);
-  if(powerupsArr.length > MAX_POWERUPS) powerupsArr = powerupsArr.slice(0, MAX_POWERUPS);
-  if(particles.length > MAX_PARTICLES) particles = particles.slice(0, MAX_PARTICLES);
-  if(cdogeArr.length > MAX_CDOGE) cdogeArr = cdogeArr.slice(0, MAX_CDOGE);
-  if(bcosmoArr.length > MAX_BCOSMO) bcosmoArr = bcosmoArr.slice(0, MAX_BCOSMO);
+  if(coinsArr.length > 20) coinsArr = coinsArr.slice(0, 20);
+  if(obsArr.length > 12) obsArr = obsArr.slice(0, 12);
+  if(particles.length > 40) particles = particles.slice(0, 40);
+  if(cdogeArr.length > 8) cdogeArr = cdogeArr.slice(0, 8);
+  if(bcosmoArr.length > 8) bcosmoArr = bcosmoArr.slice(0, 8);
 }
 
 function addParticles(x, y, color, count = 2) {
-  for(let i = 0; i < count && particles.length < 60; i++) {
+  for(let i = 0; i < count && particles.length < 40; i++) {
     particles.push({
       x: x, y: y,
-      vx: (Math.random() - 0.5) * 2.5,
-      vy: (Math.random() - 0.5) * 2.5,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
       life: 15,
       color: color,
       size: 2 + Math.random() * 2
@@ -491,76 +461,14 @@ function drawWarnings() {
   }
 }
 
-function spawnPowerup() {
-  if(powerupsArr.length >= 4) return;
-  const types = ['turbo', 'freeze', 'bomb', 'totalShield', 'star'];
-  const type = types[Math.floor(Math.random() * types.length)];
-  powerupsArr.push({
-    x: canvas.width, y: 40 + Math.random() * (canvas.height - 100),
-    w: 32, h: 32, type: type, speed: 2
-  });
-}
-
-function applyPowerup(type) {
-  const now = Date.now();
-  switch(type) {
-    case 'turbo': activePowerups.turbo = { active: true, endTime: now + 5000 }; toast('🚀 TURBO!'); break;
-    case 'freeze': activePowerups.freeze = { active: true, endTime: now + 3000 }; toast('❄️ FREEZE!'); break;
-    case 'bomb': obsArr = []; addParticles(canvas.width/2, canvas.height/2, '#ff0', 12); toast('💥 BOMBA!'); break;
-    case 'totalShield': activePowerups.totalShield = { active: true, endTime: now + 5000 }; toast('🛡️ ESCUDO TOTAL!'); break;
-    case 'star': activePowerups.star = { active: true, endTime: now + 10000, multiplier: 5 }; toast('⭐ x5 PUNTOS!'); break;
-  }
-  playSound(sndPowerup);
-  updateUI();
-}
-
-function updatePowerups() {
-  const now = Date.now();
-  for(let key in activePowerups) {
-    if(activePowerups[key].endTime && now > activePowerups[key].endTime) {
-      activePowerups[key].active = false;
-    }
-  }
-  let activeText = '';
-  if(activePowerups.turbo.active) activeText = '🚀 TURBO';
-  else if(activePowerups.freeze.active) activeText = '❄️ FREEZE';
-  else if(activePowerups.totalShield.active) activeText = '🛡️ ESCUDO TOTAL';
-  else if(activePowerups.star.active) activeText = '⭐ x5 PUNTOS';
-  document.getElementById('powerupDisplay').textContent = activeText ? `✨ ${activeText}` : '';
-  document.getElementById('powerupDisplay').style.display = activeText ? 'block' : 'none';
-}
-
-function drawPowerups() {
-  for(let i=0; i<powerupsArr.length; i++) {
-    let p = powerupsArr[i];
-    p.x -= p.speed;
-    ctx.fillStyle = '#ffaa44';
-    ctx.font = 'bold 18px Orbitron';
-    ctx.fillText(p.type === 'turbo' ? '🚀' : p.type === 'freeze' ? '❄️' : p.type === 'bomb' ? '💥' : p.type === 'totalShield' ? '🛡️' : '⭐', p.x + 8, p.y + 22);
-    if(doge.x < p.x + p.w && doge.x + doge.w > p.x && doge.y < p.y + p.h && doge.y + doge.h > p.y) {
-      applyPowerup(p.type);
-      powerupsArr.splice(i,1);
-      i--;
-    }
-  }
-  powerupsArr = powerupsArr.filter(p => p.x + p.w > 0);
-}
-
-// ==================== OBSTÁCULOS (basados en el original) ====================
-const obstacleImgs = [];
-let turnoCoins = true;
-
+// ==================== OBSTÁCULOS ====================
 function spawnObstacle() {
-  if(obsArr.length >= 15) return;
-  const obsImgsList = ['obstaculo-estelar.png', 'obstaculo-explosion.png', 'obstaculo-explosion-aire.png'];
-  const img = new Image();
-  img.src = obsImgsList[Math.floor(Math.random() * obsImgsList.length)];
-  let speed = 2 + Math.random() * 2;
-  if(activePowerups.freeze.active) speed *= 0.5;
-  if(activePowerups.turbo.active) speed *= 1.2;
-  
+  if(obsArr.length >= 10) return;
+  const obsImgsList = [obstaculoNormalImg, obstaculoExplosionImg, obstaculoExplosionAireImg];
+  const img = obsImgsList[Math.floor(Math.random() * obsImgsList.length)];
   obsArr.push({
-    x: canvas.width, y: Math.random() * (canvas.height - 60), w: 48, h: 48, sX: speed, sY: 0.5 + Math.random() * 1.5, img: img
+    x: canvas.width, y: Math.random() * (canvas.height - 60), w: 48, h: 48,
+    sX: 2 + Math.random() * 2, sY: 0.5 + Math.random() * 1.5, img: img
   });
 }
 
@@ -577,14 +485,12 @@ function updateObstacles() {
       i--;
     }
   }
-  for(let i=obsArr.length-1; i>=0; i--) {
-    if(obsArr[i].x + obsArr[i].w < 0) obsArr.splice(i,1);
-  }
+  obsArr = obsArr.filter(o => o.x + o.w > 0);
 }
 
-// ==================== SPAWNERS (basados en el original) ====================
+// ==================== SPAWNERS ====================
 function spawnCoinGroup() {
-  if(coinsArr.length >= 20) return;
+  if(coinsArr.length >= 18) return;
   const amt = Math.floor(Math.random() * 4) + 3;
   for(let i = 0; i < amt; i++) {
     coinsArr.push({x: canvas.width + i * 40, y: Math.random() * (canvas.height - 80), w: 28, h: 28, s: 2});
@@ -592,7 +498,7 @@ function spawnCoinGroup() {
 }
 
 function spawnGroupCDOGE() {
-  if(cdogeArr.length >= 10) return;
+  if(cdogeArr.length >= 8) return;
   const ubic = [
     {x:80,y:100},{x:canvas.width-120,y:80},{x:canvas.width/2,y:canvas.height/3},
     {x:canvas.width-80,y:canvas.height-120},{x:100,y:canvas.height-150}
@@ -601,7 +507,7 @@ function spawnGroupCDOGE() {
 }
 
 function spawnGroupBCOSMO() {
-  if(bcosmoArr.length >= 10) return;
+  if(bcosmoArr.length >= 8) return;
   const ubic = [
     {x:80,y:100},{x:canvas.width-120,y:80},{x:canvas.width/2,y:canvas.height/3},
     {x:canvas.width-80,y:canvas.height-120},{x:100,y:canvas.height-150}
@@ -611,7 +517,10 @@ function spawnGroupBCOSMO() {
 
 function spawnAgujeroNegro() {
   if(agujeroNegro) return;
-  agujeroNegro = { x: canvas.width + 100, y: canvas.height/2 - 40, w: 70, h: 70, vel: 1.5, radioAtraccion: 160 };
+  const posiciones = [80, canvas.height - 150, canvas.height / 2 - 40];
+  let y = posiciones[faseAgujero % 3];
+  agujeroNegro = { x: canvas.width + 100, y: y, w: 70, h: 70, vel: 1.5, radioAtraccion: 160 };
+  faseAgujero++;
 }
 
 function spawnCofreEspacial() {
@@ -644,16 +553,11 @@ function applyMagnet(obj, objX, objY, size = 16) {
 }
 
 function handleCollision() {
-  if(activePowerups.totalShield.active) {
-    toast('🛡️ Escudo total!');
-    return true;
-  }
   if(isShieldActive && shieldHits > 0) {
     shieldHits--;
     if(shieldHits <= 0) isShieldActive = false;
     updateUI();
     saveShieldPersistent();
-    comboCounter = 0;
     addParticles(doge.x + doge.w/2, doge.y + doge.h/2, '#ffaa44', 5);
     toast('🛡️ Escudo!');
     return true;
@@ -688,9 +592,6 @@ function updateUI() {
   document.getElementById('highScoreDisplay').textContent = `🏆 ${highScore}`;
   document.getElementById('contadorCDOGE').textContent = `💎 CDOGE: ${totalCDOGE}`;
   document.getElementById('contadorBCOSMO').textContent = `🐕 BCOSMO: ${totalBCOSMO}`;
-  
-  let diffText = difficultyLevel === 1 ? '🌙 FÁCIL' : difficultyLevel === 2 ? '⭐ NORMAL' : difficultyLevel === 3 ? '⚡ DIFÍCIL' : difficultyLevel === 4 ? '💀 EXPERTO' : '👹 INSANO';
-  document.getElementById('difficultyDisplay').textContent = `⚠️ ${diffText}`;
   document.getElementById('waveDisplay').textContent = `🌊 OLEADA ${currentWave}`;
   
   if(isShieldActive) {
@@ -711,21 +612,14 @@ function updateUI() {
 
 function resetGame() {
   score = 0;
-  comboCounter = 0;
   timeElapsed = 0;
   lastScoreTime = 0;
   lastFondoChange = 0;
   currentWave = 1;
-  difficultyLevel = 1;
   coins = parseInt(localStorage.getItem('cdogeCoins')) || 0;
   totalCDOGE = parseInt(localStorage.getItem('cdogeTotalCoins')) || 0;
   totalBCOSMO = parseInt(localStorage.getItem('bcosmoTotalCoins')) || 0;
   highScore = parseInt(localStorage.getItem('cdogeFloatHighScore')) || 0;
-  
-  for(let key in activePowerups) activePowerups[key].active = false;
-  powerupsArr = [];
-  activeWarnings = [];
-  particles = [];
   
   const savedShield = parseInt(localStorage.getItem('shieldHitsPersistent')) || 0;
   if(savedShield > 0) {
@@ -744,6 +638,8 @@ function resetGame() {
   bcosmoArr = [];
   agujeroNegro = null;
   cofreEspacial = null;
+  particles = [];
+  activeWarnings = [];
   updateUI();
 }
 
@@ -762,10 +658,10 @@ function drawDoge() {
   let img = skinActivo === 'astronauta' ? skinAstronautaImg : (skinActivo === 'dorado' ? dogeGoldImg : dogeImg);
   if(img) ctx.drawImage(img, doge.x, doge.y, doge.w, doge.h);
   
-  if(isShieldActive || activePowerups.totalShield.active) {
+  if(isShieldActive) {
     ctx.beginPath();
     ctx.arc(doge.x + doge.w/2, doge.y + doge.h/2, doge.w * 0.85, 0, Math.PI*2);
-    ctx.strokeStyle = activePowerups.totalShield.active ? '#ff0' : '#ffaa44';
+    ctx.strokeStyle = '#ffaa44';
     ctx.lineWidth = 3;
     ctx.stroke();
   }
@@ -796,9 +692,7 @@ function drawCoins() {
       i--;
     }
   }
-  for(let i=coinsArr.length-1; i>=0; i--) {
-    if(coinsArr[i].x + coinsArr[i].w < 0) coinsArr.splice(i,1);
-  }
+  coinsArr = coinsArr.filter(c => c.x + c.w > 0);
 }
 
 function drawCDOGE() {
@@ -896,6 +790,7 @@ function drawCofreEspacial() {
 
 // ==================== LOOP PRINCIPAL OPTIMIZADO ====================
 let lastTimestamp = 0;
+let uiUpdateCounter = 0;
 
 function updateGame(dt) {
   if(!gameActive) return;
@@ -912,16 +807,11 @@ function updateGame(dt) {
   timeElapsed += dt;
   let sec = timeElapsed / 1000;
   
-  // Dificultad progresiva
-  gravity = sec >= 75 ? GRAVITY_LEVELS[3] : sec >= 45 ? GRAVITY_LEVELS[2] : sec >= 30 ? GRAVITY_LEVELS[1] : GRAVITY_LEVELS[0];
-  
-  // Puntuación
   if(sec - lastScoreTime >= 5) { 
     score++;
     lastScoreTime = sec; 
   }
   
-  // Oleadas
   const newWave = Math.floor(score / 2000) + 1;
   if(newWave > currentWave) {
     currentWave = newWave;
@@ -929,9 +819,6 @@ function updateGame(dt) {
     if(currentWave % 3 === 0 && !agujeroNegro) { spawnAgujeroNegro(); toast(`🌀 AGUJERO NEGRO!`); }
   }
   
-  difficultyLevel = Math.min(5, currentWave);
-  
-  // Cambio de fondo
   if(sec - lastFondoChange >= 30) {
     const fondos = ['fondo-cosmodoge-v2.png', 'fondo-cosmodoge-v3.png', 'fondo-cosmodoge-v4.png'];
     const idx = Math.floor(Math.random() * fondos.length);
@@ -941,27 +828,24 @@ function updateGame(dt) {
     lastFondoChange = sec;
   }
   
-  // Spawners
-  if(coinsArr.length < 18 && Math.random() < 0.012) spawnCoinGroup();
+  // Spawners con límites estrictos
+  if(coinsArr.length < 15 && Math.random() < 0.012) spawnCoinGroup();
   
   let obsDelay = sec >= 45 ? 2000 : sec >= 30 ? 2500 : 3000;
-  if(obsArr.length < 12 && Date.now() - lastObs > obsDelay) { 
+  if(obsArr.length < 10 && Date.now() - lastObs > obsDelay) { 
     spawnObstacle(); 
     lastObs = Date.now(); 
   }
   
-  if(cdogeArr.length < 8 && Math.random() < 0.002) spawnGroupCDOGE();
-  if(bcosmoArr.length < 8 && Math.random() < 0.002) spawnGroupBCOSMO();
-  if(powerupsArr.length < 3 && Math.random() < 0.002 && score > 500) spawnPowerup();
+  if(cdogeArr.length < 6 && Math.random() < 0.002) spawnGroupCDOGE();
+  if(bcosmoArr.length < 6 && Math.random() < 0.002) spawnGroupBCOSMO();
   if(!cofreEspacial && sec > 60 && Math.random() < 0.0008) spawnCofreEspacial();
   
-  updatePowerups();
   updateParticles();
   clearArrays();
   
-  // updateUI cada 8 frames
   uiUpdateCounter++;
-  if(uiUpdateCounter >= 8) {
+  if(uiUpdateCounter >= 10) {
     updateUI();
     uiUpdateCounter = 0;
   }
@@ -970,10 +854,9 @@ function updateGame(dt) {
 function drawFrame() {
   drawBackground();
   drawCoins();
-  drawObstacles();
+  updateObstacles();
   drawCDOGE();
   drawBCOSMO();
-  drawPowerups();
   drawAgujeroNegro();
   drawCofreEspacial();
   drawDoge();
@@ -1141,6 +1024,9 @@ async function initGame() {
   cdogeImg = images['moneda_cosmodoge'] || new Image(); if(!cdogeImg.src) cdogeImg.src = 'moneda-cosmodoge.png';
   bcosmoImg = images['moneda_bcosmo'] || new Image(); if(!bcosmoImg.src) bcosmoImg.src = 'moneda-bcosmo.png';
   cofreImg = images['cofre_espacial'] || new Image(); if(!cofreImg.src) cofreImg.src = 'cofre-espacial.png';
+  obstaculoNormalImg = images['obstaculo_estelar'] || new Image(); if(!obstaculoNormalImg.src) obstaculoNormalImg.src = 'obstaculo-estelar.png';
+  obstaculoExplosionImg = images['obstaculo_explosion'] || new Image(); if(!obstaculoExplosionImg.src) obstaculoExplosionImg.src = 'obstaculo-explosion.png';
+  obstaculoExplosionAireImg = images['obstaculo_explosion_aire'] || new Image(); if(!obstaculoExplosionAireImg.src) obstaculoExplosionAireImg.src = 'obstaculo-explosion-aire.png';
   
   const savedSkin = localStorage.getItem('skinActivo');
   if(savedSkin === 'astronauta') skinActivo = 'astronauta';
