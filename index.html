@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Juego Espacial Definitivo</title>
+  <title>CosmoDoge 🚀 | Juego Definitivo con Jefe</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   
@@ -57,6 +57,7 @@
     #balanceBCOSMO { top: 45px; }
     #userNameDisplay { top: 10px; right: 10px; left: auto; background: #000000aa; color: #ffaa44; }
     #powerupDisplay { top: 360px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
+    #gunDisplay { top: 395px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
     
     /* Paneles flotantes */
     .floating-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; max-height: 80vh; background: linear-gradient(135deg, #0a0a2a, #000); border: 2px solid #0ff; border-radius: 30px; padding: 20px; z-index: 200; overflow-y: auto; display: none; }
@@ -71,6 +72,7 @@
     .toast-msg { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #0ff, #0aa); color: #000; padding: 8px 16px; border-radius: 30px; font-weight: bold; z-index: 300; animation: fadeOut 2s ease forwards; font-size: 11px; white-space: nowrap; }
     @keyframes fadeOut { 0% { opacity: 1; transform: translateX(-50%) translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); display: none; } }
     #menuFloatBtn { position: fixed; bottom: 15px; right: 15px; z-index: 150; background: linear-gradient(135deg, #0ff, #0aa); border: none; padding: 8px 16px; border-radius: 30px; font-family: 'Orbitron', monospace; font-weight: bold; cursor: pointer; display: none; font-size: 11px; }
+    #shootBtn { position: fixed; bottom: 80px; left: 15px; z-index: 150; background: linear-gradient(135deg, #f66, #c33); border: none; padding: 12px 20px; border-radius: 40px; font-family: 'Orbitron', monospace; font-weight: bold; cursor: pointer; display: none; font-size: 14px; color: white; box-shadow: 0 0 15px #f66; }
     
     /* Game Over Personalizado */
     .gameover-container { text-align: center; max-width: 500px; width: 90%; padding: 30px 25px; background: linear-gradient(135deg, rgba(30, 10, 40, 0.98), rgba(10, 5, 20, 0.98)); border-radius: 60px; border: 3px solid #f66; box-shadow: 0 0 60px rgba(255, 102, 102, 0.5); backdrop-filter: blur(10px); animation: glowPulse 1.5s infinite; }
@@ -89,6 +91,41 @@
     .gameover-btn.secondary { background: linear-gradient(135deg, #333, #111); color: #f66; border: 1px solid #f66; }
     .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle 2s infinite; }
     @keyframes twinkle { 0%,100%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1)} }
+    
+    /* Barra de vida del jefe */
+    .boss-health-bar {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 20px;
+      background: #333;
+      border-radius: 10px;
+      z-index: 60;
+      display: none;
+      border: 1px solid #fff;
+      overflow: hidden;
+    }
+    .boss-health-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #0f0, #ff0, #f00);
+      border-radius: 10px;
+      transition: width 0.2s;
+    }
+    .boss-health-text {
+      position: fixed;
+      top: 38px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 10px;
+      font-family: 'Orbitron', monospace;
+      z-index: 60;
+      display: none;
+      text-shadow: 0 0 5px #000;
+    }
   </style>
 </head>
 <body>
@@ -121,11 +158,18 @@
 <div id="difficultyDisplay" class="hud">⚠️ DIFICULTAD</div>
 <div id="waveDisplay" class="hud">🌊 OLEADA</div>
 <div id="powerupDisplay" class="hud">✨ POWER-UP</div>
+<div id="gunDisplay" class="hud">🔫</div>
 <div id="balanceCDOGE" class="hud"></div>
 <div id="balanceBCOSMO" class="hud"></div>
 <div id="userNameDisplay" class="hud"></div>
 
+<div class="boss-health-bar" id="bossHealthBar">
+  <div class="boss-health-fill" id="bossHealthFill"></div>
+</div>
+<div class="boss-health-text" id="bossHealthText"></div>
+
 <button id="menuFloatBtn" data-key="menu">🏠 MENÚ</button>
+<button id="shootBtn">🔫 DISPARAR</button>
 
 <!-- Menú Principal -->
 <div id="mainMenu" class="screen hidden">
@@ -156,6 +200,9 @@
   <div class="shop-item"><div class="shop-item-info"><strong data-key="shield">🛡️ ESCUDO</strong><br><small data-key="shieldDesc">3 impactos (persistente)</small></div><button id="buyShieldBtn" data-key="buyShield">1,000 🪙</button></div>
   <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-skin-astronauta.png');"></div><div class="shop-item-info"><strong data-key="skinAstronaut">👨‍🚀 ASTRONAUTA</strong></div></div><button id="buySkinBtn" data-key="buySkin">3,500 🪙</button></div>
   <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-cohete-dorado.png');"></div><div class="shop-item-info"><strong data-key="skinGold">⚡ COHETE DORADO</strong><br><small data-key="skinGoldDesc">Efecto brillante</small></div></div><button id="buyGoldSkinBtn" data-key="buyGoldSkin">8,000 🪙</button></div>
+  <div class="shop-item"><div class="shop-item-info"><strong>🔫 PISTOLA BÁSICA</strong><br><small>Desbloquea disparos</small></div><button id="buyGunBtn">1,000 🪙</button></div>
+  <div class="shop-item"><div class="shop-item-info"><strong>🔫🔫 DOBLE DISPARO</strong><br><small>Mejora nivel 2</small></div><button id="upgradeGunBtn">2,000 🪙</button></div>
+  <div class="shop-item"><div class="shop-item-info"><strong>⚡ LÁSER RÁPIDO</strong><br><small>Mejora nivel 3</small></div><button id="upgradeGunBtn2">5,000 🪙</button></div>
   <button id="closeShopBtn" class="menu-btn" style="margin-top:15px; background:#333;" data-key="close">✖️ CERRAR</button>
 </div>
 
@@ -237,11 +284,10 @@
 </script>
 
 <script>
-// ==================== TRADUCCIONES COMPLETAS ====================
+// ==================== TRADUCCIONES ====================
 const translations = {
   es: {
-    loading: "CARGANDO COSMODOGE",
-    subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟",
+    loading: "CARGANDO COSMODOGE", subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟",
     play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING",
     connectWallet: "🔗 CONECTAR WALLET", register: "📝 REGISTRARSE", close: "✖️ CERRAR",
     gameOver: "💀 GAME OVER", playAgain: "🔄 JUGAR DE NUEVO", menu: "🏠 MENÚ",
@@ -258,8 +304,7 @@ const translations = {
     namePlaceholder: "✨ NOMBRE GALÁCTICO"
   },
   en: {
-    loading: "LOADING COSMODOGE",
-    subtitle: "🚀 TAP TO FLY | DODGE AND COLLECT 🌟",
+    loading: "LOADING COSMODOGE", subtitle: "🚀 TAP TO FLY | DODGE AND COLLECT 🌟",
     play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING",
     connectWallet: "🔗 CONNECT WALLET", register: "📝 REGISTER", close: "✖️ CLOSE",
     gameOver: "💀 GAME OVER", playAgain: "🔄 PLAY AGAIN", menu: "🏠 MENU",
@@ -300,7 +345,7 @@ function updateLanguage() {
   });
 }
 
-// ==================== RECURSOS (SOLO LOS QUE EXISTEN) ====================
+// ==================== RECURSOS ====================
 const imagesToLoad = [
   'cosmodoge-cohete-juego.png',
   'cosmodoge-cohete-dorado.png',
@@ -314,7 +359,8 @@ const imagesToLoad = [
   'cofre-espacial.png',
   'obstaculo-agujero-negro.png',
   'obstaculo-estelar.png',
-  'obstaculo-explosion-aire.png'
+  'obstaculo-explosion-aire.png',
+  'boss-espacial-1.jpg'
 ];
 
 let loadedImages = 0;
@@ -340,7 +386,7 @@ function preloadImages() {
         if(loadedImages === imagesToLoad.length) setTimeout(resolve, 300);
       };
       img.src = src;
-      const key = src.replace('.png', '').replace(/-/g, '_');
+      const key = src.replace('.png', '').replace(/-/g, '_').replace('.jpg', '');
       images[key] = img;
     });
     setTimeout(() => { if(loadedImages < imagesToLoad.length) resolve(); }, 8000);
@@ -443,6 +489,359 @@ function mostrarSelectorWallet() {
   document.getElementById('closeModal').onclick = () => modal.remove();
 }
 
+// ==================== SISTEMA DE SONIDOS (con generación por código) ====================
+function createBeepSound(frequency, duration, volume = 0.3) {
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  oscillator.frequency.value = frequency;
+  gainNode.gain.value = volume;
+  oscillator.type = 'sine';
+  oscillator.start();
+  gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+  oscillator.stop(audioCtx.currentTime + duration);
+}
+
+// Sonidos del juego (con fallbacks)
+const sndJump = new Audio('jump.mp3');
+const sndCoin = new Audio('coin.mp3');
+const sndBoom = new Audio('boom.mp3');
+const sndRecord = new Audio('record.mp3');
+const sndCdoge = new Audio('sonido-moneda-cdoge.mp3');
+const sndBcosmo = new Audio('sonido-moneda-bcosmo.mp3');
+const music = new Audio('tema-music-cosmodoge.mp3');
+music.loop = true;
+music.volume = 0.3;
+
+// Sonidos del jefe y disparos (generados por código si no existen)
+function playShootSound() { createBeepSound(880, 0.1, 0.2); }
+function playBossAppearSound() { createBeepSound(220, 0.5, 0.4); createBeepSound(330, 0.5, 0.4); }
+function playBossAttackSound() { createBeepSound(440, 0.2, 0.3); createBeepSound(550, 0.2, 0.3); }
+function playBossHitSound() { createBeepSound(660, 0.1, 0.25); }
+function playBossDefeatSound() { createBeepSound(440, 0.2, 0.3); createBeepSound(330, 0.2, 0.3); createBeepSound(220, 0.3, 0.3); }
+
+function playSound(snd) { 
+  if(snd && snd.play) {
+    snd.currentTime = 0; 
+    snd.play().catch(()=>{}); 
+  }
+}
+function toast(msg) { WalletManager.toast(msg); }
+
+// ==================== SISTEMA DE DISPAROS ====================
+let bullets = [];
+let hasGun = localStorage.getItem('hasGun') === 'true';
+let gunLevel = parseInt(localStorage.getItem('gunLevel')) || 1;
+let lastShootTime = 0;
+
+const gunUpgrades = {
+  1: { name: '🔫 Pistola Básica', price: 0, cooldown: 500, damage: 1, bullets: 1, spread: 0, size: 8 },
+  2: { name: '🔫🔫 Doble Disparo', price: 2000, cooldown: 450, damage: 1, bullets: 2, spread: 15, size: 8 },
+  3: { name: '⚡ Láser Rápido', price: 5000, cooldown: 300, damage: 1, bullets: 1, spread: 0, speed: 12, size: 10 },
+  4: { name: '💥 Dispersión', price: 10000, cooldown: 600, damage: 1, bullets: 5, spread: 25, size: 8 },
+  5: { name: '🌟 Súper Cañón', price: 20000, cooldown: 800, damage: 3, bullets: 1, spread: 0, size: 20 }
+};
+
+function shoot() {
+  if(!gameActive) return;
+  if(!hasGun) { toast('🔫 Compra un arma en la tienda primero!'); return; }
+  
+  const now = Date.now();
+  const upgrade = gunUpgrades[gunLevel];
+  if(now - lastShootTime < upgrade.cooldown) return;
+  
+  lastShootTime = now;
+  playShootSound();
+  
+  for(let i = 0; i < upgrade.bullets; i++) {
+    let angle = (i - (upgrade.bullets-1)/2) * upgrade.spread * Math.PI / 180;
+    bullets.push({
+      x: doge.x + doge.w,
+      y: doge.y + doge.h/2,
+      w: upgrade.size || 8,
+      h: upgrade.size || 5,
+      angle: angle,
+      damage: upgrade.damage,
+      speed: upgrade.speed || 8,
+      life: 100
+    });
+  }
+}
+
+function updateBullets() {
+  for(let i = 0; i < bullets.length; i++) {
+    let b = bullets[i];
+    b.x += Math.cos(b.angle) * b.speed;
+    b.y += Math.sin(b.angle) * b.speed;
+    b.life--;
+    
+    // Colisión con obstáculos
+    for(let j = 0; j < obsArr.length; j++) {
+      let o = obsArr[j];
+      if(b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y) {
+        obsArr.splice(j,1);
+        bullets.splice(i,1);
+        i--;
+        break;
+      }
+    }
+    
+    // Colisión con jefe
+    if(boss.active && b.x < boss.x + boss.w && b.x + b.w > boss.x && b.y < boss.y + boss.h && b.y + b.h > boss.y) {
+      boss.health -= b.damage;
+      bullets.splice(i,1);
+      i--;
+      playBossHitSound();
+      updateBossHealthBar();
+    }
+    
+    if(b.x > canvas.width || b.life <= 0) {
+      bullets.splice(i,1);
+      i--;
+    }
+  }
+}
+
+function drawBullets() {
+  for(let b of bullets) {
+    ctx.fillStyle = '#ff0';
+    ctx.shadowBlur = 5;
+    ctx.shadowColor = '#ff0';
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ==================== SISTEMA DE JEFE ====================
+let boss = {
+  active: false,
+  x: 0, y: 0,
+  w: 100, h: 100,
+  health: 0,
+  maxHealth: 0,
+  attackPattern: 'rays',
+  attackTimer: 0,
+  moveTimer: 0,
+  img: null
+};
+
+let bossProjectiles = [];
+
+function updateBossHealthBar() {
+  if(boss.active) {
+    const percent = (boss.health / boss.maxHealth) * 100;
+    document.getElementById('bossHealthFill').style.width = percent + '%';
+    document.getElementById('bossHealthText').textContent = `👾 JEFE ESPACIAL ${boss.health}/${boss.maxHealth}`;
+    document.getElementById('bossHealthBar').style.display = 'block';
+    document.getElementById('bossHealthText').style.display = 'block';
+  } else {
+    document.getElementById('bossHealthBar').style.display = 'none';
+    document.getElementById('bossHealthText').style.display = 'none';
+  }
+}
+
+function spawnBoss(level) {
+  boss.active = true;
+  boss.x = canvas.width - 120;
+  boss.y = canvas.height / 2 - 50;
+  boss.w = 100;
+  boss.h = 100;
+  boss.maxHealth = 50 + level * 10;
+  boss.health = boss.maxHealth;
+  boss.attackPattern = ['rays', 'fireballs', 'spirals'][Math.floor(Math.random() * 3)];
+  boss.attackTimer = 0;
+  boss.moveTimer = 0;
+  boss.img = images['boss_espacial_1'] || null;
+  
+  toast(`👾 JEFE ESPACIAL NIVEL ${level}! 👾`);
+  playBossAppearSound();
+  showWarning('👾 JEFE APARECIÓ! DISPARA PARA DERROTARLO 👾', 1500);
+  updateBossHealthBar();
+}
+
+function updateBoss() {
+  if(!boss.active) return;
+  
+  // Movimiento del jefe
+  boss.moveTimer += 0.02;
+  boss.y = canvas.height/2 - 50 + Math.sin(boss.moveTimer) * 80;
+  boss.y = Math.min(Math.max(boss.y, 50), canvas.height - boss.h - 50);
+  
+  // Ataques del jefe
+  boss.attackTimer++;
+  if(boss.attackTimer > 60) {
+    boss.attackTimer = 0;
+    if(boss.attackPattern === 'rays') attackRays();
+    else if(boss.attackPattern === 'fireballs') attackFireballs();
+    else attackSpirals();
+  }
+  
+  // Colisión con el jugador
+  if(doge.x < boss.x + boss.w && doge.x + doge.w > boss.x && doge.y < boss.y + boss.h && doge.y + doge.h > boss.y) {
+    if(!handleCollision()) gameOver();
+  }
+  
+  // Si el jefe muere
+  if(boss.health <= 0) {
+    boss.active = false;
+    toast('🎉 JEFE DERROTADO! +5000 🪙 +500 CDOGE +500 BCOSMO 🎉');
+    coins += 5000;
+    totalCDOGE += 500;
+    totalBCOSMO += 500;
+    localStorage.setItem('cdogeCoins', coins);
+    localStorage.setItem('cdogeTotalCoins', totalCDOGE);
+    localStorage.setItem('bcosmoTotalCoins', totalBCOSMO);
+    updateUI();
+    playBossDefeatSound();
+    spawnPowerup();
+    updateBossHealthBar();
+  }
+}
+
+function attackRays() {
+  showWarning('⚡ RAYO MORTAL ⚡', 500);
+  for(let i = -2; i <= 2; i++) {
+    bossProjectiles.push({
+      x: boss.x,
+      y: boss.y + boss.h/2 + i * 25,
+      w: 10, h: 5,
+      type: 'ray',
+      speed: 8
+    });
+  }
+  playBossAttackSound();
+}
+
+function attackFireballs() {
+  showWarning('🔥 BOLAS DE FUEGO 🔥', 500);
+  for(let i = 0; i < 5; i++) {
+    bossProjectiles.push({
+      x: boss.x,
+      y: boss.y + Math.random() * boss.h,
+      w: 12, h: 12,
+      type: 'fireball',
+      speed: 5,
+      targetY: doge.y + doge.h/2
+    });
+  }
+  playBossAttackSound();
+}
+
+function attackSpirals() {
+  showWarning('🌀 ESPIRAL CÓSMICA 🌀', 500);
+  for(let i = 0; i < 8; i++) {
+    let angle = (i / 8) * Math.PI * 2;
+    bossProjectiles.push({
+      x: boss.x,
+      y: boss.y + boss.h/2,
+      w: 8, h: 8,
+      type: 'spiral',
+      speed: 4,
+      angle: angle
+    });
+  }
+  playBossAttackSound();
+}
+
+function updateBossProjectiles() {
+  for(let i = 0; i < bossProjectiles.length; i++) {
+    let p = bossProjectiles[i];
+    
+    if(p.type === 'ray') {
+      p.x -= p.speed;
+    } else if(p.type === 'fireball') {
+      let dy = p.targetY - p.y;
+      p.y += Math.min(Math.max(dy * 0.05, -3), 3);
+      p.x -= p.speed;
+    } else if(p.type === 'spiral') {
+      p.angle = (p.angle || 0) + 0.1;
+      p.x -= p.speed;
+      p.y += Math.sin(p.angle) * 4;
+    }
+    
+    if(p.x < 0 || p.y < 0 || p.y > canvas.height) {
+      bossProjectiles.splice(i,1);
+      i--;
+      continue;
+    }
+    
+    if(doge.x < p.x + p.w && doge.x + doge.w > p.x && doge.y < p.y + p.h && doge.y + doge.h > p.y) {
+      if(!handleCollision()) gameOver();
+      bossProjectiles.splice(i,1);
+      i--;
+    }
+  }
+}
+
+function drawBoss() {
+  if(!boss.active) return;
+  
+  // Dibujar jefe
+  if(boss.img) {
+    ctx.drawImage(boss.img, boss.x, boss.y, boss.w, boss.h);
+  } else {
+    ctx.fillStyle = '#f0f';
+    ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 16px Orbitron';
+    ctx.fillText('BOSS', boss.x + 20, boss.y + 55);
+  }
+  
+  // Dibujar proyectiles del jefe
+  for(let p of bossProjectiles) {
+    ctx.fillStyle = p.type === 'ray' ? '#f00' : (p.type === 'fireball' ? '#ff6600' : '#0ff');
+    ctx.shadowBlur = 5;
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ==================== EFECTO PARALLAX ====================
+let bgOffset = 0;
+let starLayers = [
+  { speed: 0.2, stars: [] },
+  { speed: 0.5, stars: [] },
+  { speed: 1.0, stars: [] }
+];
+
+function initStars() {
+  for(let layer of starLayers) {
+    layer.stars = [];
+    for(let i = 0; i < 50; i++) {
+      layer.stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 1 + Math.random() * 2
+      });
+    }
+  }
+}
+
+function updateParallax() {
+  bgOffset += 0.3;
+  for(let layer of starLayers) {
+    for(let star of layer.stars) {
+      star.x -= layer.speed;
+      if(star.x < 0) star.x = canvas.width;
+    }
+  }
+}
+
+function drawParallax() {
+  for(let i = 0; i < starLayers.length; i++) {
+    let layer = starLayers[i];
+    let alpha = 0.3 + i * 0.3;
+    for(let star of layer.stars) {
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
 // ==================== CONFIGURACIÓN DEL JUEGO ====================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -450,6 +849,7 @@ const ctx = canvas.getContext('2d');
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  initStars();
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -496,20 +896,6 @@ const doge = { x: 100, y: 200, w: 48, h: 48, v: 0 };
 let fondoImg, dogeImg, dogeGoldImg, skinAstronautaImg, coinImg, cdogeImg, bcosmoImg, cofreImg;
 let obstaculoImages = [];
 
-// Sonidos
-const sndJump = new Audio('jump.mp3');
-const sndCoin = new Audio('coin.mp3');
-const sndBoom = new Audio('boom.mp3');
-const sndRecord = new Audio('record.mp3');
-const sndCdoge = new Audio('sonido-moneda-cdoge.mp3');
-const sndBcosmo = new Audio('sonido-moneda-bcosmo.mp3');
-const music = new Audio('tema-music-cosmodoge.mp3');
-music.loop = true;
-music.volume = 0.3;
-
-function playSound(snd) { snd.currentTime = 0; snd.play().catch(()=>{}); }
-function toast(msg) { WalletManager.toast(msg); }
-
 // ==================== LIMPIEZA ====================
 function clearArrays() {
   const MAX_COINS = 20;
@@ -518,6 +904,8 @@ function clearArrays() {
   const MAX_PARTICLES = 40;
   const MAX_CDOGE = 8;
   const MAX_BCOSMO = 8;
+  const MAX_BULLETS = 30;
+  const MAX_BOSS_PROJECTILES = 30;
   
   if(coinsArr.length > MAX_COINS) coinsArr = coinsArr.slice(0, MAX_COINS);
   if(obsArr.length > MAX_OBSTACLES) obsArr = obsArr.slice(0, MAX_OBSTACLES);
@@ -525,6 +913,8 @@ function clearArrays() {
   if(particles.length > MAX_PARTICLES) particles = particles.slice(0, MAX_PARTICLES);
   if(cdogeArr.length > MAX_CDOGE) cdogeArr = cdogeArr.slice(0, MAX_CDOGE);
   if(bcosmoArr.length > MAX_BCOSMO) bcosmoArr = bcosmoArr.slice(0, MAX_BCOSMO);
+  if(bullets.length > MAX_BULLETS) bullets = bullets.slice(0, MAX_BULLETS);
+  if(bossProjectiles.length > MAX_BOSS_PROJECTILES) bossProjectiles = bossProjectiles.slice(0, MAX_BOSS_PROJECTILES);
 }
 
 function addParticles(x, y, color, count = 2) {
@@ -640,11 +1030,10 @@ function drawPowerups() {
   powerupsArr = powerupsArr.filter(p => p.x + p.w > 0);
 }
 
-// ==================== OBSTÁCULOS (SOLO LOS QUE FUNCIONAN) ====================
+// ==================== OBSTÁCULOS ====================
 function initObstacleImages() {
   obstaculoImages = [];
   
-  // Usar SOLO las imágenes que existen y funcionan
   const validObstacles = ['obstaculo_estelar', 'obstaculo_explosion_aire'];
   
   for(let key of validObstacles) {
@@ -653,12 +1042,6 @@ function initObstacleImages() {
     }
   }
   
-  // Duplicar para tener variedad
-  if(obstaculoImages.length === 1) {
-    obstaculoImages.push(obstaculoImages[0]);
-  }
-  
-  // Fallback por si acaso
   if(obstaculoImages.length === 0) {
     const defaultImg = new Image();
     defaultImg.src = 'obstaculo-estelar.png';
@@ -795,7 +1178,6 @@ function updateObstacles() {
     }
     o.y = Math.min(Math.max(o.y, 20), canvas.height - o.h - 20);
     
-    // Colisión ajustada
     if(doge.x < o.x + o.w - 8 && doge.x + doge.w - 8 > o.x + 8 && 
        doge.y < o.y + o.h - 8 && doge.y + doge.h - 8 > o.y + 8) {
       if(!handleCollision()) gameOver();
@@ -971,6 +1353,14 @@ function updateUI() {
   } else {
     document.getElementById('imanContador').style.display = 'none';
   }
+  
+  // Mostrar información del arma
+  if(hasGun) {
+    document.getElementById('gunDisplay').textContent = `${gunUpgrades[gunLevel].name}`;
+    document.getElementById('gunDisplay').style.display = 'block';
+  } else {
+    document.getElementById('gunDisplay').style.display = 'none';
+  }
 }
 
 function resetGame() {
@@ -991,6 +1381,9 @@ function resetGame() {
   powerupsArr = [];
   activeWarnings = [];
   particles = [];
+  bullets = [];
+  bossProjectiles = [];
+  boss.active = false;
   
   const savedShield = parseInt(localStorage.getItem('shieldHitsPersistent')) || 0;
   if(savedShield > 0) {
@@ -1010,6 +1403,7 @@ function resetGame() {
   agujeroNegro = null;
   cofreEspacial = null;
   updateUI();
+  updateBossHealthBar();
 }
 
 function saveShieldPersistent() {
@@ -1021,7 +1415,10 @@ function saveShieldPersistent() {
 }
 
 // ==================== DIBUJADO ====================
-function drawBackground() { if(fondoImg) ctx.drawImage(fondoImg, 0, 0, canvas.width, canvas.height); }
+function drawBackground() { 
+  drawParallax();
+  if(fondoImg) ctx.drawImage(fondoImg, 0, 0, canvas.width, canvas.height);
+}
 
 function drawDoge() {
   let img = skinActivo === 'astronauta' ? skinAstronautaImg : (skinActivo === 'dorado' ? dogeGoldImg : dogeImg);
@@ -1135,7 +1532,6 @@ function drawAgujeroNegro() {
   if(!agujeroNegro) return;
   agujeroNegro.x -= agujeroNegro.vel;
   
-  // Atracción del perro
   let dx = (agujeroNegro.x + agujeroNegro.w/2) - (doge.x + doge.w/2);
   let dy = (agujeroNegro.y + agujeroNegro.h/2) - (doge.y + doge.h/2);
   let dist = Math.hypot(dx, dy);
@@ -1145,7 +1541,6 @@ function drawAgujeroNegro() {
     doge.y += dy * fuerza;
   }
   
-  // Efecto de absorción - partículas alrededor
   for(let i=0; i<12; i++) {
     ctx.beginPath();
     ctx.arc(agujeroNegro.x + agujeroNegro.w/2 + Math.sin(Date.now()/150 + i)*15, agujeroNegro.y + agujeroNegro.h/2 + Math.cos(Date.now()/150 + i)*15, 4, 0, Math.PI*2);
@@ -1153,7 +1548,6 @@ function drawAgujeroNegro() {
     ctx.fill();
   }
   
-  // Gradiente del agujero negro
   const grad = ctx.createRadialGradient(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, 5, agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2);
   grad.addColorStop(0, '#fff');
   grad.addColorStop(0.2, '#f0f');
@@ -1164,14 +1558,12 @@ function drawAgujeroNegro() {
   ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2, 0, Math.PI*2);
   ctx.fill();
   
-  // Anillo de energía
   ctx.beginPath();
   ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2 + 5, 0, Math.PI*2);
   ctx.strokeStyle = `rgba(255, 0, 255, ${0.5 + Math.sin(Date.now()/200)*0.3})`;
   ctx.lineWidth = 3;
   ctx.stroke();
   
-  // Game over si entra al núcleo
   if(dist < agujeroNegro.w/2) {
     toast('🌀 Has sido absorbido por el agujero negro!');
     gameOver();
@@ -1185,7 +1577,6 @@ function drawCofreEspacial() {
   cofreEspacial.x -= cofreEspacial.vel;
   if(cofreImg) ctx.drawImage(cofreImg, cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
   
-  // Efecto de brillo
   ctx.shadowBlur = 10;
   ctx.shadowColor = '#ffaa44';
   if(cofreImg) ctx.drawImage(cofreImg, cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
@@ -1223,12 +1614,18 @@ function updateGame(dt) {
     lastScoreTime = sec; 
   }
   
+  // Verificar jefe cada 25 niveles (25, 50, 75, 100...)
+  const nivelJefe = Math.floor(score / 2000) + 1;
+  if(nivelJefe >= 25 && nivelJefe % 25 === 0 && !boss.active && nivelJefe > (currentWave - 1)) {
+    spawnBoss(nivelJefe);
+  }
+  
   const newWave = Math.floor(score / 2000) + 1;
-  if(newWave > currentWave) {
+  if(newWave > currentWave && !boss.active) {
     currentWave = newWave;
     showWarning(`🌊 OLEADA ${currentWave} 🌊`, 1000);
     if(currentWave % 2 === 0 && powerupsArr.length < 3) { spawnPowerup(); toast(`✨ POWER-UP!`); }
-    if(currentWave >= 3 && !agujeroNegro) { spawnAgujeroNegro(); }
+    if(currentWave >= 3 && !agujeroNegro && !boss.active) { spawnAgujeroNegro(); }
   }
   
   difficultyLevel = Math.min(5, currentWave);
@@ -1248,18 +1645,22 @@ function updateGame(dt) {
   if(bcosmoArr.length < 6 && Math.random() < 0.004) spawnGroupBCOSMO();
   
   let obsDelay = Math.max(900, 1800 - Math.floor(score / 30) * 4);
-  if(obsArr.length < 10 && Date.now() - lastObs > obsDelay) { 
+  if(obsArr.length < 10 && Date.now() - lastObs > obsDelay && !boss.active) { 
     if(!trySpawnPattern()) spawnObstacle();
     lastObs = Date.now(); 
     onObstaclePassed();
   }
   
   if(powerupsArr.length < 3 && Math.random() < 0.0025 && score > 500) spawnPowerup();
-  if(!cofreEspacial && sec > 85 && Math.random() < 0.0008) spawnCofreEspacial();
+  if(!cofreEspacial && sec > 85 && Math.random() < 0.0008 && !boss.active) spawnCofreEspacial();
   
   updateObstacles();
+  updateBullets();
+  updateBoss();
+  updateBossProjectiles();
   updatePowerups();
   updateParticles();
+  updateParallax();
   clearArrays();
   
   uiUpdateCounter++;
@@ -1276,9 +1677,11 @@ function drawFrame() {
   drawCDOGE();
   drawBCOSMO();
   drawPowerups();
+  drawBoss();
   drawAgujeroNegro();
   drawCofreEspacial();
   drawDoge();
+  drawBullets();
   drawParticles();
   drawWarnings();
 }
@@ -1319,6 +1722,7 @@ function startGame() {
   lastTimestampLoop = 0;
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('menuFloatBtn').style.display = 'block';
+  document.getElementById('shootBtn').style.display = 'block';
   music.play();
 }
 
@@ -1326,6 +1730,7 @@ function stopGame() {
   gameActive = false;
   music.pause();
   document.getElementById('menuFloatBtn').style.display = 'none';
+  document.getElementById('shootBtn').style.display = 'none';
 }
 
 // ==================== RECOMPENSAS ====================
@@ -1492,6 +1897,51 @@ function comprarGoldSkin() {
   }
 }
 
+function comprarGun() {
+  if(coins >= 1000 && !hasGun) {
+    coins -= 1000;
+    hasGun = true;
+    localStorage.setItem('hasGun', 'true');
+    localStorage.setItem('cdogeCoins', coins);
+    updateUI();
+    toast('🔫 Pistola desbloqueada! Usa el botón 🔫 para disparar');
+  } else if(hasGun) {
+    toast('🔫 Ya tienes un arma! Mejórala');
+  } else {
+    toast('💰 Necesitas 1,000 monedas');
+  }
+}
+
+function upgradeGun() {
+  if(gunLevel < 5 && coins >= gunUpgrades[gunLevel+1].price) {
+    coins -= gunUpgrades[gunLevel+1].price;
+    gunLevel++;
+    localStorage.setItem('gunLevel', gunLevel);
+    localStorage.setItem('cdogeCoins', coins);
+    updateUI();
+    toast(`🔫 ¡${gunUpgrades[gunLevel].name} desbloqueado!`);
+  } else if(gunLevel >= 5) {
+    toast('🔫 ¡Ya tienes el arma máxima!');
+  } else {
+    toast(`💰 Necesitas ${gunUpgrades[gunLevel+1].price} monedas`);
+  }
+}
+
+function upgradeGun2() {
+  if(gunLevel < 3 && coins >= 5000) {
+    coins -= 5000;
+    gunLevel = 3;
+    localStorage.setItem('gunLevel', gunLevel);
+    localStorage.setItem('cdogeCoins', coins);
+    updateUI();
+    toast(`🔫 ¡${gunUpgrades[gunLevel].name} desbloqueado!`);
+  } else if(gunLevel >= 3) {
+    toast('🔫 Ya tienes nivel 3 o superior');
+  } else {
+    toast('💰 Necesitas 5,000 monedas');
+  }
+}
+
 // ==================== INICIALIZACIÓN ====================
 async function initGame() {
   document.getElementById('loadingScreen').classList.remove('hidden');
@@ -1509,6 +1959,7 @@ async function initGame() {
   cofreImg = images['cofre_espacial'] || new Image(); if(!cofreImg.src) cofreImg.src = 'cofre-espacial.png';
   
   initObstacleImages();
+  initStars();
   
   const savedSkin = localStorage.getItem('skinActivo');
   if(savedSkin === 'astronauta') skinActivo = 'astronauta';
@@ -1542,6 +1993,7 @@ async function initGame() {
   document.getElementById('restartBtn').onclick = startGame;
   document.getElementById('menuFromGameOver').onclick = () => { document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden'); };
   document.getElementById('menuFloatBtn').onclick = () => { stopGame(); document.getElementById('mainMenu').classList.remove('hidden'); };
+  document.getElementById('shootBtn').onclick = () => { shoot(); };
   
   document.getElementById('continueAfterRecord').onclick = () => { 
     document.getElementById('newRecordScreen').classList.add('hidden'); 
@@ -1570,6 +2022,9 @@ async function initGame() {
   document.getElementById('buyShieldBtn').onclick = comprarEscudo;
   document.getElementById('buySkinBtn').onclick = comprarSkin;
   document.getElementById('buyGoldSkinBtn').onclick = comprarGoldSkin;
+  document.getElementById('buyGunBtn').onclick = comprarGun;
+  document.getElementById('upgradeGunBtn').onclick = upgradeGun;
+  document.getElementById('upgradeGunBtn2').onclick = upgradeGun2;
   document.getElementById('dailyRewardBtn').onclick = reclamarRecompensaDiaria;
   document.getElementById('claimTokensBtn').onclick = canjearTokens;
   document.getElementById('claimLevelBonusBtn').onclick = reclamarBonusNivel;
