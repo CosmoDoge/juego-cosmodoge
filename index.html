@@ -98,7 +98,7 @@
 <div id="loadingScreen" class="screen">
   <div class="loading-container">
     <div class="logo" style="width:80px; height:80px;"></div>
-    <h2 style="color:#0ff;">CARGANDO COSMODOGE</h2>
+    <h2 style="color:#0ff;" data-key="loading">CARGANDO COSMODOGE</h2>
     <div class="loading-bar"><div id="loadingProgress" class="loading-progress"></div></div>
     <p id="loadingText" style="color:#0ff; margin-top:10px;">Iniciando...</p>
   </div>
@@ -125,24 +125,24 @@
 <div id="balanceBCOSMO" class="hud"></div>
 <div id="userNameDisplay" class="hud"></div>
 
-<button id="menuFloatBtn">🏠 MENÚ</button>
+<button id="menuFloatBtn" data-key="menu">🏠 MENÚ</button>
 
 <!-- Menú Principal -->
 <div id="mainMenu" class="screen hidden">
   <div class="menu-container">
     <div class="logo"></div>
     <h1 class="game-title" id="gameTitle">COSMODOGE</h1>
-    <p id="gameSubtitle" style="color:#0ff; font-size:10px; margin-bottom:10px;">🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟</p>
+    <p id="gameSubtitle" style="color:#0ff; font-size:10px; margin-bottom:10px;" data-key="subtitle">🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟</p>
     <div class="menu-buttons">
-      <button id="playBtn" class="menu-btn">🎮 JUGAR</button>
-      <button id="shopBtn" class="menu-btn secondary">🛒 TIENDA</button>
-      <button id="rewardsBtn" class="menu-btn secondary">🎁 RECOMPENSAS</button>
-      <button id="rankingBtn" class="menu-btn secondary">🏆 RANKING</button>
-      <button id="walletBtn" class="menu-btn secondary">🔗 CONECTAR WALLET</button>
+      <button id="playBtn" class="menu-btn" data-key="play">🎮 JUGAR</button>
+      <button id="shopBtn" class="menu-btn secondary" data-key="shop">🛒 TIENDA</button>
+      <button id="rewardsBtn" class="menu-btn secondary" data-key="rewards">🎁 RECOMPENSAS</button>
+      <button id="rankingBtn" class="menu-btn secondary" data-key="ranking">🏆 RANKING</button>
+      <button id="walletBtn" class="menu-btn secondary" data-key="connectWallet">🔗 CONECTAR WALLET</button>
     </div>
     <div class="register-section">
-      <input type="text" id="registerName" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20">
-      <button id="registerBtn" class="menu-btn" style="padding:8px; font-size:0.8rem;">📝 REGISTRARSE</button>
+      <input type="text" id="registerName" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20" data-key-placeholder="namePlaceholder">
+      <button id="registerBtn" class="menu-btn" style="padding:8px; font-size:0.8rem;" data-key="register">📝 REGISTRARSE</button>
       <div id="userGreeting" class="user-greeting" style="display:none;"></div>
     </div>
     <div id="walletStatus" style="margin-top:10px; font-size:9px; color:#0ff;"></div>
@@ -151,28 +151,28 @@
 
 <!-- Tienda -->
 <div id="shopPanel" class="floating-panel">
-  <h2 style="color:#0ff; text-align:center; font-size:1.3rem;">🛒 TIENDA</h2>
-  <div class="shop-item"><div class="shop-item-info"><strong>🧲 IMÁN ESPACIAL</strong><br><small>Atrae todo 1h</small></div><button id="buyMagnetCDOGE">1,500 CDOGE</button><button id="buyMagnetBCOSMO">2,500 BCOSMO</button></div>
-  <div class="shop-item"><div class="shop-item-info"><strong>🛡️ ESCUDO</strong><br><small>3 impactos (persistente)</small></div><button id="buyShieldBtn">1,000 🪙</button></div>
-  <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-skin-astronauta.png');"></div><div class="shop-item-info"><strong>👨‍🚀 ASTRONAUTA</strong></div></div><button id="buySkinBtn">3,500 🪙</button></div>
-  <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-cohete-dorado.png');"></div><div class="shop-item-info"><strong>⚡ COHETE DORADO</strong><br><small>Efecto brillante</small></div></div><button id="buyGoldSkinBtn">8,000 🪙</button></div>
-  <button id="closeShopBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
+  <h2 style="color:#0ff; text-align:center; font-size:1.3rem;" data-key="shopTitle">🛒 TIENDA</h2>
+  <div class="shop-item"><div class="shop-item-info"><strong data-key="magnet">🧲 IMÁN ESPACIAL</strong><br><small data-key="magnetDesc">Atrae todo 1h</small></div><button id="buyMagnetCDOGE">1,500 CDOGE</button><button id="buyMagnetBCOSMO">2,500 BCOSMO</button></div>
+  <div class="shop-item"><div class="shop-item-info"><strong data-key="shield">🛡️ ESCUDO</strong><br><small data-key="shieldDesc">3 impactos (persistente)</small></div><button id="buyShieldBtn" data-key="buyShield">1,000 🪙</button></div>
+  <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-skin-astronauta.png');"></div><div class="shop-item-info"><strong data-key="skinAstronaut">👨‍🚀 ASTRONAUTA</strong></div></div><button id="buySkinBtn" data-key="buySkin">3,500 🪙</button></div>
+  <div class="shop-item"><div style="display:flex; align-items:center;"><div class="skin-preview" style="background-image: url('cosmodoge-cohete-dorado.png');"></div><div class="shop-item-info"><strong data-key="skinGold">⚡ COHETE DORADO</strong><br><small data-key="skinGoldDesc">Efecto brillante</small></div></div><button id="buyGoldSkinBtn" data-key="buyGoldSkin">8,000 🪙</button></div>
+  <button id="closeShopBtn" class="menu-btn" style="margin-top:15px; background:#333;" data-key="close">✖️ CERRAR</button>
 </div>
 
 <!-- Recompensas -->
 <div id="rewardsPanel" class="floating-panel">
-  <h2 style="color:#ffaa44; text-align:center;">🎁 RECOMPENSAS</h2>
-  <div class="shop-item"><div><strong>📅 RECOMPENSA DIARIA</strong><br><small>+500 🪙 +50 CDOGE</small></div><button id="dailyRewardBtn">RECLAMAR</button></div>
-  <div class="shop-item"><div><strong>🏆 CANJE DE TOKENS</strong><br><small>100,000 → Tokens Reales</small></div><button id="claimTokensBtn">CANJEAR</button></div>
-  <div class="shop-item"><div><strong>🎯 BONUS POR NIVEL</strong><br><small>Cada 1000 pts</small></div><button id="claimLevelBonusBtn">RECLAMAR</button></div>
-  <button id="closeRewardsBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
+  <h2 style="color:#ffaa44; text-align:center;" data-key="rewardsTitle">🎁 RECOMPENSAS</h2>
+  <div class="shop-item"><div><strong data-key="daily">📅 RECOMPENSA DIARIA</strong><br><small data-key="dailyDesc">+500 🪙 +50 CDOGE</small></div><button id="dailyRewardBtn" data-key="claim">RECLAMAR</button></div>
+  <div class="shop-item"><div><strong data-key="exchange">🏆 CANJE DE TOKENS</strong><br><small data-key="exchangeDesc">100,000 → Tokens Reales</small></div><button id="claimTokensBtn" data-key="exchangeBtn">CANJEAR</button></div>
+  <div class="shop-item"><div><strong data-key="levelBonus">🎯 BONUS POR NIVEL</strong><br><small data-key="levelBonusDesc">Cada 1000 pts</small></div><button id="claimLevelBonusBtn" data-key="claim">RECLAMAR</button></div>
+  <button id="closeRewardsBtn" class="menu-btn" style="margin-top:15px; background:#333;" data-key="close">✖️ CERRAR</button>
 </div>
 
 <!-- Ranking -->
 <div id="rankingPanel" class="floating-panel">
-  <h2 style="color:#0ff; text-align:center;">🏆 TOP 10</h2>
+  <h2 style="color:#0ff; text-align:center;" data-key="rankingTitle">🏆 TOP 10</h2>
   <div id="rankingList" class="ranking-list">🔄 Cargando...</div>
-  <button id="closeRankingBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
+  <button id="closeRankingBtn" class="menu-btn" style="margin-top:15px; background:#333;" data-key="close">✖️ CERRAR</button>
 </div>
 
 <!-- Game Over -->
@@ -180,18 +180,18 @@
   <div class="gameover-container">
     <div id="gameoverStars" style="position:relative; height:0;"></div>
     <div class="gameover-doge"></div>
-    <h1 class="gameover-title">💀 GAME OVER 💀</h1>
+    <h1 class="gameover-title" data-key="gameOver">💀 GAME OVER 💀</h1>
     <div class="score-stats">
-      <div class="stat-row"><span class="stat-label">🚀 PUNTAJE FINAL</span><span class="score-number" id="finalScoreValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">💰 MONEDAS</span><span class="stat-value" id="finalCoinsValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">💎 CDOGE</span><span class="stat-value" id="finalCDOGEValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">🐕 BCOSMO</span><span class="stat-value" id="finalBCOSMOValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">🔥 MÁXIMO COMBO</span><span class="stat-value" id="finalComboValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">🌊 OLEADA</span><span class="stat-value" id="finalWaveValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalScore">🚀 PUNTAJE FINAL</span><span class="score-number" id="finalScoreValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalCoins">💰 MONEDAS</span><span class="stat-value" id="finalCoinsValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalCDOGE">💎 CDOGE</span><span class="stat-value" id="finalCDOGEValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalBCOSMO">🐕 BCOSMO</span><span class="stat-value" id="finalBCOSMOValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalCombo">🔥 MÁXIMO COMBO</span><span class="stat-value" id="finalComboValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalWave">🌊 OLEADA</span><span class="stat-value" id="finalWaveValue">0</span></div>
     </div>
     <div class="gameover-buttons">
-      <button id="restartBtn" class="gameover-btn">🔄 JUGAR DE NUEVO</button>
-      <button id="menuFromGameOver" class="gameover-btn secondary">🏠 MENÚ</button>
+      <button id="restartBtn" class="gameover-btn" data-key="playAgain">🔄 JUGAR DE NUEVO</button>
+      <button id="menuFromGameOver" class="gameover-btn secondary" data-key="menu">🏠 MENÚ</button>
     </div>
   </div>
 </div>
@@ -199,10 +199,10 @@
 <!-- Nuevo Récord -->
 <div id="newRecordScreen" class="screen hidden">
   <div class="menu-container" style="border-color:#ffaa44;">
-    <h1 style="color:#ffaa44;">🌟 NUEVO RÉCORD!</h1>
+    <h1 style="color:#ffaa44;" data-key="newRecord">🌟 NUEVO RÉCORD!</h1>
     <div id="recordScore" style="margin:10px; font-size:18px;"></div>
-    <button id="continueAfterRecord" class="menu-btn">🔄 CONTINUAR</button>
-    <button id="menuAfterRecord" class="menu-btn secondary">🏠 MENÚ</button>
+    <button id="continueAfterRecord" class="menu-btn" data-key="continue">🔄 CONTINUAR</button>
+    <button id="menuAfterRecord" class="menu-btn secondary" data-key="menu">🏠 MENÚ</button>
   </div>
 </div>
 
@@ -237,22 +237,63 @@
 </script>
 
 <script>
-// ==================== TRADUCCIONES ====================
+// ==================== TRADUCCIONES COMPLETAS ====================
 const translations = {
-  es: { title: "COSMODOGE", subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟", play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING", connectWallet: "🔗 CONECTAR WALLET", register: "📝 REGISTRARSE", close: "✖️ CERRAR", gameOver: "💀 GAME OVER", playAgain: "🔄 JUGAR DE NUEVO", menu: "🏠 MENÚ", newRecord: "🌟 NUEVO RÉCORD!", continue: "🔄 CONTINUAR" },
-  en: { title: "COSMODOGE", subtitle: "🚀 TAP TO FLY | DODGE AND COLLECT 🌟", play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING", connectWallet: "🔗 CONNECT WALLET", register: "📝 REGISTER", close: "✖️ CLOSE", gameOver: "💀 GAME OVER", playAgain: "🔄 PLAY AGAIN", menu: "🏠 MENU", newRecord: "🌟 NEW RECORD!", continue: "🔄 CONTINUE" }
+  es: {
+    loading: "CARGANDO COSMODOGE",
+    subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟",
+    play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING",
+    connectWallet: "🔗 CONECTAR WALLET", register: "📝 REGISTRARSE", close: "✖️ CERRAR",
+    gameOver: "💀 GAME OVER", playAgain: "🔄 JUGAR DE NUEVO", menu: "🏠 MENÚ",
+    newRecord: "🌟 NUEVO RÉCORD!", continue: "🔄 CONTINUAR",
+    shopTitle: "🛒 TIENDA", magnet: "🧲 IMÁN ESPACIAL", magnetDesc: "Atrae todo 1h",
+    shield: "🛡️ ESCUDO", shieldDesc: "3 impactos (persistente)", buyShield: "1,000 🪙",
+    skinAstronaut: "👨‍🚀 ASTRONAUTA", buySkin: "3,500 🪙",
+    skinGold: "⚡ COHETE DORADO", skinGoldDesc: "Efecto brillante", buyGoldSkin: "8,000 🪙",
+    rewardsTitle: "🎁 RECOMPENSAS", daily: "📅 RECOMPENSA DIARIA", dailyDesc: "+500 🪙 +50 CDOGE",
+    exchange: "🏆 CANJE DE TOKENS", exchangeDesc: "100,000 → Tokens Reales", exchangeBtn: "CANJEAR",
+    levelBonus: "🎯 BONUS POR NIVEL", levelBonusDesc: "Cada 1000 pts", claim: "RECLAMAR",
+    rankingTitle: "🏆 TOP 10", finalScore: "🚀 PUNTAJE FINAL", finalCoins: "💰 MONEDAS",
+    finalCDOGE: "💎 CDOGE", finalBCOSMO: "🐕 BCOSMO", finalCombo: "🔥 MÁXIMO COMBO", finalWave: "🌊 OLEADA",
+    namePlaceholder: "✨ NOMBRE GALÁCTICO"
+  },
+  en: {
+    loading: "LOADING COSMODOGE",
+    subtitle: "🚀 TAP TO FLY | DODGE AND COLLECT 🌟",
+    play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING",
+    connectWallet: "🔗 CONNECT WALLET", register: "📝 REGISTER", close: "✖️ CLOSE",
+    gameOver: "💀 GAME OVER", playAgain: "🔄 PLAY AGAIN", menu: "🏠 MENU",
+    newRecord: "🌟 NEW RECORD!", continue: "🔄 CONTINUE",
+    shopTitle: "🛒 SHOP", magnet: "🧲 SPACE MAGNET", magnetDesc: "Attracts everything 1h",
+    shield: "🛡️ SHIELD", shieldDesc: "3 hits (persistent)", buyShield: "1,000 🪙",
+    skinAstronaut: "👨‍🚀 ASTRONAUT", buySkin: "3,500 🪙",
+    skinGold: "⚡ GOLDEN ROCKET", skinGoldDesc: "Glow effect", buyGoldSkin: "8,000 🪙",
+    rewardsTitle: "🎁 REWARDS", daily: "📅 DAILY REWARD", dailyDesc: "+500 🪙 +50 CDOGE",
+    exchange: "🏆 TOKEN EXCHANGE", exchangeDesc: "100,000 → Real Tokens", exchangeBtn: "EXCHANGE",
+    levelBonus: "🎯 LEVEL BONUS", levelBonusDesc: "Every 1000 pts", claim: "CLAIM",
+    rankingTitle: "🏆 TOP 10", finalScore: "🚀 FINAL SCORE", finalCoins: "💰 COINS",
+    finalCDOGE: "💎 CDOGE", finalBCOSMO: "🐕 BCOSMO", finalCombo: "🔥 MAX COMBO", finalWave: "🌊 WAVE",
+    namePlaceholder: "✨ GALACTIC NAME"
+  }
 };
 
 let currentLang = 'es';
+
 function updateLanguage() {
-  document.getElementById('gameTitle').textContent = translations[currentLang].title;
-  document.getElementById('gameSubtitle').textContent = translations[currentLang].subtitle;
-  document.getElementById('playBtn').textContent = translations[currentLang].play;
-  document.getElementById('shopBtn').textContent = translations[currentLang].shop;
-  document.getElementById('rewardsBtn').textContent = translations[currentLang].rewards;
-  document.getElementById('rankingBtn').textContent = translations[currentLang].ranking;
-  document.getElementById('walletBtn').textContent = translations[currentLang].connectWallet;
-  document.getElementById('registerBtn').textContent = translations[currentLang].register;
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    if(translations[currentLang][key]) {
+      if(el.tagName === 'INPUT') {
+        el.placeholder = translations[currentLang][key];
+      } else {
+        el.textContent = translations[currentLang][key];
+      }
+    }
+  });
+  document.querySelectorAll('[data-key-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-key-placeholder');
+    if(translations[currentLang][key]) el.placeholder = translations[currentLang][key];
+  });
   document.querySelectorAll('.lang-btn').forEach(btn => {
     if(btn.getAttribute('data-lang') === currentLang) btn.classList.add('active');
     else btn.classList.remove('active');
@@ -273,8 +314,7 @@ const imagesToLoad = [
   'cofre-espacial.png',
   'obstaculo-agujero-negro.png',
   'obstaculo-estelar.png',
-  'obstaculo-explosion-aire.png',
-  'obstaculo-perseguidor.png'
+  'obstaculo-explosion-aire.png'
 ];
 
 let loadedImages = 0;
@@ -453,7 +493,7 @@ let activeWarnings = [];
 const doge = { x: 100, y: 200, w: 48, h: 48, v: 0 };
 
 // Imágenes
-let fondoImg, dogeImg, dogeGoldImg, skinAstronautaImg, coinImg, cdogeImg, bcosmoImg, cofreImg, agujeroNegroImg;
+let fondoImg, dogeImg, dogeGoldImg, skinAstronautaImg, coinImg, cdogeImg, bcosmoImg, cofreImg;
 let obstaculoImages = [];
 
 // Sonidos
@@ -600,12 +640,37 @@ function drawPowerups() {
   powerupsArr = powerupsArr.filter(p => p.x + p.w > 0);
 }
 
-// ==================== OBSTÁCULOS ====================
+// ==================== OBSTÁCULOS (SOLO LOS QUE FUNCIONAN) ====================
+function initObstacleImages() {
+  obstaculoImages = [];
+  
+  // Usar SOLO las imágenes que existen y funcionan
+  const validObstacles = ['obstaculo_estelar', 'obstaculo_explosion_aire'];
+  
+  for(let key of validObstacles) {
+    if(images[key]) {
+      obstaculoImages.push(images[key]);
+    }
+  }
+  
+  // Duplicar para tener variedad
+  if(obstaculoImages.length === 1) {
+    obstaculoImages.push(obstaculoImages[0]);
+  }
+  
+  // Fallback por si acaso
+  if(obstaculoImages.length === 0) {
+    const defaultImg = new Image();
+    defaultImg.src = 'obstaculo-estelar.png';
+    obstaculoImages.push(defaultImg);
+  }
+}
+
 const obstacleTypes = [
   { name: 'normal', weight: 35, speed: 2 },
   { name: 'zigzag', weight: 25, speed: 1.8, amplitude: 18, frequency: 0.06 },
-  { name: 'chaser', weight: 20, speed: 1.5, chaseSpeed: 0.7 },
-  { name: 'meteor', weight: 18, speed: 2.3, fallSpeed: 1.0 },
+  { name: 'chaser', weight: 20, speed: 1.5, chaseSpeed: 0.8 },
+  { name: 'meteor', weight: 18, speed: 2.3, fallSpeed: 1.2 },
   { name: 'homing', weight: 12, speed: 2.0, unlockAt: 1000 },
   { name: 'spiral', weight: 10, speed: 1.8, amplitude: 30, unlockAt: 2000 }
 ];
@@ -626,7 +691,7 @@ function spawnObstacle() {
     if(random <= accum) { selected = type; break; }
   }
   
-  let speed = selected.speed + (difficultyLevel * 0.15);
+  let speed = selected.speed + (difficultyLevel * 0.12);
   if(activePowerups.freeze.active) speed *= 0.4;
   if(activePowerups.turbo.active) speed *= 1.3;
   
@@ -638,8 +703,8 @@ function spawnObstacle() {
     type: selected.name, startY: 0, angle: 0,
     amplitude: selected.amplitude || 25,
     frequency: selected.frequency || 0.07,
-    spiralAngle: 0, chaseSpeed: selected.chaseSpeed || 0.7,
-    fallSpeed: selected.fallSpeed || 1.0
+    spiralAngle: 0, chaseSpeed: selected.chaseSpeed || 0.8,
+    fallSpeed: selected.fallSpeed || 1.2
   });
 }
 
@@ -694,7 +759,7 @@ function trySpawnPattern() {
         x: obs.x, y: obs.y, w: 48, h: 48,
         sX: 2, img: randomImg, type: obs.type,
         startY: obs.startY || obs.y, angle: 0, spiralAngle: 0,
-        amplitude: 25, frequency: 0.07, chaseSpeed: 0.7, fallSpeed: 1.0
+        amplitude: 25, frequency: 0.07, chaseSpeed: 0.8, fallSpeed: 1.2
       });
     });
     return true;
@@ -721,7 +786,7 @@ function updateObstacles() {
       case 'homing':
         let targetY = doge.y + doge.h/2 - o.h/2;
         let diff = targetY - o.y;
-        o.y += Math.min(Math.max(diff * 0.06, -1.2), 1.2);
+        o.y += Math.min(Math.max(diff * 0.07, -1.5), 1.5);
         break;
       case 'spiral':
         o.spiralAngle = (o.spiralAngle || 0) + 0.08;
@@ -730,7 +795,7 @@ function updateObstacles() {
     }
     o.y = Math.min(Math.max(o.y, 20), canvas.height - o.h - 20);
     
-    // Colisión
+    // Colisión ajustada
     if(doge.x < o.x + o.w - 8 && doge.x + doge.w - 8 > o.x + 8 && 
        doge.y < o.y + o.h - 8 && doge.y + doge.h - 8 > o.y + 8) {
       if(!handleCollision()) gameOver();
@@ -781,9 +846,9 @@ function spawnAgujeroNegro() {
   if(agujeroNegro) return;
   const posiciones = [80, canvas.height - 150, canvas.height / 2 - 40];
   let y = posiciones[faseAgujero % 3];
-  agujeroNegro = { x: canvas.width + 100, y: y, w: 80, h: 80, vel: 1.3, radio: 200 };
+  agujeroNegro = { x: canvas.width + 100, y: y, w: 80, h: 80, vel: 1.2, radio: 200 };
   faseAgujero++;
-  toast('🌀 AGUJERO NEGRO APARECIÓ! Acércate con cuidado');
+  toast('🌀 AGUJERO NEGRO! Acércate con cuidado');
 }
 
 function spawnCofreEspacial() {
@@ -793,11 +858,11 @@ function spawnCofreEspacial() {
 
 // ==================== PREMIOS DEL COFRE ====================
 const cofrePremios = [
-  { nombre: '🛡️ Escudo Ligero', efecto: () => { isShieldActive = true; shieldHits += 1; saveShieldPersistent(); updateUI(); }, mensaje: 'Escudo de 1 impacto!', color: '#ffaa44' },
-  { nombre: '🧲 Imán Corto', efecto: () => { imanExpiration = Date.now() + 120000; }, mensaje: 'Imán activado por 2 minutos!', color: '#0ff' },
-  { nombre: '💰 Monedas x2', efecto: () => { powerupMultiplier = 2; powerupMultiplierEnd = Date.now() + 60000; }, mensaje: 'Monedas x2 por 1 minuto!', color: '#ff0' },
-  { nombre: '⚡ Velocidad', efecto: () => { activePowerups.turbo = { active: true, endTime: Date.now() + 10000 }; }, mensaje: 'Velocidad aumentada!', color: '#0ff' },
-  { nombre: '❄️ Congelar', efecto: () => { activePowerups.freeze = { active: true, endTime: Date.now() + 3000 }; }, mensaje: 'Obstáculos congelados!', color: '#88f' }
+  { nombre: '🛡️ Escudo Ligero', efecto: () => { isShieldActive = true; shieldHits += 2; saveShieldPersistent(); updateUI(); }, mensaje: 'Escudo de 2 impactos!', duracion: 0, color: '#ffaa44' },
+  { nombre: '🧲 Imán', efecto: () => { imanExpiration = Date.now() + 300000; }, mensaje: 'Imán activado por 5 minutos!', duracion: 300, color: '#0ff' },
+  { nombre: '💰 Monedas x2', efecto: () => { powerupMultiplier = 2; powerupMultiplierEnd = Date.now() + 60000; }, mensaje: 'Monedas x2 por 1 minuto!', duracion: 60, color: '#ff0' },
+  { nombre: '⚡ Velocidad', efecto: () => { activePowerups.turbo = { active: true, endTime: Date.now() + 10000 }; }, mensaje: 'Velocidad aumentada!', duracion: 10, color: '#0ff' },
+  { nombre: '❄️ Congelar', efecto: () => { activePowerups.freeze = { active: true, endTime: Date.now() + 3000 }; }, mensaje: 'Obstáculos congelados!', duracion: 3, color: '#88f' }
 ];
 
 function aplicarPremioCofre() {
@@ -827,7 +892,7 @@ function applyBlackHoleAttraction(obj, objX, objY, size = 16) {
   let dy = (agujeroNegro.y + agujeroNegro.h/2) - (objY + size/2);
   let dist = Math.hypot(dx, dy);
   if(dist < agujeroNegro.radio && dist > 25) {
-    let fuerza = (agujeroNegro.radio - dist) / agujeroNegro.radio * 0.12;
+    let fuerza = (agujeroNegro.radio - dist) / agujeroNegro.radio * 0.15;
     obj.x += dx * fuerza;
     obj.y += dy * fuerza;
   }
@@ -1075,12 +1140,12 @@ function drawAgujeroNegro() {
   let dy = (agujeroNegro.y + agujeroNegro.h/2) - (doge.y + doge.h/2);
   let dist = Math.hypot(dx, dy);
   if(dist < agujeroNegro.radio && dist > 30) {
-    let fuerza = (agujeroNegro.radio - dist) / agujeroNegro.radio * 0.06;
+    let fuerza = (agujeroNegro.radio - dist) / agujeroNegro.radio * 0.08;
     doge.x += dx * fuerza;
     doge.y += dy * fuerza;
   }
   
-  // Efecto visual de absorción
+  // Efecto de absorción - partículas alrededor
   for(let i=0; i<12; i++) {
     ctx.beginPath();
     ctx.arc(agujeroNegro.x + agujeroNegro.w/2 + Math.sin(Date.now()/150 + i)*15, agujeroNegro.y + agujeroNegro.h/2 + Math.cos(Date.now()/150 + i)*15, 4, 0, Math.PI*2);
@@ -1099,7 +1164,7 @@ function drawAgujeroNegro() {
   ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2, 0, Math.PI*2);
   ctx.fill();
   
-  // Anillo de energía alrededor
+  // Anillo de energía
   ctx.beginPath();
   ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2 + 5, 0, Math.PI*2);
   ctx.strokeStyle = `rgba(255, 0, 255, ${0.5 + Math.sin(Date.now()/200)*0.3})`;
@@ -1120,7 +1185,7 @@ function drawCofreEspacial() {
   cofreEspacial.x -= cofreEspacial.vel;
   if(cofreImg) ctx.drawImage(cofreImg, cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
   
-  // Efecto de brillo en el cofre
+  // Efecto de brillo
   ctx.shadowBlur = 10;
   ctx.shadowColor = '#ffaa44';
   if(cofreImg) ctx.drawImage(cofreImg, cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
@@ -1178,9 +1243,9 @@ function updateGame(dt) {
   }
   
   // Spawners
-  if(coinsArr.length < 15 && Math.random() < 0.01) spawnCoinGroup();
-  if(cdogeArr.length < 6 && Math.random() < 0.003) spawnGroupCDOGE();
-  if(bcosmoArr.length < 6 && Math.random() < 0.003) spawnGroupBCOSMO();
+  if(coinsArr.length < 15 && Math.random() < 0.012) spawnCoinGroup();
+  if(cdogeArr.length < 6 && Math.random() < 0.004) spawnGroupCDOGE();
+  if(bcosmoArr.length < 6 && Math.random() < 0.004) spawnGroupBCOSMO();
   
   let obsDelay = Math.max(900, 1800 - Math.floor(score / 30) * 4);
   if(obsArr.length < 10 && Date.now() - lastObs > obsDelay) { 
@@ -1189,7 +1254,7 @@ function updateGame(dt) {
     onObstaclePassed();
   }
   
-  if(powerupsArr.length < 3 && Math.random() < 0.002 && score > 500) spawnPowerup();
+  if(powerupsArr.length < 3 && Math.random() < 0.0025 && score > 500) spawnPowerup();
   if(!cofreEspacial && sec > 85 && Math.random() < 0.0008) spawnCofreEspacial();
   
   updateObstacles();
@@ -1442,20 +1507,8 @@ async function initGame() {
   cdogeImg = images['moneda_cosmodoge'] || new Image(); if(!cdogeImg.src) cdogeImg.src = 'moneda-cosmodoge.png';
   bcosmoImg = images['moneda_bcosmo'] || new Image(); if(!bcosmoImg.src) bcosmoImg.src = 'moneda-bcosmo.png';
   cofreImg = images['cofre_espacial'] || new Image(); if(!cofreImg.src) cofreImg.src = 'cofre-espacial.png';
-  agujeroNegroImg = images['obstaculo_agujero_negro'] || new Image(); if(!agujeroNegroImg.src) agujeroNegroImg.src = 'obstaculo-agujero-negro.png';
   
-  // Cargar obstáculos espaciales
-  const spatialObstacles = ['obstaculo_estelar', 'obstaculo_explosion_aire', 'obstaculo_perseguidor'];
-  for(let key of spatialObstacles) {
-    if(images[key]) {
-      obstaculoImages.push(images[key]);
-    }
-  }
-  if(obstaculoImages.length === 0) {
-    const defaultImg = new Image();
-    defaultImg.src = 'obstaculo-estelar.png';
-    obstaculoImages.push(defaultImg);
-  }
+  initObstacleImages();
   
   const savedSkin = localStorage.getItem('skinActivo');
   if(savedSkin === 'astronauta') skinActivo = 'astronauta';
