@@ -3,28 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Edición Definitiva</title>
-
+  <title>CosmoDoge 🚀 | Juego Definitivo</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
-  
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.41.0/lib/index.iife.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/lib/index.iife.min.js"></script>
-
   <style>
+    /* ========== ESTILOS COMPLETOS ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Orbitron', monospace; overflow: hidden; background: #000; width: 100%; height: 100%; position: fixed; top: 0; left: 0; }
     canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; object-fit: cover; background: #000; }
-    
-    /* Pantallas */
     .screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #0a0a2a, #000000); transition: all 0.3s ease; }
     .screen.hidden { display: none; }
     #loadingScreen { z-index: 1000; background: #000; }
     .loading-container { text-align: center; color: #0ff; }
     .loading-bar { width: 80%; max-width: 300px; height: 20px; background: #333; border-radius: 10px; margin: 20px auto; overflow: hidden; }
     .loading-progress { width: 0%; height: 100%; background: linear-gradient(90deg, #0ff, #f0f); transition: width 0.1s; }
-    
-    /* Menú Principal */
     .menu-container { text-align: center; max-width: 480px; width: 90%; padding: 25px 20px; background: linear-gradient(135deg, rgba(0, 20, 50, 0.98), rgba(0, 5, 20, 0.98)); border-radius: 50px; border: 2px solid #0ff; box-shadow: 0 0 50px rgba(0, 255, 255, 0.4); backdrop-filter: blur(5px); }
     .logo { width: 100px; height: 100px; margin: 0 auto 15px; background: url('cosmodoge-cohete-juego.png') center/contain no-repeat; animation: floatLogo 3s ease-in-out infinite; filter: drop-shadow(0 0 10px #0ff); }
     @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
@@ -38,8 +32,6 @@
     .register-section { margin-top: 15px; padding: 12px; background: rgba(0, 255, 255, 0.1); border-radius: 25px; }
     .register-section input { width: 100%; padding: 10px; border-radius: 30px; border: 1px solid #0ff; background: #111; color: #0ff; font-family: 'Orbitron', monospace; text-align: center; margin-bottom: 8px; font-size: 12px; }
     .user-greeting { margin-top: 10px; padding: 8px; background: rgba(0, 255, 255, 0.2); border-radius: 20px; color: #ffaa44; font-size: 11px; }
-    
-    /* HUD */
     .hud { position: fixed; z-index: 50; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 20px; font-family: 'Orbitron', monospace; font-size: 10px; font-weight: bold; color: #0ff; pointer-events: none; white-space: nowrap; border: 1px solid rgba(0,255,255,0.3); }
     @media (min-width: 768px) { .hud { font-size: 12px; padding: 6px 15px; } }
     #scoreDisplay { top: 10px; left: 10px; color: #ffaa44; }
@@ -59,8 +51,6 @@
     #userNameDisplay { top: 10px; right: 10px; left: auto; background: #000000aa; color: #ffaa44; }
     #powerupDisplay { top: 395px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
     #gunDisplay { top: 430px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
-    
-    /* Paneles flotantes */
     .floating-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; max-height: 80vh; background: linear-gradient(135deg, #0a0a2a, #000); border: 2px solid #0ff; border-radius: 30px; padding: 20px; z-index: 200; overflow-y: auto; display: none; }
     .shop-item { background: rgba(0, 255, 255, 0.1); margin: 10px 0; padding: 12px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
     .shop-item-info { flex: 1; }
@@ -74,22 +64,14 @@
     @keyframes fadeOut { 0% { opacity: 1; transform: translateX(-50%) translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); display: none; } }
     #menuFloatBtn { position: fixed; bottom: 15px; right: 15px; z-index: 150; background: linear-gradient(135deg, #0ff, #0aa); border: none; padding: 8px 16px; border-radius: 30px; font-family: 'Orbitron', monospace; font-weight: bold; cursor: pointer; display: none; font-size: 11px; }
     #shootBtn { position: fixed; bottom: 80px; left: 15px; z-index: 150; background: linear-gradient(135deg, #f66, #c33); border: none; padding: 12px 20px; border-radius: 40px; font-family: 'Orbitron', monospace; font-weight: bold; cursor: pointer; display: none; font-size: 14px; color: white; box-shadow: 0 0 15px #f66; }
-    
-    /* Controles móviles */
     .mobile-controls { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 150; display: none; }
     .ctrl-btn { background: rgba(0, 255, 255, 0.8); border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.2rem; font-weight: bold; color: #000; cursor: pointer; box-shadow: 0 0 10px #0ff; }
-    
-    /* Barra de vida del jefe */
     .boss-health-bar { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); width: 300px; height: 25px; background: #333; border-radius: 15px; z-index: 60; display: none; border: 2px solid #fff; overflow: hidden; }
     .boss-health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #0f0, #ff0, #f00); border-radius: 15px; transition: width 0.2s; }
     .boss-health-text { position: fixed; top: 45px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 12px; font-family: 'Orbitron', monospace; z-index: 60; display: none; text-shadow: 0 0 5px #000; }
-    
-    /* Arena de pelea */
     .boss-arena { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 55; display: none; align-items: center; justify-content: center; }
     .arena-border { border: 3px solid #f0f; box-shadow: 0 0 30px #f0f; position: absolute; top: 50px; left: 50px; right: 50px; bottom: 50px; border-radius: 30px; pointer-events: none; animation: borderPulse 1s infinite; }
     @keyframes borderPulse { 0%, 100% { border-color: #f0f; box-shadow: 0 0 20px #f0f; } 50% { border-color: #ff0; box-shadow: 0 0 40px #ff0; } }
-    
-    /* Game Over Personalizado */
     .gameover-container { text-align: center; max-width: 500px; width: 90%; padding: 30px 25px; background: linear-gradient(135deg, rgba(30, 10, 40, 0.98), rgba(10, 5, 20, 0.98)); border-radius: 60px; border: 3px solid #f66; box-shadow: 0 0 60px rgba(255, 102, 102, 0.5); backdrop-filter: blur(10px); animation: glowPulse 1.5s infinite; }
     @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 40px rgba(255,102,102,0.4); } 50% { box-shadow: 0 0 80px rgba(255,102,102,0.8); } }
     .gameover-doge { width: 100px; height: 100px; margin: 0 auto 15px; background: url('cosmodoge-cohete-juego.png') center/contain no-repeat; animation: dogeCry 2s ease-in-out infinite, floatDoge 3s ease-in-out infinite; filter: drop-shadow(0 0 15px #f66); }
@@ -244,7 +226,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, limit, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  import { getFirestore, collection, query, orderBy, limit, getDocs, doc, setDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
@@ -269,6 +251,18 @@
       }, { merge: true });
       return true;
     } catch(e) { console.warn(e); return false; }
+  };
+  
+  window.cargarDatosUsuario = async (nombre) => {
+    if(!nombre) return null;
+    try {
+      const docRef = doc(db, "jugadores", nombre);
+      const docSnap = await getDoc(docRef);
+      if(docSnap.exists()) {
+        return docSnap.data();
+      }
+      return null;
+    } catch(e) { console.warn(e); return null; }
   };
 </script>
 
@@ -334,6 +328,10 @@ function updateLanguage() {
   });
 }
 
+// ==================== URLs ACTUALIZADAS ====================
+const WEB_URL = 'https://cosmodoge.github.io/cosmodoge-site/';
+const GAME_URL = 'https://cosmodoge.github.io/juego-cosmodoge/';
+
 // ==================== RECURSOS ====================
 const imagesToLoad = [
   'cosmodoge-cohete-juego.png',
@@ -386,7 +384,9 @@ function preloadImages() {
 
 // ==================== WALLET MANAGER ====================
 const CDOGE_CON = '0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A';
+const CDOGE_REC = '0x1980dCdDA07071970dEAa69c975F590976Ee667D';
 const MINT = '2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump';
+const RCV = 'A6dnVgGaS1scC2m6hmPdK15D5gs5vDsHS8PEq3xtJKNx';
 
 const WalletManager = {
   type: null, address: null,
@@ -480,7 +480,75 @@ function mostrarSelectorWallet() {
   document.getElementById('closeModal').onclick = () => modal.remove();
 }
 
-// ==================== SISTEMA DE SONIDOS CON FALLBACK ====================
+// ==================== FUNCIONES DE VERIFICACIÓN DE SALDO ====================
+async function checkCDOGEBalance(requiredAmount) {
+  if(WalletManager.type !== 'metamask') {
+    toast('🔗 Conecta MetaMask primero');
+    return false;
+  }
+  
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(CDOGE_CON, ['function balanceOf(address) view returns(uint256)', 'function decimals() view returns(uint8)'], provider);
+    const balance = await contract.balanceOf(WalletManager.address);
+    const decimals = await contract.decimals();
+    const humanBalance = Number(balance) / (10 ** decimals);
+    
+    if(humanBalance >= requiredAmount) {
+      return true;
+    } else {
+      redirectToWeb();
+      return false;
+    }
+  } catch(e) {
+    console.error('Error verificando CDOGE:', e);
+    toast('Error al verificar saldo de CDOGE');
+    return false;
+  }
+}
+
+async function checkBCOSMOBalance(requiredAmount) {
+  if(WalletManager.type !== 'phantom') {
+    toast('🔗 Conecta Phantom primero');
+    return false;
+  }
+  
+  try {
+    const connection = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+      new solanaWeb3.PublicKey(WalletManager.address),
+      { programId: new solanaWeb3.PublicKey(solanaWeb3.TOKEN_PROGRAM_ID) }
+    );
+    
+    let balance = 0;
+    tokenAccounts.value.forEach(account => {
+      const info = account.account.data.parsed.info;
+      if(info.mint === MINT) {
+        balance = info.tokenAmount.uiAmount;
+      }
+    });
+    
+    if(balance >= requiredAmount) {
+      return true;
+    } else {
+      redirectToWeb();
+      return false;
+    }
+  } catch(e) {
+    console.error('Error verificando BCOSMO:', e);
+    toast('Error al verificar saldo de BCOSMO');
+    return false;
+  }
+}
+
+function redirectToWeb() {
+  const confirmar = confirm('No tienes suficientes tokens. ¿Quieres visitar la web de CosmoDoge para obtener más?');
+  if(confirmar) {
+    window.open(WEB_URL, '_blank');
+  }
+}
+
+// ==================== SISTEMA DE SONIDOS ====================
 function createBeepSound(frequency, duration, volume = 0.3) {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -497,7 +565,6 @@ function createBeepSound(frequency, duration, volume = 0.3) {
   } catch(e) {}
 }
 
-// Sonidos con fallback (si no cargan los MP3, usamos beeps)
 const sndJump = new Audio('jump.mp3');
 const sndCoin = new Audio('coin.mp3');
 const sndBoom = new Audio('boom.mp3');
@@ -505,46 +572,25 @@ const sndRecord = new Audio('record.mp3');
 const sndCdoge = new Audio('sonido-moneda-cdoge.mp3');
 const sndBcosmo = new Audio('sonido-moneda-bcosmo.mp3');
 
-// MÚSICA DE FONDO - VERSIÓN CORREGIDA CON FALLBACK
+// MÚSICA DE FONDO
 let music = null;
 let bgMusicInterval = null;
 let isMusicPlaying = false;
 
 function startBackgroundMusic() {
   if(isMusicPlaying) return;
-  
-  // Intentar cargar el archivo MP3
   music = new Audio('tema-music-cosmodoge.mp3');
   music.loop = true;
   music.volume = 0.3;
-  
-  // Si el MP3 carga correctamente, usarlo
-  music.addEventListener('canplaythrough', () => {
-    if(gameActive && !isMusicPlaying) {
-      music.play().catch(() => {
-        console.warn('No se pudo reproducir MP3, usando Web Audio API');
-        startBeepMusic();
-      });
-      isMusicPlaying = true;
-    }
-  });
-  
-  music.addEventListener('error', () => {
-    console.warn('Archivo de música no encontrado, usando Web Audio API');
+  music.play().catch(() => {
+    console.warn('No se pudo reproducir MP3');
     startBeepMusic();
   });
-  
-  // Timeout para no esperar demasiado
-  setTimeout(() => {
-    if(!isMusicPlaying && gameActive) {
-      startBeepMusic();
-    }
-  }, 1000);
+  isMusicPlaying = true;
 }
 
 function startBeepMusic() {
   if(bgMusicInterval) return;
-  
   function playNote(freq, duration) {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -560,10 +606,8 @@ function startBeepMusic() {
       oscillator.stop(audioCtx.currentTime + duration);
     } catch(e) {}
   }
-  
-  // Música ambiente con beeps (melodía espacial simple)
   bgMusicInterval = setInterval(() => {
-    if(gameActive && !music?.paused) {
+    if(gameActive) {
       playNote(110, 0.5);
       setTimeout(() => playNote(110, 0.5), 600);
       setTimeout(() => playNote(165, 0.8), 1200);
@@ -573,23 +617,12 @@ function startBeepMusic() {
 }
 
 function stopBackgroundMusic() {
-  if(music) {
-    music.pause();
-    music.currentTime = 0;
-  }
-  if(bgMusicInterval) {
-    clearInterval(bgMusicInterval);
-    bgMusicInterval = null;
-  }
+  if(music) { music.pause(); music.currentTime = 0; }
+  if(bgMusicInterval) { clearInterval(bgMusicInterval); bgMusicInterval = null; }
   isMusicPlaying = false;
 }
 
-function playShootSound() { 
-  try {
-    if(sndShoot && sndShoot.play) sndShoot.play().catch(()=>createBeepSound(880, 0.1, 0.2));
-    else createBeepSound(880, 0.1, 0.2);
-  } catch(e) { createBeepSound(880, 0.1, 0.2); }
-}
+function playShootSound() { createBeepSound(880, 0.1, 0.2); }
 function playBossAppearSound() { createBeepSound(220, 0.5, 0.4); createBeepSound(330, 0.5, 0.4); }
 function playBossAttackSound() { createBeepSound(440, 0.2, 0.3); createBeepSound(550, 0.2, 0.3); }
 function playBossHitSound() { createBeepSound(660, 0.1, 0.25); }
@@ -610,7 +643,6 @@ let gunLevel = parseInt(localStorage.getItem('gunLevel')) || 1;
 let lastShootTime = 0;
 let trialWeapon = null;
 let trialEndTime = 0;
-const sndShoot = new Audio('shoot.mp3');
 
 const gunUpgrades = {
   1: { name: '🔫 Pistola Básica', price: 0, cooldown: 500, damage: 1, bullets: 1, spread: 0, size: 8 },
@@ -1999,77 +2031,48 @@ async function canjearTokens() {
 
 async function mostrarRanking() {
   const container = document.getElementById('rankingList');
-  container.innerHTML = '<p>🔄 Cargando...</p>';
+  container.innerHTML = '<p>🔄 Cargando ranking global...</p>';
   try {
     const q = query(collection(db, "jugadores"), orderBy("puntaje", "desc"), limit(10));
     const snap = await getDocs(q);
-    let html = '';
-    snap.forEach((doc, i) => {
+    let html = '<div style="margin-bottom:10px; font-weight:bold;">🏆 TOP 10 MUNDIAL 🏆</div>';
+    let rank = 1;
+    snap.forEach((doc) => {
       const data = doc.data();
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-      html += `<div class="ranking-item"><span>${medal} ${data.nombre}</span><span>🚀 ${data.puntaje}</span><span>💰 ${data.monedas}</span></div>`;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+      html += `<div class="ranking-item">
+        <span>${medal} <strong>${data.nombre || 'Anónimo'}</strong></span>
+        <span>🚀 ${data.puntaje || 0}</span>
+        <span>💰 ${data.monedas || 0}</span>
+      </div>`;
+      rank++;
     });
-    container.innerHTML = html || '<p>✨ Sin puntajes aún</p>';
-  } catch(e) { container.innerHTML = '<p>⚠️ Error de conexión</p>'; }
-}
-
-// ==================== COMPRAS ====================
-function verificarSaldoCDOGE(monto) {
-  return new Promise(async (resolve) => {
-    if(WalletManager.type === 'metamask' && WalletManager.address) {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(CDOGE_CON, ['function balanceOf(address) view returns(uint256)', 'function decimals() view returns(uint8)'], provider);
-        const bal = await contract.balanceOf(WalletManager.address);
-        const dec = await contract.decimals();
-        const balance = Number(bal) / (10 ** dec);
-        resolve(balance >= monto);
-      } catch(e) { resolve(false); }
-    } else {
-      resolve(false);
-    }
-  });
-}
-
-function verificarSaldoBCOSMO(monto) {
-  return new Promise(async (resolve) => {
-    if(WalletManager.type === 'phantom' && WalletManager.address) {
-      try {
-        const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
-        const tokenAccounts = await conn.getParsedTokenAccountsByOwner(new solanaWeb3.PublicKey(WalletManager.address), { programId: new solanaWeb3.PublicKey(solanaWeb3.TOKEN_PROGRAM_ID) });
-        let balance = 0;
-        tokenAccounts.value.forEach(acc => {
-          if(acc.account.data.parsed.info.mint === MINT) balance = acc.account.data.parsed.info.tokenAmount.uiAmount;
-        });
-        resolve(balance >= monto);
-      } catch(e) { resolve(false); }
-    } else {
-      resolve(false);
-    }
-  });
-}
-
-function redirigirAWeb() {
-  const confirmar = confirm('No tienes suficientes tokens. ¿Quieres visitar cosmodoge.space para obtener más?');
-  if(confirmar) {
-    window.open('https://cosmodoge.space', '_blank');
+    container.innerHTML = html || '<p>✨ Sin puntajes aún. ¡Sé el primero!</p>';
+  } catch(e) {
+    console.error('Error al cargar ranking:', e);
+    container.innerHTML = '<p>⚠️ Error de conexión. Intenta más tarde.</p>';
   }
 }
 
+// ==================== COMPRAS ====================
 async function comprarImanCDOGE() {
   if(WalletManager.type !== 'metamask') { toast('🔗 Conecta MetaMask primero'); return; }
-  const tieneSaldo = await verificarSaldoCDOGE(1500);
-  if(!tieneSaldo) { redirigirAWeb(); return; }
-  imanExpiration = Date.now() + 3600000;
-  toast('🧲 Imán 1h activado!');
+  const tieneSaldo = await checkCDOGEBalance(1500);
+  if(tieneSaldo) {
+    imanExpiration = Date.now() + 3600000;
+    toast('🧲 Imán 1h activado!');
+    updateUI();
+  }
 }
 
 async function comprarImanBCOSMO() {
   if(WalletManager.type !== 'phantom') { toast('🔗 Conecta Phantom primero'); return; }
-  const tieneSaldo = await verificarSaldoBCOSMO(2500);
-  if(!tieneSaldo) { redirigirAWeb(); return; }
-  imanExpiration = Date.now() + 3600000;
-  toast('🧲 Imán 1h activado!');
+  const tieneSaldo = await checkBCOSMOBalance(2500);
+  if(tieneSaldo) {
+    imanExpiration = Date.now() + 3600000;
+    toast('🧲 Imán 1h activado!');
+    updateUI();
+  }
 }
 
 function comprarEscudo() {
@@ -2161,6 +2164,80 @@ function tryGun() { startWeaponTrial(1); }
 function tryGun2() { startWeaponTrial(2); }
 function tryGun3() { startWeaponTrial(3); }
 
+// ==================== REGISTRO DE USUARIO ====================
+async function registrarUsuario(nombre) {
+  if(!nombre || nombre.length < 3) {
+    toast('✨ Nombre mínimo 3 caracteres');
+    return false;
+  }
+  
+  try {
+    // Guardar en localStorage
+    localStorage.setItem('cosmodogeUserName', nombre);
+    
+    // Guardar en Firebase
+    await setDoc(doc(db, "jugadores", nombre), {
+      nombre: nombre,
+      fechaRegistro: serverTimestamp(),
+      ultimaConexion: serverTimestamp(),
+      puntaje: highScore,
+      monedas: coins,
+      cdoge: totalCDOGE,
+      bcosmo: totalBCOSMO
+    }, { merge: true });
+    
+    // Actualizar UI
+    document.getElementById('userNameDisplay').textContent = `✨ ${nombre}`;
+    document.getElementById('userGreeting').innerHTML = `✨ ¡Bienvenido ${nombre}! ✨`;
+    document.getElementById('userGreeting').style.display = 'block';
+    
+    // Ocultar formulario de registro
+    document.getElementById('registerName').style.display = 'none';
+    document.getElementById('registerBtn').style.display = 'none';
+    
+    toast(`✅ ¡Bienvenido ${nombre}! 🚀`);
+    return true;
+  } catch(e) {
+    console.error('Error al registrar usuario:', e);
+    toast('❌ Error al registrar. Intenta de nuevo.');
+    return false;
+  }
+}
+
+async function cargarUsuarioExistente(nombre) {
+  try {
+    const data = await cargarDatosUsuario(nombre);
+    if(data) {
+      // Cargar datos guardados
+      if(data.puntaje && data.puntaje > highScore) {
+        highScore = data.puntaje;
+        localStorage.setItem('cdogeFloatHighScore', highScore);
+      }
+      if(data.monedas) {
+        coins = data.monedas;
+        localStorage.setItem('cdogeCoins', coins);
+      }
+      if(data.cdoge) totalCDOGE = data.cdoge;
+      if(data.bcosmo) totalBCOSMO = data.bcosmo;
+      
+      updateUI();
+      
+      document.getElementById('userNameDisplay').textContent = `✨ ${nombre}`;
+      document.getElementById('userGreeting').innerHTML = `✨ ¡Bienvenido de vuelta ${nombre}! ✨`;
+      document.getElementById('userGreeting').style.display = 'block';
+      document.getElementById('registerName').style.display = 'none';
+      document.getElementById('registerBtn').style.display = 'none';
+      
+      toast(`✨ ¡Bienvenido de vuelta ${nombre}!`);
+      return true;
+    }
+    return false;
+  } catch(e) {
+    console.error('Error al cargar usuario:', e);
+    return false;
+  }
+}
+
 // ==================== INICIALIZACIÓN ====================
 async function initGame() {
   document.getElementById('loadingScreen').classList.remove('hidden');
@@ -2187,13 +2264,14 @@ async function initGame() {
   const savedShield = parseInt(localStorage.getItem('shieldHitsPersistent')) || 0;
   if(savedShield > 0) { isShieldActive = true; shieldHits = savedShield; }
   
+  // Cargar usuario si existe
   const savedName = localStorage.getItem('cosmodogeUserName');
   if(savedName) {
-    document.getElementById('userNameDisplay').textContent = `✨ ${savedName}`;
-    document.getElementById('userGreeting').innerHTML = `✨ ¡Bienvenido ${savedName}! ✨`;
-    document.getElementById('userGreeting').style.display = 'block';
-    document.getElementById('registerName').style.display = 'none';
-    document.getElementById('registerBtn').style.display = 'none';
+    await cargarUsuarioExistente(savedName);
+  } else {
+    // Mostrar formulario de registro
+    document.getElementById('registerName').style.display = 'block';
+    document.getElementById('registerBtn').style.display = 'block';
   }
   
   document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -2249,15 +2327,7 @@ async function initGame() {
   
   document.getElementById('registerBtn').onclick = () => {
     const name = document.getElementById('registerName').value.trim();
-    if(name && name.length >= 3) {
-      localStorage.setItem('cosmodogeUserName', name);
-      document.getElementById('userNameDisplay').textContent = `✨ ${name}`;
-      document.getElementById('userGreeting').innerHTML = `✨ ¡Bienvenido ${name}! ✨`;
-      document.getElementById('userGreeting').style.display = 'block';
-      document.getElementById('registerName').style.display = 'none';
-      document.getElementById('registerBtn').style.display = 'none';
-      toast(`✅ ¡Bienvenido ${name}! 🚀`);
-    } else toast('✨ Nombre mínimo 3 caracteres');
+    registrarUsuario(name);
   };
   
   document.getElementById('buyMagnetCDOGE').onclick = comprarImanCDOGE;
