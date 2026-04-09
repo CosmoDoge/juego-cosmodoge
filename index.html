@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Edición Épica - Jefes y Tuberías</title>
+  <title>CosmoDoge 🚀 | Edición Definitiva</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   
@@ -480,32 +480,116 @@ function mostrarSelectorWallet() {
   document.getElementById('closeModal').onclick = () => modal.remove();
 }
 
-// ==================== SISTEMA DE SONIDOS ====================
+// ==================== SISTEMA DE SONIDOS CON FALLBACK ====================
 function createBeepSound(frequency, duration, volume = 0.3) {
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  oscillator.frequency.value = frequency;
-  gainNode.gain.value = volume;
-  oscillator.type = 'sine';
-  oscillator.start();
-  gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-  oscillator.stop(audioCtx.currentTime + duration);
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    oscillator.frequency.value = frequency;
+    gainNode.gain.value = volume;
+    oscillator.type = 'sine';
+    oscillator.start();
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+    oscillator.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
 }
 
+// Sonidos con fallback (si no cargan los MP3, usamos beeps)
 const sndJump = new Audio('jump.mp3');
 const sndCoin = new Audio('coin.mp3');
 const sndBoom = new Audio('boom.mp3');
 const sndRecord = new Audio('record.mp3');
 const sndCdoge = new Audio('sonido-moneda-cdoge.mp3');
 const sndBcosmo = new Audio('sonido-moneda-bcosmo.mp3');
-const music = new Audio('tema-music-cosmodoge.mp3');
-music.loop = true;
-music.volume = 0.3;
 
-function playShootSound() { createBeepSound(880, 0.1, 0.2); }
+// MÚSICA DE FONDO - VERSIÓN CORREGIDA CON FALLBACK
+let music = null;
+let bgMusicInterval = null;
+let isMusicPlaying = false;
+
+function startBackgroundMusic() {
+  if(isMusicPlaying) return;
+  
+  // Intentar cargar el archivo MP3
+  music = new Audio('tema-music-cosmodoge.mp3');
+  music.loop = true;
+  music.volume = 0.3;
+  
+  // Si el MP3 carga correctamente, usarlo
+  music.addEventListener('canplaythrough', () => {
+    if(gameActive && !isMusicPlaying) {
+      music.play().catch(() => {
+        console.warn('No se pudo reproducir MP3, usando Web Audio API');
+        startBeepMusic();
+      });
+      isMusicPlaying = true;
+    }
+  });
+  
+  music.addEventListener('error', () => {
+    console.warn('Archivo de música no encontrado, usando Web Audio API');
+    startBeepMusic();
+  });
+  
+  // Timeout para no esperar demasiado
+  setTimeout(() => {
+    if(!isMusicPlaying && gameActive) {
+      startBeepMusic();
+    }
+  }, 1000);
+}
+
+function startBeepMusic() {
+  if(bgMusicInterval) return;
+  
+  function playNote(freq, duration) {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.frequency.value = freq;
+      gainNode.gain.value = 0.1;
+      oscillator.type = 'sine';
+      oscillator.start();
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+      oscillator.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+  
+  // Música ambiente con beeps (melodía espacial simple)
+  bgMusicInterval = setInterval(() => {
+    if(gameActive && !music?.paused) {
+      playNote(110, 0.5);
+      setTimeout(() => playNote(110, 0.5), 600);
+      setTimeout(() => playNote(165, 0.8), 1200);
+    }
+  }, 4000);
+  isMusicPlaying = true;
+}
+
+function stopBackgroundMusic() {
+  if(music) {
+    music.pause();
+    music.currentTime = 0;
+  }
+  if(bgMusicInterval) {
+    clearInterval(bgMusicInterval);
+    bgMusicInterval = null;
+  }
+  isMusicPlaying = false;
+}
+
+function playShootSound() { 
+  try {
+    if(sndShoot && sndShoot.play) sndShoot.play().catch(()=>createBeepSound(880, 0.1, 0.2));
+    else createBeepSound(880, 0.1, 0.2);
+  } catch(e) { createBeepSound(880, 0.1, 0.2); }
+}
 function playBossAppearSound() { createBeepSound(220, 0.5, 0.4); createBeepSound(330, 0.5, 0.4); }
 function playBossAttackSound() { createBeepSound(440, 0.2, 0.3); createBeepSound(550, 0.2, 0.3); }
 function playBossHitSound() { createBeepSound(660, 0.1, 0.25); }
@@ -526,6 +610,7 @@ let gunLevel = parseInt(localStorage.getItem('gunLevel')) || 1;
 let lastShootTime = 0;
 let trialWeapon = null;
 let trialEndTime = 0;
+const sndShoot = new Audio('shoot.mp3');
 
 const gunUpgrades = {
   1: { name: '🔫 Pistola Básica', price: 0, cooldown: 500, damage: 1, bullets: 1, spread: 0, size: 8 },
@@ -651,7 +736,7 @@ let boss = {
 
 let bossProjectiles = [];
 let pipes = [];
-let gameWorld = 'space'; // space, pipes, hybrid
+let gameWorld = 'space';
 
 function updateBossHealthBar() {
   if(boss.active) {
@@ -1402,7 +1487,7 @@ function handleCollision() {
 function gameOver() {
   if(!gameActive) return;
   gameActive = false;
-  music.pause();
+  stopBackgroundMusic();
   saveShieldPersistent();
   
   document.getElementById('finalScoreValue').textContent = score;
@@ -1852,12 +1937,12 @@ function startGame() {
   document.getElementById('menuFloatBtn').style.display = 'block';
   document.getElementById('shootBtn').style.display = 'block';
   document.getElementById('mobileControls').style.display = 'flex';
-  music.play();
+  startBackgroundMusic();
 }
 
 function stopGame() {
   gameActive = false;
-  music.pause();
+  stopBackgroundMusic();
   document.getElementById('menuFloatBtn').style.display = 'none';
   document.getElementById('shootBtn').style.display = 'none';
   document.getElementById('mobileControls').style.display = 'none';
