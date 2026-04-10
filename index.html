@@ -10,6 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.41.0/lib/index.iife.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/lib/index.iife.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -59,6 +61,7 @@
     #userNameDisplay { top: 10px; right: 10px; left: auto; background: #000000aa; color: #ffaa44; }
     #powerupDisplay { top: 395px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
     #gunDisplay { top: 430px; left: 10px; color: #ffaa44; font-size: 9px; display: none; background: #000000aa; }
+    #cdogePrice, #bcosmoPrice { font-size: 8px; background: #000000aa; }
     
     /* Paneles flotantes */
     .floating-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; max-height: 80vh; background: linear-gradient(135deg, #0a0a2a, #000); border: 2px solid #0ff; border-radius: 30px; padding: 20px; z-index: 200; overflow-y: auto; display: none; }
@@ -172,6 +175,7 @@
       <button id="rewardsBtn" class="menu-btn secondary" data-key="rewards">🎁 RECOMPENSAS</button>
       <button id="rankingBtn" class="menu-btn secondary" data-key="ranking">🏆 RANKING</button>
       <button id="walletBtn" class="menu-btn secondary" data-key="connectWallet">🔗 CONECTAR WALLET</button>
+      <button id="pumpFunBtn" class="menu-btn secondary">📊 PUMP.FUN</button>
     </div>
     <div class="register-section">
       <input type="text" id="registerName" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20" data-key-placeholder="namePlaceholder">
@@ -242,37 +246,33 @@
   </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, limit, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
-    authDomain: "cosmodogelive.firebaseapp.com",
-    projectId: "cosmodogelive",
-    storageBucket: "cosmodogelive.appspot.com",
-    messagingSenderId: "648227069914",
-    appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  window.db = db;
-
-  window.guardarPuntaje = async (nombre, puntaje, monedas) => {
-    if(!nombre) return false;
-    try {
-      await setDoc(doc(db, "jugadores", nombre.trim()), {
-        nombre: nombre.trim(),
-        puntaje: puntaje,
-        monedas: monedas,
-        fecha: serverTimestamp()
-      }, { merge: true });
-      return true;
-    } catch(e) { console.warn(e); return false; }
-  };
-</script>
-
 <script>
+// ==================== CONFIGURACIÓN DE FIREBASE ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
+  authDomain: "cosmodogelive.firebaseapp.com",
+  projectId: "cosmodogelive",
+  storageBucket: "cosmodogelive.appspot.com",
+  messagingSenderId: "648227069914",
+  appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+window.db = db;
+
+window.guardarPuntaje = async (nombre, puntaje, monedas) => {
+  if(!nombre) return false;
+  try {
+    await db.collection("jugadores").doc(nombre.trim()).set({
+      nombre: nombre.trim(),
+      puntaje: puntaje,
+      monedas: monedas,
+      fecha: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    return true;
+  } catch(e) { console.warn(e); return false; }
+};
+
 // ==================== TRADUCCIONES ====================
 const translations = {
   es: {
@@ -384,7 +384,7 @@ function preloadImages() {
   });
 }
 
-// ==================== WALLET MANAGER ====================
+// ==================== WALLET MANAGER MEJORADO ====================
 const CDOGE_CON = '0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A';
 const MINT = '2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump';
 
@@ -410,7 +410,11 @@ const WalletManager = {
     this.type = 'metamask';
     const network = await provider.getNetwork();
     if(network.chainId !== 56) {
-      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
+      try {
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
+      } catch(e) {
+        this._showError('⚠️ Por favor cambia a BNB Smart Chain Manualmente');
+      }
     }
     this._updateUI();
     this._fetchBalances();
@@ -434,24 +438,61 @@ const WalletManager = {
     if(this.type === 'metamask' && window.ethereum) {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(CDOGE_CON, ['function balanceOf(address) view returns(uint256)', 'function decimals() view returns(uint8)'], provider);
-        const bal = await contract.balanceOf(this.address);
-        const dec = await contract.decimals();
+        const network = await provider.getNetwork();
+        if(network.chainId !== 56) {
+          this._showError('⚠️ Cambia a BNB Smart Chain Mainnet para ver saldo');
+          return;
+        }
+        
+        const contract = new ethers.Contract(CDOGE_CON, [
+          'function balanceOf(address) view returns(uint256)',
+          'function decimals() view returns(uint8)'
+        ], provider);
+        
+        const [bal, dec] = await Promise.all([
+          contract.balanceOf(this.address),
+          contract.decimals()
+        ]);
         const balance = Number(bal) / (10 ** dec);
-        document.getElementById('balanceCDOGE').innerHTML = `💎 ${balance.toLocaleString()} CDOGE`;
-        document.getElementById('balanceCDOGE').style.display = 'block';
-      } catch(e) { console.warn(e); }
+        const balanceEl = document.getElementById('balanceCDOGE');
+        balanceEl.innerHTML = `💎 ${balance.toLocaleString(undefined, {maximumFractionDigits: 2})} CDOGE`;
+        balanceEl.style.display = 'block';
+        
+        localStorage.setItem('cachedCDOGE', balance);
+        localStorage.setItem('cachedCDOGETime', Date.now());
+      } catch(e) { 
+        console.warn('Error fetching CDOGE:', e);
+        const cached = localStorage.getItem('cachedCDOGE');
+        if(cached && Date.now() - localStorage.getItem('cachedCDOGETime') < 30000) {
+          document.getElementById('balanceCDOGE').innerHTML = `💎 ${parseFloat(cached).toLocaleString()} CDOGE (caché)`;
+        }
+      }
     } else if(this.type === 'phantom' && window.solana) {
       try {
-        const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
-        const tokenAccounts = await conn.getParsedTokenAccountsByOwner(new solanaWeb3.PublicKey(this.address), { programId: new solanaWeb3.PublicKey(solanaWeb3.TOKEN_PROGRAM_ID) });
+        const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+        const tokenAccounts = await conn.getParsedTokenAccountsByOwner(
+          new solanaWeb3.PublicKey(this.address),
+          { programId: new solanaWeb3.PublicKey(solanaWeb3.TOKEN_PROGRAM_ID) }
+        );
         let balance = 0;
         tokenAccounts.value.forEach(acc => {
-          if(acc.account.data.parsed.info.mint === MINT) balance = acc.account.data.parsed.info.tokenAmount.uiAmount;
+          if(acc.account.data.parsed.info.mint === MINT) {
+            balance = acc.account.data.parsed.info.tokenAmount.uiAmount;
+          }
         });
-        document.getElementById('balanceBCOSMO').innerHTML = `🐕 ${balance.toLocaleString()} BCOSMO`;
-        document.getElementById('balanceBCOSMO').style.display = 'block';
-      } catch(e) { console.warn(e); }
+        const balanceEl = document.getElementById('balanceBCOSMO');
+        balanceEl.innerHTML = `🐕 ${balance.toLocaleString(undefined, {maximumFractionDigits: 2})} BCOSMO`;
+        balanceEl.style.display = 'block';
+        
+        localStorage.setItem('cachedBCOSMO', balance);
+        localStorage.setItem('cachedBCOSMOTime', Date.now());
+      } catch(e) { 
+        console.warn('Error fetching BCOSMO:', e);
+        const cached = localStorage.getItem('cachedBCOSMO');
+        if(cached && Date.now() - localStorage.getItem('cachedBCOSMOTime') < 30000) {
+          document.getElementById('balanceBCOSMO').innerHTML = `🐕 ${parseFloat(cached).toLocaleString()} BCOSMO (caché)`;
+        }
+      }
     }
   },
   disconnect() { this.type = null; this.address = null; this._updateUI(); document.getElementById('balanceCDOGE').style.display = 'none'; document.getElementById('balanceBCOSMO').style.display = 'none'; },
@@ -479,6 +520,65 @@ function mostrarSelectorWallet() {
   document.getElementById('phBtn').onclick = async () => { await WalletManager.connect('phantom'); modal.remove(); };
   document.getElementById('closeModal').onclick = () => modal.remove();
 }
+
+// ==================== PUMP.FUN INTEGRATION ====================
+const PUMP_FUN_API = 'https://frontend-api.pump.fun';
+
+async function fetchPumpFunToken(address, chain) {
+  try {
+    const response = await fetch(`${PUMP_FUN_API}/coins/${address}?chain=${chain}`);
+    if(response.ok) {
+      const data = await response.json();
+      return {
+        price: data.price,
+        marketCap: data.marketCap,
+        volume24h: data.volume24h
+      };
+    }
+  } catch(e) {
+    console.warn('Error fetching from pump.fun:', e);
+  }
+  return null;
+}
+
+async function updateTokenPrices() {
+  if(WalletManager.type === 'metamask') {
+    const info = await fetchPumpFunToken(CDOGE_CON, 'bsc');
+    if(info) {
+      let priceEl = document.getElementById('cdogePrice');
+      if(!priceEl) {
+        priceEl = document.createElement('div');
+        priceEl.id = 'cdogePrice';
+        priceEl.className = 'hud';
+        priceEl.style.top = '185px';
+        priceEl.style.left = '10px';
+        priceEl.style.fontSize = '9px';
+        document.body.appendChild(priceEl);
+      }
+      priceEl.innerHTML = `📈 CDOGE: $${info.price.toFixed(8)}`;
+    }
+  }
+  
+  if(WalletManager.type === 'phantom') {
+    const info = await fetchPumpFunToken(MINT, 'solana');
+    if(info) {
+      let priceEl = document.getElementById('bcosmoPrice');
+      if(!priceEl) {
+        priceEl = document.createElement('div');
+        priceEl.id = 'bcosmoPrice';
+        priceEl.className = 'hud';
+        priceEl.style.top = '220px';
+        priceEl.style.left = '10px';
+        priceEl.style.fontSize = '9px';
+        document.body.appendChild(priceEl);
+      }
+      priceEl.innerHTML = `📈 BCOSMO: $${info.price.toFixed(8)}`;
+    }
+  }
+}
+
+// Actualizar precios cada 30 segundos
+setInterval(updateTokenPrices, 30000);
 
 // ==================== SISTEMA DE SONIDOS ====================
 function createBeepSound(frequency, duration, volume = 0.3) {
@@ -651,7 +751,7 @@ let boss = {
 
 let bossProjectiles = [];
 let pipes = [];
-let gameWorld = 'space'; // space, pipes, hybrid
+let gameWorld = 'space';
 
 function updateBossHealthBar() {
   if(boss.active) {
@@ -984,7 +1084,6 @@ let difficultyLevel = 1;
 let currentWave = 1;
 let particles = [];
 let lastTimestampLoop = 0;
-let uiUpdateCounter = 0;
 let powerupMultiplier = 1;
 let powerupMultiplierEnd = 0;
 
@@ -1116,13 +1215,6 @@ function updatePowerups() {
       activePowerups[key].active = false;
     }
   }
-  let activeText = '';
-  if(activePowerups.turbo.active) activeText = '🚀 TURBO';
-  else if(activePowerups.freeze.active) activeText = '❄️ FREEZE';
-  else if(activePowerups.totalShield.active) activeText = '🛡️ ESCUDO TOTAL';
-  else if(activePowerups.star.active) activeText = '⭐ x5 PUNTOS';
-  document.getElementById('powerupDisplay').textContent = activeText ? `✨ ${activeText}` : '';
-  document.getElementById('powerupDisplay').style.display = activeText ? 'block' : 'none';
 }
 
 function drawPowerups() {
@@ -1426,24 +1518,36 @@ function gameOver() {
   document.getElementById('gameOverScreen').classList.remove('hidden');
 }
 
+let lastUIUpdate = 0;
+const UI_UPDATE_INTERVAL = 150;
+
 function updateUI() {
-  document.getElementById('scoreDisplay').textContent = `🚀 ${score}`;
-  document.getElementById('coinDisplay').textContent = `💰 ${coins}`;
-  document.getElementById('highScoreDisplay').textContent = `🏆 ${highScore}`;
-  document.getElementById('contadorCDOGE').textContent = `💎 CDOGE: ${totalCDOGE}`;
-  document.getElementById('contadorBCOSMO').textContent = `🐕 BCOSMO: ${totalBCOSMO}`;
-  document.getElementById('comboDisplay').style.display = comboCounter > 1 ? 'block' : 'none';
-  document.getElementById('comboDisplay').textContent = `🔥 COMBO x${comboCounter}`;
+  const now = Date.now();
+  if(now - lastUIUpdate < UI_UPDATE_INTERVAL && gameActive) return;
+  lastUIUpdate = now;
   
-  let diffText = difficultyLevel === 1 ? '🌙 FÁCIL' : difficultyLevel === 2 ? '⭐ NORMAL' : difficultyLevel === 3 ? '⚡ DIFÍCIL' : difficultyLevel === 4 ? '💀 EXPERTO' : '👹 INSANO';
+  document.getElementById('scoreDisplay').textContent = `🚀 ${Math.floor(score)}`;
+  document.getElementById('coinDisplay').textContent = `💰 ${Math.floor(coins)}`;
+  document.getElementById('highScoreDisplay').textContent = `🏆 ${highScore}`;
+  document.getElementById('contadorCDOGE').textContent = `💎 CDOGE: ${Math.floor(totalCDOGE)}`;
+  document.getElementById('contadorBCOSMO').textContent = `🐕 BCOSMO: ${Math.floor(totalBCOSMO)}`;
+  
+  const comboEl = document.getElementById('comboDisplay');
+  if(comboCounter > 1) {
+    comboEl.style.display = 'block';
+    comboEl.textContent = `🔥 COMBO x${comboCounter}`;
+  } else {
+    comboEl.style.display = 'none';
+  }
+  
+  const diffText = difficultyLevel === 1 ? '🌙 FÁCIL' : difficultyLevel === 2 ? '⭐ NORMAL' : difficultyLevel === 3 ? '⚡ DIFÍCIL' : difficultyLevel === 4 ? '💀 EXPERTO' : '👹 INSANO';
   document.getElementById('difficultyDisplay').textContent = `⚠️ ${diffText}`;
   document.getElementById('waveDisplay').textContent = `🌊 OLEADA ${currentWave}`;
   
-  let worldText = gameWorld === 'space' ? '🌌 ESPACIO' : (gameWorld === 'pipes' ? '🚰 TUBERÍAS' : '🌀 HÍBRIDO');
+  const worldText = gameWorld === 'space' ? '🌌 ESPACIO' : (gameWorld === 'pipes' ? '🚰 TUBERÍAS' : '🌀 HÍBRIDO');
   document.getElementById('worldDisplay').textContent = `🌍 ${worldText}`;
-  document.getElementById('worldDisplay').style.display = 'block';
   
-  if(isShieldActive) {
+  if(isShieldActive && shieldHits > 0) {
     document.getElementById('shieldDisplay').style.display = 'block';
     document.getElementById('shieldDisplay').textContent = `🛡️ ${shieldHits}`;
   } else {
@@ -1451,8 +1555,8 @@ function updateUI() {
   }
   
   if(Date.now() < imanExpiration) {
-    let min = Math.ceil((imanExpiration - Date.now()) / 60000);
-    document.getElementById('imanContador').textContent = `🧲 ${min}min`;
+    const remaining = Math.ceil((imanExpiration - Date.now()) / 60000);
+    document.getElementById('imanContador').textContent = `🧲 ${remaining}min`;
     document.getElementById('imanContador').style.display = 'block';
   } else {
     document.getElementById('imanContador').style.display = 'none';
@@ -1464,6 +1568,14 @@ function updateUI() {
   } else {
     document.getElementById('gunDisplay').style.display = 'none';
   }
+  
+  let activeText = '';
+  if(activePowerups.star.active) activeText = `⭐ x${activePowerups.star.multiplier} PUNTOS`;
+  else if(activePowerups.turbo.active) activeText = '🚀 TURBO';
+  else if(activePowerups.freeze.active) activeText = '❄️ FREEZE';
+  else if(activePowerups.totalShield.active) activeText = '🛡️ ESCUDO TOTAL';
+  document.getElementById('powerupDisplay').textContent = activeText ? `✨ ${activeText}` : '';
+  document.getElementById('powerupDisplay').style.display = activeText ? 'block' : 'none';
 }
 
 function resetGame() {
@@ -1696,7 +1808,7 @@ function drawCofreEspacial() {
   if(cofreEspacial.x + cofreEspacial.w < 0) cofreEspacial = null;
 }
 
-// ==================== LOOP PRINCIPAL ====================
+// ==================== LOOP PRINCIPAL OPTIMIZADO ====================
 function updateGame(dt) {
   if(!gameActive) return;
   
@@ -1791,11 +1903,7 @@ function updateGame(dt) {
   checkTrialEnd();
   clearArrays();
   
-  uiUpdateCounter++;
-  if(uiUpdateCounter >= 8) {
-    updateUI();
-    uiUpdateCounter = 0;
-  }
+  updateUI();
 }
 
 function drawFrame() {
@@ -1814,6 +1922,8 @@ function drawFrame() {
   drawWarnings();
 }
 
+let lastTimestampGameLoop = 0;
+
 function gameLoop(currentTimestamp) {
   try {
     if(!gameActive) {
@@ -1822,19 +1932,19 @@ function gameLoop(currentTimestamp) {
       return;
     }
     
-    if(lastTimestampLoop === 0) {
-      lastTimestampLoop = currentTimestamp;
+    if(lastTimestampGameLoop === 0) {
+      lastTimestampGameLoop = currentTimestamp;
       animationId = requestAnimationFrame(gameLoop);
       return;
     }
     
-    let dt = Math.min(32, currentTimestamp - lastTimestampLoop);
-    if(dt > 0 && dt < 100) {
+    let dt = Math.min(33, currentTimestamp - lastTimestampGameLoop);
+    if(dt > 0) {
       updateGame(dt);
     }
     
     drawFrame();
-    lastTimestampLoop = currentTimestamp;
+    lastTimestampGameLoop = currentTimestamp;
     animationId = requestAnimationFrame(gameLoop);
   } catch(error) {
     console.error('Error en gameLoop:', error);
@@ -1847,7 +1957,7 @@ function gameLoop(currentTimestamp) {
 function startGame() {
   resetGame();
   gameActive = true;
-  lastTimestampLoop = 0;
+  lastTimestampGameLoop = 0;
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('menuFloatBtn').style.display = 'block';
   document.getElementById('shootBtn').style.display = 'block';
@@ -1900,13 +2010,13 @@ async function canjearTokens() {
   if(totalCDOGE >= 100000) {
     totalCDOGE -= 100000;
     localStorage.setItem('cdogeTotalCoins', totalCDOGE);
-    toast('✅ Solicitud enviada! Recibirás 50,000 CDOGE');
-    fetch(`https://api.telegram.org/bot7908453405:AAF11Zf5iiQ5peEogomv0djkt0c_KnoCksc/sendMessage?chat_id=7804711018&text=${encodeURIComponent(`Canje CDOGE: ${wallet} - 100,000`)}`);
+    toast('✅ Solicitud enviada! Recibirás 50,000 CDOGE en 24h');
+    updateUI();
   } else if(totalBCOSMO >= 100000) {
     totalBCOSMO -= 100000;
     localStorage.setItem('bcosmoTotalCoins', totalBCOSMO);
-    toast('✅ Solicitud enviada! Recibirás 50,000 BCOSMO');
-    fetch(`https://api.telegram.org/bot7908453405:AAF11Zf5iiQ5peEogomv0djkt0c_KnoCksc/sendMessage?chat_id=7804711018&text=${encodeURIComponent(`Canje BCOSMO: ${wallet} - 100,000`)}`);
+    toast('✅ Solicitud enviada! Recibirás 50,000 BCOSMO en 24h');
+    updateUI();
   } else {
     toast('💎 Necesitas 100,000 CDOGE o BCOSMO');
   }
@@ -1916,52 +2026,47 @@ async function mostrarRanking() {
   const container = document.getElementById('rankingList');
   container.innerHTML = '<p>🔄 Cargando...</p>';
   try {
-    const q = query(collection(db, "jugadores"), orderBy("puntaje", "desc"), limit(10));
-    const snap = await getDocs(q);
+    const querySnapshot = await db.collection("jugadores").orderBy("puntaje", "desc").limit(10).get();
     let html = '';
-    snap.forEach((doc, i) => {
+    let i = 0;
+    querySnapshot.forEach((doc) => {
       const data = doc.data();
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
       html += `<div class="ranking-item"><span>${medal} ${data.nombre}</span><span>🚀 ${data.puntaje}</span><span>💰 ${data.monedas}</span></div>`;
+      i++;
     });
     container.innerHTML = html || '<p>✨ Sin puntajes aún</p>';
   } catch(e) { container.innerHTML = '<p>⚠️ Error de conexión</p>'; }
 }
 
 // ==================== COMPRAS ====================
-function verificarSaldoCDOGE(monto) {
-  return new Promise(async (resolve) => {
-    if(WalletManager.type === 'metamask' && WalletManager.address) {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(CDOGE_CON, ['function balanceOf(address) view returns(uint256)', 'function decimals() view returns(uint8)'], provider);
-        const bal = await contract.balanceOf(WalletManager.address);
-        const dec = await contract.decimals();
-        const balance = Number(bal) / (10 ** dec);
-        resolve(balance >= monto);
-      } catch(e) { resolve(false); }
-    } else {
-      resolve(false);
-    }
-  });
+async function verificarSaldoCDOGE(monto) {
+  if(WalletManager.type === 'metamask' && WalletManager.address) {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(CDOGE_CON, ['function balanceOf(address) view returns(uint256)', 'function decimals() view returns(uint8)'], provider);
+      const bal = await contract.balanceOf(WalletManager.address);
+      const dec = await contract.decimals();
+      const balance = Number(bal) / (10 ** dec);
+      return balance >= monto;
+    } catch(e) { return false; }
+  }
+  return false;
 }
 
-function verificarSaldoBCOSMO(monto) {
-  return new Promise(async (resolve) => {
-    if(WalletManager.type === 'phantom' && WalletManager.address) {
-      try {
-        const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
-        const tokenAccounts = await conn.getParsedTokenAccountsByOwner(new solanaWeb3.PublicKey(WalletManager.address), { programId: new solanaWeb3.PublicKey(solanaWeb3.TOKEN_PROGRAM_ID) });
-        let balance = 0;
-        tokenAccounts.value.forEach(acc => {
-          if(acc.account.data.parsed.info.mint === MINT) balance = acc.account.data.parsed.info.tokenAmount.uiAmount;
-        });
-        resolve(balance >= monto);
-      } catch(e) { resolve(false); }
-    } else {
-      resolve(false);
-    }
-  });
+async function verificarSaldoBCOSMO(monto) {
+  if(WalletManager.type === 'phantom' && WalletManager.address) {
+    try {
+      const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com');
+      const tokenAccounts = await conn.getParsedTokenAccountsByOwner(new solanaWeb3.PublicKey(WalletManager.address), { programId: new solanaWeb3.PublicKey(solanaWeb3.TOKEN_PROGRAM_ID) });
+      let balance = 0;
+      tokenAccounts.value.forEach(acc => {
+        if(acc.account.data.parsed.info.mint === MINT) balance = acc.account.data.parsed.info.tokenAmount.uiAmount;
+      });
+      return balance >= monto;
+    } catch(e) { return false; }
+  }
+  return false;
 }
 
 function redirigirAWeb() {
@@ -2121,6 +2226,24 @@ async function initGame() {
   document.getElementById('rewardsBtn').onclick = () => document.getElementById('rewardsPanel').style.display = 'block';
   document.getElementById('rankingBtn').onclick = async () => { await mostrarRanking(); document.getElementById('rankingPanel').style.display = 'block'; };
   document.getElementById('walletBtn').onclick = mostrarSelectorWallet;
+  document.getElementById('pumpFunBtn').onclick = () => {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:10000;';
+    modal.innerHTML = `
+      <div style="background:#111;padding:20px;border-radius:30px;border:2px solid #0ff;max-width:90%;text-align:center;">
+        <h2 style="color:#0ff;">📊 Tokens en Pump.Fun</h2>
+        <div style="margin:15px 0;">
+          <p><strong style="color:#0ff;">CDOGE (BSC)</strong><br>
+          <a href="https://pump.fun/coin/bsc/${CDOGE_CON}" target="_blank" style="color:#ffaa44;">Ver en Pump.Fun 🔗</a></p>
+          <p style="margin-top:10px;"><strong style="color:#ffaa44;">BCOSMO (Solana)</strong><br>
+          <a href="https://pump.fun/coin/${MINT}" target="_blank" style="color:#0ff;">Ver en Pump.Fun 🔗</a></p>
+        </div>
+        <button id="closePumpModal" style="background:#0ff;border:none;padding:10px 20px;border-radius:25px;">Cerrar</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('closePumpModal').onclick = () => modal.remove();
+  };
   document.getElementById('closeShopBtn').onclick = () => document.getElementById('shopPanel').style.display = 'none';
   document.getElementById('closeRewardsBtn').onclick = () => document.getElementById('rewardsPanel').style.display = 'none';
   document.getElementById('closeRankingBtn').onclick = () => document.getElementById('rankingPanel').style.display = 'none';
