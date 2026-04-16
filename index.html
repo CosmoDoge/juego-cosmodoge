@@ -3,14 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Edición Final Estable</title>
+  <title>CosmoDoge 🚀 | Edición Definitiva</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.41.0/lib/index.iife.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+  
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
+    
+    window.firebaseModules = { initializeApp, getFirestore, collection, doc, setDoc, getDocs, query, orderBy, limit, serverTimestamp, getAnalytics };
+  </script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -33,11 +40,15 @@
     .menu-btn { background: linear-gradient(135deg, #0ff, #0aa); border: none; padding: 12px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: bold; font-family: 'Orbitron', monospace; cursor: pointer; transition: all 0.2s; color: #000; }
     .menu-btn.secondary { background: linear-gradient(135deg, #2a2a4a, #0a0a2a); color: #0ff; border: 1px solid #0ff; }
     .lang-selector { position: absolute; top: 15px; right: 15px; z-index: 200; display: flex; gap: 8px; }
-    .lang-btn { background: rgba(0, 255, 255, 0.2); border: 1px solid #0ff; color: #0ff; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-family: 'Orbitron', monospace; font-size: 11px; }
-    .lang-btn.active { background: #0ff; color: #000; box-shadow: 0 0 10px #0ff; }
+    .lang-btn { background: rgba(0, 255, 255, 0.2); border: 1px solid #0ff; color: #0ff; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-family: 'Orbitron', monospace; font-size: 11px; transition: all 0.3s; }
+    .lang-btn.active { background: #0ff; color: #000; box-shadow: 0 0 15px #0ff; }
     .register-section { margin-top: 15px; padding: 12px; background: rgba(0, 255, 255, 0.1); border-radius: 25px; }
     .register-section input { width: 100%; padding: 10px; border-radius: 30px; border: 1px solid #0ff; background: #111; color: #0ff; font-family: 'Orbitron', monospace; text-align: center; margin-bottom: 8px; font-size: 12px; }
     .user-greeting { margin-top: 10px; padding: 8px; background: rgba(0, 255, 255, 0.2); border-radius: 20px; color: #ffaa44; font-size: 11px; }
+    
+    .token-buttons { display: flex; gap: 10px; margin-top: 10px; }
+    .token-btn { flex: 1; background: linear-gradient(135deg, #ffaa44, #ff6600); border: none; padding: 10px; border-radius: 25px; font-size: 0.8rem; font-weight: bold; cursor: pointer; color: #000; }
+    .token-btn.bcosmo { background: linear-gradient(135deg, #ff66aa, #cc3388); }
     
     .hud-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; z-index: 60; pointer-events: none; max-width: 95%; }
     .hud-item { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); border-radius: 30px; padding: 4px 10px; font-family: 'Orbitron', monospace; font-size: 10px; font-weight: bold; border: 1px solid rgba(0, 255, 255, 0.3); white-space: nowrap; pointer-events: none; }
@@ -73,6 +84,8 @@
     .boss-health-text { text-align: center; color: #fff; font-size: 14px; font-weight: bold; margin-top: 5px; text-shadow: 0 0 10px #ff0000; }
     .boss-name { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: #ff0000; font-size: 18px; font-weight: bold; text-shadow: 0 0 15px #ff0000; white-space: nowrap; }
     
+    .boss-sprite { mix-blend-mode: multiply; filter: drop-shadow(0 0 20px #ff00ff) brightness(1.2); }
+    
     .gameover-container { text-align: center; max-width: 500px; width: 90%; padding: 30px 25px; background: linear-gradient(135deg, rgba(30, 10, 40, 0.98), rgba(10, 5, 20, 0.98)); border-radius: 60px; border: 3px solid #f66; backdrop-filter: blur(10px); }
     .gameover-doge { width: 100px; height: 100px; margin: 0 auto 15px; background: url('cosmodoge-cohete-juego.png') center/contain no-repeat; animation: dogeCry 2s ease-in-out infinite; }
     @keyframes dogeCry { 25%{transform:rotate(5deg)}75%{transform:rotate(-5deg)}}
@@ -88,6 +101,17 @@
     .camera-shake { animation: shake 0.3s ease-in-out; }
     @keyframes shake { 25%{transform:translate(-5px,5px)}50%{transform:translate(5px,-5px)}75%{transform:translate(-3px,3px)}}
     .flash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: red; opacity: 0; pointer-events: none; z-index: 500; transition: opacity 0.1s; }
+    
+    /* Tutorial */
+    .tutorial-container { max-width: 500px; width: 90%; background: linear-gradient(135deg, #0a0a2a, #000); border: 3px solid #0ff; border-radius: 40px; padding: 30px; text-align: center; box-shadow: 0 0 50px #0ff; }
+    .tutorial-step { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .tutorial-icon { width: 80px; height: 80px; background: rgba(0,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 2px solid #0ff; margin: 10px auto; }
+    .tutorial-title { color: #0ff; font-size: 1.5rem; margin-bottom: 10px; }
+    .tutorial-text { color: #fff; font-size: 1rem; margin-bottom: 20px; line-height: 1.5; }
+    .tutorial-progress { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+    .tutorial-dot { width: 10px; height: 10px; border-radius: 50%; background: #333; transition: all 0.3s; }
+    .tutorial-dot.active { background: #0ff; box-shadow: 0 0 10px #0ff; transform: scale(1.3); }
+    .tutorial-buttons { display: flex; gap: 10px; justify-content: center; }
   </style>
 </head>
 <body>
@@ -98,7 +122,7 @@
 <div id="loadingScreen" class="screen">
   <div class="loading-container">
     <div class="logo"></div>
-    <h2 style="color:#0ff;">CARGANDO COSMODOGE</h2>
+    <h2 style="color:#0ff;" data-key="loading">CARGANDO COSMODOGE</h2>
     <div class="loading-bar"><div id="loadingProgress" class="loading-progress"></div></div>
     <p id="loadingText" style="color:#0ff; margin-top:10px;">Iniciando...</p>
   </div>
@@ -119,7 +143,7 @@
   <div class="hud-item" id="imanContador" style="display:none;">🧲 0min</div>
   <div class="hud-item hud-combo" id="comboDisplay" style="display:none;">🔥 x0</div>
   <div class="hud-item" id="waveDisplay" style="display:none;">🌊 1</div>
-  <div class="hud-item" id="multiplierDisplay" style="display:none;">✨ x1</div>
+  <div class="hud-item" id="ammoDisplay" style="display:none;">🔫 ∞</div>
 </div>
 
 <div id="userNameDisplay" class="hud-item" style="position:fixed; top:10px; right:10px; left:auto; background:#000000aa; display:none;"></div>
@@ -146,68 +170,109 @@
   <div class="menu-container">
     <div class="logo"></div>
     <h1 class="game-title">COSMODOGE</h1>
-    <p style="color:#0ff; font-size:10px; margin-bottom:10px;">🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟</p>
+    <p style="color:#0ff; font-size:10px; margin-bottom:10px;" data-key="subtitle">🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟</p>
     <div class="menu-buttons">
-      <button id="playBtn" class="menu-btn">🎮 JUGAR</button>
-      <button id="shopBtn" class="menu-btn secondary">🛒 TIENDA</button>
-      <button id="rewardsBtn" class="menu-btn secondary">🎁 RECOMPENSAS</button>
-      <button id="rankingBtn" class="menu-btn secondary">🏆 RANKING</button>
-      <button id="walletBtn" class="menu-btn secondary">🔗 CONECTAR WALLET</button>
+      <button id="playBtn" class="menu-btn" data-key="play">🎮 JUGAR</button>
+      <button id="shopBtn" class="menu-btn secondary" data-key="shop">🛒 TIENDA</button>
+      <button id="rewardsBtn" class="menu-btn secondary" data-key="rewards">🎁 RECOMPENSAS</button>
+      <button id="rankingBtn" class="menu-btn secondary" data-key="ranking">🏆 RANKING</button>
+      <button id="tutorialBtn" class="menu-btn secondary" data-key="tutorial">📖 TUTORIAL</button>
+      <button id="walletBtn" class="menu-btn secondary" data-key="connectWallet">🔗 CONECTAR WALLET</button>
+    </div>
+    <div class="token-buttons">
+      <button id="buyCDOGEBtn" class="token-btn" data-key="buyCDOGE">💎 COMPRAR CDOGE</button>
+      <button id="buyBCOSMOBtn" class="token-btn bcosmo" data-key="buyBCOSMO">🐕 COMPRAR BCOSMO</button>
     </div>
     <div class="register-section">
-      <input type="text" id="registerName" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20">
-      <button id="registerBtn" class="menu-btn" style="padding:8px; font-size:0.8rem;">📝 REGISTRARSE</button>
+      <input type="text" id="registerName" data-key-placeholder="namePlaceholder" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20">
+      <button id="registerBtn" class="menu-btn" style="padding:8px; font-size:0.8rem;" data-key="register">📝 REGISTRARSE</button>
       <div id="userGreeting" class="user-greeting" style="display:none;"></div>
     </div>
   </div>
 </div>
 
 <div id="shopPanel" class="floating-panel">
-  <h2 style="color:#0ff; text-align:center;">🛒 TIENDA ESPACIAL</h2>
-  <div class="shop-item"><div><strong>🧲 IMÁN</strong><br><small>Atrae monedas 1h</small></div><button id="buyMagnet">1,000 🪙</button></div>
-  <div class="shop-item"><div><strong>🛡️ ESCUDO</strong><br><small>Protege 3 golpes</small></div><button id="buyShield">1,500 🪙</button></div>
-  <div class="shop-item"><div><strong>🔫 PISTOLA</strong><br><small>Dispara a enemigos</small></div><button id="buyGun">2,000 🪙</button></div>
-  <div class="shop-item"><div><strong>⚡ MEJORA ARMA</strong><br><small>+Daño +Velocidad</small></div><button id="upgradeGun">3,000 🪙</button></div>
-  <button id="closeShopBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
+  <h2 style="color:#0ff; text-align:center;" data-key="shopTitle">🛒 TIENDA ESPACIAL</h2>
+  <div class="shop-item"><div><strong data-key="magnet">🧲 IMÁN</strong><br><small data-key="magnetDesc">Atrae monedas 1h</small></div><button id="buyMagnet">1,000 🪙</button></div>
+  <div class="shop-item"><div><strong data-key="shield">🛡️ ESCUDO</strong><br><small data-key="shieldDesc">Protege 3 golpes</small></div><button id="buyShield">1,500 🪙</button></div>
+  <div class="shop-item"><div><strong data-key="gun">🔫 PISTOLA</strong><br><small data-key="gunDesc">Dispara a enemigos</small></div><button id="buyGun">2,000 🪙</button></div>
+  <div class="shop-item"><div><strong data-key="upgrade">⚡ MEJORA ARMA</strong><br><small data-key="upgradeDesc">+Daño +Velocidad</small></div><button id="upgradeGun">3,000 🪙</button></div>
+  <button id="closeShopBtn" class="menu-btn" style="margin-top:15px; background:#333;" data-key="close">✖️ CERRAR</button>
 </div>
 
 <div id="rewardsPanel" class="floating-panel">
-  <h2 style="color:#ffaa44; text-align:center;">🎁 RECOMPENSAS</h2>
-  <div class="shop-item"><div><strong>📅 DIARIA</strong><br><small>+500 🪙 +50 💎</small></div><button id="dailyRewardBtn">RECLAMAR</button></div>
-  <div class="shop-item"><div><strong>🏆 CANJE</strong><br><small>100k → Tokens</small></div><button id="claimTokensBtn">CANJEAR</button></div>
-  <button id="closeRewardsBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
+  <h2 style="color:#ffaa44; text-align:center;" data-key="rewardsTitle">🎁 RECOMPENSAS</h2>
+  <div class="shop-item"><div><strong data-key="daily">📅 DIARIA</strong><br><small data-key="dailyDesc">+500 🪙 +50 💎</small></div><button id="dailyRewardBtn" data-key="claim">RECLAMAR</button></div>
+  <div class="shop-item"><div><strong data-key="exchange">🏆 CANJE</strong><br><small data-key="exchangeDesc">100k → Tokens</small></div><button id="claimTokensBtn" data-key="exchangeBtn">CANJEAR</button></div>
+  <button id="closeRewardsBtn" class="menu-btn" style="margin-top:15px; background:#333;" data-key="close">✖️ CERRAR</button>
 </div>
 
 <div id="rankingPanel" class="floating-panel">
-  <h2 style="color:#0ff; text-align:center;">🏆 TOP 10 GALÁCTICO</h2>
+  <h2 style="color:#0ff; text-align:center;" data-key="rankingTitle">🏆 TOP 10 GALÁCTICO</h2>
   <div id="rankingList" class="ranking-list">🔄 Cargando...</div>
-  <button id="closeRankingBtn" class="menu-btn" style="margin-top:15px; background:#333;">✖️ CERRAR</button>
+  <button id="closeRankingBtn" class="menu-btn" style="margin-top:15px; background:#333;" data-key="close">✖️ CERRAR</button>
+</div>
+
+<div id="tutorialScreen" class="screen hidden">
+  <div class="tutorial-container">
+    <div class="tutorial-step" id="tutorialStep1">
+      <div class="tutorial-icon">🚀</div>
+      <h3 class="tutorial-title" data-key="tut1Title">¡Bienvenido, Piloto!</h3>
+      <p class="tutorial-text" data-key="tut1Text">Toca la pantalla o presiona ESPACIO para impulsar tu nave y esquivar obstáculos.</p>
+    </div>
+    <div class="tutorial-step hidden" id="tutorialStep2">
+      <div class="tutorial-icon">💎</div>
+      <h3 class="tutorial-title" data-key="tut2Title">Recolecta Tesoros</h3>
+      <p class="tutorial-text" data-key="tut2Text">Monedas doradas 🪙, CDOGE azules 💎 y BCOSMO naranjas 🐕. ¡Cada una tiene valor!</p>
+    </div>
+    <div class="tutorial-step hidden" id="tutorialStep3">
+      <div class="tutorial-icon">👾</div>
+      <h3 class="tutorial-title" data-key="tut3Title">¡Enfrenta al Jefe!</h3>
+      <p class="tutorial-text" data-key="tut3Text">Cada 500 puntos aparece COSMODRAGON. Usa el joystick para esquivar y el botón rojo para DISPARAR.</p>
+    </div>
+    <div class="tutorial-step hidden" id="tutorialStep4">
+      <div class="tutorial-icon">🎁</div>
+      <h3 class="tutorial-title" data-key="tut4Title">Cofres Mágicos</h3>
+      <p class="tutorial-text" data-key="tut4Text">Ábrelos para obtener escudos, imanes, multiplicadores y más. ¡Buena suerte!</p>
+    </div>
+    <div class="tutorial-progress">
+      <div class="tutorial-dot active" id="dot1"></div>
+      <div class="tutorial-dot" id="dot2"></div>
+      <div class="tutorial-dot" id="dot3"></div>
+      <div class="tutorial-dot" id="dot4"></div>
+    </div>
+    <div class="tutorial-buttons">
+      <button id="tutorialPrev" class="menu-btn secondary" data-key="prev" disabled>◀ ANTERIOR</button>
+      <button id="tutorialNext" class="menu-btn" data-key="next">SIGUIENTE ▶</button>
+      <button id="tutorialSkip" class="menu-btn secondary" data-key="skip">SALTAR</button>
+    </div>
+  </div>
 </div>
 
 <div id="gameOverScreen" class="screen hidden">
   <div class="gameover-container">
     <div class="gameover-doge"></div>
-    <h1 class="gameover-title">💀 GAME OVER 💀</h1>
+    <h1 class="gameover-title" data-key="gameOver">💀 GAME OVER 💀</h1>
     <div class="score-stats">
-      <div class="stat-row"><span class="stat-label">🚀 PUNTAJE FINAL</span><span class="score-number" id="finalScoreValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">🪙 MONEDAS</span><span class="stat-value" id="finalCoinsValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">💎 CDOGE</span><span class="stat-value" id="finalCDOGEValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">🐕 BCOSMO</span><span class="stat-value" id="finalBCOSMOValue">0</span></div>
-      <div class="stat-row"><span class="stat-label">🔥 COMBO MÁX</span><span class="stat-value" id="finalComboValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalScore">🚀 PUNTAJE FINAL</span><span class="score-number" id="finalScoreValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalCoins">🪙 MONEDAS</span><span class="stat-value" id="finalCoinsValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalCDOGE">💎 CDOGE</span><span class="stat-value" id="finalCDOGEValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalBCOSMO">🐕 BCOSMO</span><span class="stat-value" id="finalBCOSMOValue">0</span></div>
+      <div class="stat-row"><span class="stat-label" data-key="finalCombo">🔥 COMBO MÁX</span><span class="stat-value" id="finalComboValue">0</span></div>
     </div>
     <div class="gameover-buttons">
-      <button id="restartBtn" class="gameover-btn">🔄 JUGAR DE NUEVO</button>
-      <button id="menuFromGameOver" class="gameover-btn secondary">🏠 MENÚ</button>
+      <button id="restartBtn" class="gameover-btn" data-key="playAgain">🔄 JUGAR DE NUEVO</button>
+      <button id="menuFromGameOver" class="gameover-btn secondary" data-key="menu">🏠 MENÚ</button>
     </div>
   </div>
 </div>
 
 <div id="newRecordScreen" class="screen hidden">
   <div class="menu-container" style="border-color:#ffaa44;">
-    <h1 style="color:#ffaa44;">🌟 NUEVO RÉCORD!</h1>
+    <h1 style="color:#ffaa44;" data-key="newRecord">🌟 NUEVO RÉCORD!</h1>
     <div id="recordScore" style="margin:10px; font-size:18px;"></div>
-    <button id="continueAfterRecord" class="menu-btn">🔄 CONTINUAR</button>
-    <button id="menuAfterRecord" class="menu-btn secondary">🏠 MENÚ</button>
+    <button id="continueAfterRecord" class="menu-btn" data-key="continue">🔄 CONTINUAR</button>
+    <button id="menuAfterRecord" class="menu-btn secondary" data-key="menu">🏠 MENÚ</button>
   </div>
 </div>
 
@@ -215,22 +280,118 @@
 (function() {
   "use strict";
   
-  // ==================== CONFIGURACIÓN ====================
+  // ==================== TRADUCCIONES ====================
+  const translations = {
+    es: {
+      loading: "CARGANDO COSMODOGE", subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟",
+      play: "🎮 JUGAR", shop: "🛒 TIENDA", rewards: "🎁 RECOMPENSAS", ranking: "🏆 RANKING",
+      tutorial: "📖 TUTORIAL", connectWallet: "🔗 CONECTAR WALLET", buyCDOGE: "💎 COMPRAR CDOGE",
+      buyBCOSMO: "🐕 COMPRAR BCOSMO", register: "📝 REGISTRARSE", close: "✖️ CERRAR",
+      shopTitle: "🛒 TIENDA ESPACIAL", magnet: "🧲 IMÁN", magnetDesc: "Atrae monedas 1h",
+      shield: "🛡️ ESCUDO", shieldDesc: "Protege 3 golpes", gun: "🔫 PISTOLA", gunDesc: "Dispara a enemigos",
+      upgrade: "⚡ MEJORA ARMA", upgradeDesc: "+Daño +Velocidad",
+      rewardsTitle: "🎁 RECOMPENSAS", daily: "📅 DIARIA", dailyDesc: "+500 🪙 +50 💎",
+      exchange: "🏆 CANJE", exchangeDesc: "100k → Tokens", exchangeBtn: "CANJEAR", claim: "RECLAMAR",
+      rankingTitle: "🏆 TOP 10 GALÁCTICO",
+      gameOver: "💀 GAME OVER", playAgain: "🔄 JUGAR DE NUEVO", menu: "🏠 MENÚ",
+      newRecord: "🌟 NUEVO RÉCORD!", continue: "🔄 CONTINUAR",
+      finalScore: "🚀 PUNTAJE FINAL", finalCoins: "🪙 MONEDAS", finalCDOGE: "💎 CDOGE",
+      finalBCOSMO: "🐕 BCOSMO", finalCombo: "🔥 COMBO MÁX",
+      namePlaceholder: "✨ NOMBRE GALÁCTICO",
+      tut1Title: "¡Bienvenido, Piloto!", tut1Text: "Toca la pantalla o presiona ESPACIO para impulsar tu nave y esquivar obstáculos.",
+      tut2Title: "Recolecta Tesoros", tut2Text: "Monedas doradas 🪙, CDOGE azules 💎 y BCOSMO naranjas 🐕. ¡Cada una tiene valor!",
+      tut3Title: "¡Enfrenta al Jefe!", tut3Text: "Cada 500 puntos aparece COSMODRAGON. Usa el joystick para esquivar y el botón rojo para DISPARAR.",
+      tut4Title: "Cofres Mágicos", tut4Text: "Ábrelos para obtener escudos, imanes, multiplicadores y más. ¡Buena suerte!",
+      prev: "◀ ANTERIOR", next: "SIGUIENTE ▶", skip: "SALTAR",
+      pause: "⏸️ PAUSA", resume: "▶️ CONTINUAR"
+    },
+    en: {
+      loading: "LOADING COSMODOGE", subtitle: "🚀 TAP TO FLY | DODGE AND COLLECT 🌟",
+      play: "🎮 PLAY", shop: "🛒 SHOP", rewards: "🎁 REWARDS", ranking: "🏆 RANKING",
+      tutorial: "📖 TUTORIAL", connectWallet: "🔗 CONNECT WALLET", buyCDOGE: "💎 BUY CDOGE",
+      buyBCOSMO: "🐕 BUY BCOSMO", register: "📝 REGISTER", close: "✖️ CLOSE",
+      shopTitle: "🛒 SPACE SHOP", magnet: "🧲 MAGNET", magnetDesc: "Attracts coins 1h",
+      shield: "🛡️ SHIELD", shieldDesc: "Protects 3 hits", gun: "🔫 GUN", gunDesc: "Shoot enemies",
+      upgrade: "⚡ UPGRADE WEAPON", upgradeDesc: "+Damage +Speed",
+      rewardsTitle: "🎁 REWARDS", daily: "📅 DAILY", dailyDesc: "+500 🪙 +50 💎",
+      exchange: "🏆 EXCHANGE", exchangeDesc: "100k → Tokens", exchangeBtn: "EXCHANGE", claim: "CLAIM",
+      rankingTitle: "🏆 TOP 10 GALACTIC",
+      gameOver: "💀 GAME OVER", playAgain: "🔄 PLAY AGAIN", menu: "🏠 MENU",
+      newRecord: "🌟 NEW RECORD!", continue: "🔄 CONTINUE",
+      finalScore: "🚀 FINAL SCORE", finalCoins: "🪙 COINS", finalCDOGE: "💎 CDOGE",
+      finalBCOSMO: "🐕 BCOSMO", finalCombo: "🔥 MAX COMBO",
+      namePlaceholder: "✨ GALACTIC NAME",
+      tut1Title: "Welcome, Pilot!", tut1Text: "Tap the screen or press SPACE to boost your ship and dodge obstacles.",
+      tut2Title: "Collect Treasures", tut2Text: "Gold coins 🪙, blue CDOGE 💎 and orange BCOSMO 🐕. Each has value!",
+      tut3Title: "Face the Boss!", tut3Text: "Every 500 points COSMODRAGON appears. Use the joystick to dodge and the red button to SHOOT.",
+      tut4Title: "Magic Chests", tut4Text: "Open them to get shields, magnets, multipliers and more. Good luck!",
+      prev: "◀ PREVIOUS", next: "NEXT ▶", skip: "SKIP",
+      pause: "⏸️ PAUSED", resume: "▶️ RESUMED"
+    }
+  };
+  
+  let currentLang = localStorage.getItem('cosmodogeLang') || 'es';
+  
+  function t(key) {
+    return translations[currentLang][key] || key;
+  }
+  
+  function updateLanguage() {
+    document.querySelectorAll('[data-key]').forEach(el => {
+      const key = el.getAttribute('data-key');
+      if(translations[currentLang][key]) {
+        if(el.tagName === 'INPUT') {
+          el.placeholder = translations[currentLang][key];
+        } else {
+          el.textContent = translations[currentLang][key];
+        }
+      }
+    });
+    document.querySelectorAll('[data-key-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-key-placeholder');
+      if(translations[currentLang][key]) el.placeholder = translations[currentLang][key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
+    });
+    localStorage.setItem('cosmodogeLang', currentLang);
+  }
+  
+  // ==================== FIREBASE ====================
   const firebaseConfig = {
-    apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
-    authDomain: "cosmodogelive.firebaseapp.com",
-    projectId: "cosmodogelive",
-    storageBucket: "cosmodogelive.appspot.com",
-    messagingSenderId: "648227069914",
-    appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
+    apiKey: "AIzaSyBTjGJn6S8bz6PSaMUT8YuYKEfMJB_xZW8",
+    authDomain: "cosmodogegame.firebaseapp.com",
+    projectId: "cosmodogegame",
+    storageBucket: "cosmodogegame.firebasestorage.app",
+    messagingSenderId: "269767748803",
+    appId: "1:269767748803:web:e5cfa79835bb2c68024676",
+    measurementId: "G-ZMQ0NV69PH"
   };
   
   let db = null;
-  try { 
-    firebase.initializeApp(firebaseConfig); 
-    db = firebase.firestore(); 
-  } catch(e) { 
-    console.warn("Firebase no disponible"); 
+  let app = null;
+  
+  try {
+    const { initializeApp, getFirestore, collection, doc, setDoc, getDocs, query, orderBy, limit, serverTimestamp, getAnalytics } = window.firebaseModules;
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    getAnalytics(app);
+    window.Firestore = { collection, doc, setDoc, getDocs, query, orderBy, limit, serverTimestamp };
+  } catch(e) {
+    console.warn("Firebase no disponible:", e);
+  }
+  
+  async function guardarPuntaje(nombre, puntaje, monedas) {
+    if(!nombre || !db) return;
+    try {
+      const { doc, setDoc, serverTimestamp } = window.Firestore;
+      await setDoc(doc(db, "jugadores", nombre.trim()), {
+        nombre: nombre.trim(),
+        puntaje: puntaje,
+        monedas: monedas,
+        fecha: serverTimestamp()
+      }, { merge: true });
+    } catch(e) {}
   }
   
   // ==================== RECURSOS ====================
@@ -260,7 +421,8 @@
     coin: 'moneda.mp3',
     cdoge: 'sonido-moneda-cdoge.mp3',
     bcosmo: 'sonido-moneda-bcosmo.mp3',
-    explosion: 'boom.mp3'
+    explosion: 'boom.mp3',
+    shoot: 'boom.mp3'
   };
   
   const images = {};
@@ -272,15 +434,10 @@
     return new Promise((resolve) => {
       for(const [key, url] of Object.entries(imageUrls)) {
         const img = new Image();
-        img.onload = img.onerror = function() { 
-          loadedAssets++; 
-          updateProgress(); 
-          if(loadedAssets === totalAssets) resolve(); 
-        };
+        img.onload = img.onerror = () => { loadedAssets++; updateProgress(); if(loadedAssets === totalAssets) resolve(); };
         img.src = url;
         images[key] = img;
       }
-      
       for(const [key, url] of Object.entries(audioUrls)) {
         const audio = new Audio();
         audio.preload = 'auto';
@@ -291,316 +448,213 @@
         updateProgress();
         if(loadedAssets === totalAssets) resolve();
       }
-      
       setTimeout(() => resolve(), 8000);
     });
   }
   
   function updateProgress() {
     const percent = Math.floor((loadedAssets / totalAssets) * 100);
-    const progressBar = document.getElementById('loadingProgress');
-    const loadingText = document.getElementById('loadingText');
-    if(progressBar) progressBar.style.width = percent + '%';
-    if(loadingText) loadingText.textContent = `Cargando... ${percent}%`;
+    document.getElementById('loadingProgress').style.width = percent + '%';
+    document.getElementById('loadingText').textContent = `Cargando... ${percent}%`;
   }
   
   // ==================== VARIABLES GLOBALES ====================
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   
-  let gameActive = false;
-  let isPaused = false;
-  let animationId = null;
+  let gameActive = false, isPaused = false, animationId = null;
   let score = 0, coins = 0, highScore = 0, totalCDOGE = 0, totalBCOSMO = 0;
   let timeElapsed = 0, lastScoreTime = 0, lastObs = 0;
   let isShieldActive = false, shieldHits = 0;
   let imanExpiration = 0;
   let coinMultiplier = 1, coinMultiplierEnd = 0;
-  let speedBoost = false, speedBoostEnd = 0;
   let comboCounter = 0;
-  let difficultyLevel = 1, currentWave = 1;
+  let currentWave = 1;
   let particles = [];
   let lastTimestampGameLoop = 0;
-  let cameraShake = 0;
-  let flashEffect = 0;
+  let cameraShake = 0, flashEffect = 0;
   let hasGun = false;
   let gunLevel = 1;
   let lastBossScore = 0;
+  let ammo = Infinity;
+  let lastShootTime = 0;
   
   let coinsArr = [], obsArr = [], cdogeArr = [], bcosmoArr = [];
   let agujeroNegro = null, cofreEspacial = null;
+  let bullets = [];
   
   const doge = { x: 100, y: 200, w: 48, h: 48, vy: 0 };
-  let gravity = 0.48;
+  const gravity = 0.48;
   const JUMP_POWER = -9.2;
   
   let boss = { 
-    active: false, 
-    x: 0, y: 0, w: 150, h: 150, 
+    active: false, x: 0, y: 0, w: 150, h: 150, 
     health: 1000, maxHealth: 1000, 
-    attackPattern: 'followers', 
-    attackTimer: 0, 
-    moveTimer: 0,
+    attackPattern: 'followers', attackTimer: 0, moveTimer: 0,
     followers: []
   };
   let bossProjectiles = [];
   
   let starLayers = [{ speed: 0.2, stars: [] }, { speed: 0.5, stars: [] }, { speed: 1.0, stars: [] }];
-  
   let moveLeft = false, moveRight = false, moveUp = false, moveDown = false;
   let invincibleUntil = 0;
   let audioUnlocked = false;
-  let joystickActive = false, joystickTouchId = null;
   
-  // ==================== FUNCIONES DE UTILIDAD ====================
+  // ==================== UTILIDADES ====================
   function toast(msg) {
-    const toastDiv = document.createElement('div');
-    toastDiv.className = 'toast-msg';
-    toastDiv.textContent = msg;
-    document.body.appendChild(toastDiv);
-    setTimeout(() => toastDiv.remove(), 2500);
+    const div = document.createElement('div');
+    div.className = 'toast-msg';
+    div.textContent = msg;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2500);
   }
   
   function unlockAudio() {
     if(audioUnlocked) return;
-    Object.values(sounds).forEach(snd => {
-      snd.play().then(() => {
-        snd.pause();
-        snd.currentTime = 0;
-      }).catch(() => {});
-    });
+    Object.values(sounds).forEach(s => { s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(() => {}); });
     audioUnlocked = true;
   }
   
+  let currentMusic = null;
   function playMusic(type) {
     if(!audioUnlocked) return;
-    if(window.currentMusic) {
-      window.currentMusic.pause();
-      window.currentMusic.currentTime = 0;
-    }
-    
+    if(currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; }
     if(type === 'normal') {
       const themes = [sounds.theme1, sounds.theme2, sounds.theme3].filter(s => s);
-      window.currentMusic = themes[Math.floor(Math.random() * themes.length)];
+      currentMusic = themes[Math.floor(Math.random() * themes.length)];
     } else if(type === 'boss') {
-      window.currentMusic = sounds.boss;
+      currentMusic = sounds.boss;
     }
-    
-    if(window.currentMusic) {
-      window.currentMusic.loop = true;
-      window.currentMusic.volume = 0.3;
-      window.currentMusic.play().catch(() => {});
-    }
+    if(currentMusic) { currentMusic.loop = true; currentMusic.volume = 0.3; currentMusic.play().catch(() => {}); }
   }
   
-  function stopMusic() {
-    if(window.currentMusic) {
-      window.currentMusic.pause();
-      window.currentMusic.currentTime = 0;
-      window.currentMusic = null;
-    }
-  }
+  function stopMusic() { if(currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; currentMusic = null; } }
+  function playSound(key) { const s = sounds[key]; if(s && audioUnlocked) { s.currentTime = 0; s.volume = 0.5; s.play().catch(() => {}); } }
   
-  function playSound(soundKey) {
-    const snd = sounds[soundKey];
-    if(snd && audioUnlocked) {
-      snd.currentTime = 0;
-      snd.volume = 0.5;
-      snd.play().catch(() => {});
-    }
-  }
-  
-  function resizeCanvas() { 
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight; 
-    initStars(); 
-  }
-  
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initStars(); }
   function initStars() {
     for(let layer of starLayers) {
       layer.stars = [];
-      for(let i = 0; i < 50; i++) {
-        layer.stars.push({ 
-          x: Math.random() * canvas.width, 
-          y: Math.random() * canvas.height, 
-          size: 1 + Math.random() * 2 
-        });
-      }
+      for(let i = 0; i < 50; i++) layer.stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: 1 + Math.random() * 2 });
     }
   }
   
   function addParticles(x, y, color, count = 2) {
     for(let i = 0; i < count && particles.length < 100; i++) {
-      particles.push({ 
-        x, y, 
-        vx: (Math.random() - 0.5) * 4, 
-        vy: (Math.random() - 0.5) * 4, 
-        life: 25, 
-        color, 
-        size: 2 + Math.random() * 3 
-      });
+      particles.push({ x, y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, life: 25, color, size: 2 + Math.random() * 3 });
     }
   }
   
   function checkCollision(r1, r2, padding = 5) {
-    return r1.x < r2.x + r2.w - padding &&
-           r1.x + r1.w > r2.x + padding &&
-           r1.y < r2.y + r2.h - padding &&
-           r1.y + r1.h > r2.y + padding;
+    return r1.x < r2.x + r2.w - padding && r1.x + r1.w > r2.x + padding && r1.y < r2.y + r2.h - padding && r1.y + r1.h > r2.y + padding;
   }
   
   function handleCollision() {
     if(Date.now() < invincibleUntil) return true;
-    if(isShieldActive && shieldHits > 0) { 
-      shieldHits--; 
-      if(shieldHits <= 0) isShieldActive = false; 
-      updateUI(); 
-      comboCounter = 0; 
-      invincibleUntil = Date.now() + 500;
-      toast('🛡️ ¡Escudo absorbido!');
-      return true; 
-    }
-    cameraShake = 10; 
-    flashEffect = 10;
-    document.body.classList.add('camera-shake'); 
-    setTimeout(() => document.body.classList.remove('camera-shake'), 300);
+    if(isShieldActive && shieldHits > 0) { shieldHits--; if(shieldHits <= 0) isShieldActive = false; updateUI(); comboCounter = 0; invincibleUntil = Date.now() + 500; toast('🛡️ Escudo!'); return true; }
+    cameraShake = 10; flashEffect = 10;
+    document.body.classList.add('camera-shake'); setTimeout(() => document.body.classList.remove('camera-shake'), 300);
     return false;
   }
   
   // ==================== UI ====================
   function updateUI() {
-    const scoreEl = document.getElementById('scoreDisplay');
-    const coinEl = document.getElementById('coinDisplay');
-    const highEl = document.getElementById('highScoreDisplay');
-    const cdogeEl = document.getElementById('contadorCDOGE');
-    const bcosmoEl = document.getElementById('contadorBCOSMO');
+    document.getElementById('scoreDisplay').innerHTML = `🚀 ${Math.floor(score)}`;
+    document.getElementById('coinDisplay').innerHTML = `🪙 ${Math.floor(coins)}`;
+    document.getElementById('highScoreDisplay').innerHTML = `🏆 ${highScore}`;
+    document.getElementById('contadorCDOGE').innerHTML = `💎 ${Math.floor(totalCDOGE)}`;
+    document.getElementById('contadorBCOSMO').innerHTML = `🐕 ${Math.floor(totalBCOSMO)}`;
+    
     const comboEl = document.getElementById('comboDisplay');
+    comboEl.style.display = comboCounter > 1 ? 'flex' : 'none';
+    if(comboCounter > 1) comboEl.innerHTML = `🔥 x${comboCounter}`;
+    
     const shieldEl = document.getElementById('shieldDisplay');
+    shieldEl.style.display = (isShieldActive && shieldHits > 0) ? 'flex' : 'none';
+    if(isShieldActive) shieldEl.innerHTML = `🛡️ ${shieldHits}`;
+    
     const imanEl = document.getElementById('imanContador');
-    const multEl = document.getElementById('multiplierDisplay');
-    const waveEl = document.getElementById('waveDisplay');
+    if(Date.now() < imanExpiration) { imanEl.innerHTML = `🧲 ${Math.ceil((imanExpiration - Date.now()) / 60000)}min`; imanEl.style.display = 'flex'; }
+    else imanEl.style.display = 'none';
     
-    if(scoreEl) scoreEl.innerHTML = `🚀 ${Math.floor(score)}`;
-    if(coinEl) coinEl.innerHTML = `🪙 ${Math.floor(coins)}`;
-    if(highEl) highEl.innerHTML = `🏆 ${highScore}`;
-    if(cdogeEl) cdogeEl.innerHTML = `💎 ${Math.floor(totalCDOGE)}`;
-    if(bcosmoEl) bcosmoEl.innerHTML = `🐕 ${Math.floor(totalBCOSMO)}`;
+    document.getElementById('waveDisplay').innerHTML = `🌊 ${currentWave}`;
+    document.getElementById('waveDisplay').style.display = 'flex';
     
-    if(comboEl) {
-      if(comboCounter > 1) { 
-        comboEl.style.display = 'flex'; 
-        comboEl.innerHTML = `🔥 x${comboCounter}`; 
-      } else {
-        comboEl.style.display = 'none';
-      }
-    }
-    
-    if(shieldEl) {
-      if(isShieldActive && shieldHits > 0) { 
-        shieldEl.innerHTML = `🛡️ ${shieldHits}`; 
-        shieldEl.style.display = 'flex'; 
-      } else {
-        shieldEl.style.display = 'none';
-      }
-    }
-    
-    if(imanEl) {
-      if(Date.now() < imanExpiration) { 
-        const remaining = Math.ceil((imanExpiration - Date.now()) / 60000); 
-        imanEl.innerHTML = `🧲 ${remaining}min`; 
-        imanEl.style.display = 'flex'; 
-      } else {
-        imanEl.style.display = 'none';
-      }
-    }
-    
-    if(multEl) {
-      if(Date.now() < coinMultiplierEnd) {
-        multEl.innerHTML = `✨ x${coinMultiplier}`;
-        multEl.style.display = 'flex';
-      } else {
-        multEl.style.display = 'none';
-      }
-    }
-    
-    if(waveEl) {
-      waveEl.innerHTML = `🌊 ${currentWave}`;
-      waveEl.style.display = 'flex';
-    }
+    const ammoEl = document.getElementById('ammoDisplay');
+    ammoEl.style.display = hasGun ? 'flex' : 'none';
+    ammoEl.innerHTML = `🔫 ${ammo === Infinity ? '∞' : ammo}`;
   }
   
   function updateBossUI() {
     const container = document.getElementById('bossHealthContainer');
-    const fill = document.getElementById('bossHealthFill');
-    const text = document.getElementById('bossHealthText');
-    const name = document.getElementById('bossName');
-    
-    if(!container || !fill || !text || !name) return;
-    
+    if(!container) return;
     if(boss.active) {
-      const percent = (boss.health / boss.maxHealth) * 100;
-      fill.style.width = percent + '%';
-      text.innerHTML = `❤️ ${Math.floor(boss.health)}/${boss.maxHealth}`;
-      name.innerHTML = `👾 COSMODRAGON ${boss.attackPattern === 'followers' ? 'INVOCADOR' : (boss.attackPattern === 'spread' ? 'DESTRUCTOR' : 'CAZADOR')}`;
+      document.getElementById('bossHealthFill').style.width = `${(boss.health / boss.maxHealth) * 100}%`;
+      document.getElementById('bossHealthText').innerHTML = `❤️ ${Math.floor(boss.health)}/${boss.maxHealth}`;
+      document.getElementById('bossName').innerHTML = `👾 COSMODRAGON ${boss.attackPattern === 'followers' ? 'INVOCADOR' : 'DESTRUCTOR'}`;
       container.style.display = 'block';
     } else {
       container.style.display = 'none';
     }
   }
   
+  // ==================== ARMA ====================
+  function shoot() {
+    if(!gameActive || isPaused || !hasGun) return;
+    const now = Date.now();
+    if(now - lastShootTime < 300) return;
+    lastShootTime = now;
+    
+    bullets.push({ x: doge.x + doge.w, y: doge.y + doge.h/2, w: 12, h: 6, speed: 10, damage: 10 + gunLevel * 5 });
+    playSound('shoot');
+  }
+  
+  function updateBullets() {
+    for(let i = 0; i < bullets.length; i++) {
+      bullets[i].x += bullets[i].speed;
+      
+      if(boss.active && checkCollision(bullets[i], boss, 0)) {
+        boss.health -= bullets[i].damage;
+        bullets.splice(i, 1); i--;
+        addParticles(boss.x + boss.w/2, boss.y + boss.h/2, '#ff6600', 5);
+        if(boss.health <= 0) bossDefeated();
+        continue;
+      }
+      
+      boss.followers?.forEach((f, idx) => {
+        if(checkCollision(bullets[i], f, 0)) {
+          boss.followers.splice(idx, 1);
+          bullets.splice(i, 1);
+          addParticles(f.x + f.w/2, f.y + f.h/2, '#ff0000', 8);
+        }
+      });
+      
+      if(bullets[i] && bullets[i].x > canvas.width) bullets.splice(i, 1);
+    }
+  }
+  
   // ==================== SPAWNERS ====================
   function spawnCoinGroup() {
     if(coinsArr.length >= 25) return;
-    const count = Math.floor(Math.random() * 5) + 3;
-    for(let i = 0; i < count; i++) {
-      coinsArr.push({ 
-        x: canvas.width + i * 45, 
-        y: 40 + Math.random() * (canvas.height - 100), 
-        w: 24, h: 24, 
-        s: 2 + Math.random() * 1.5 
-      });
+    for(let i = 0; i < Math.floor(Math.random() * 5) + 3; i++) {
+      coinsArr.push({ x: canvas.width + i * 45, y: 40 + Math.random() * (canvas.height - 100), w: 24, h: 24, s: 2 + Math.random() * 1.5 });
     }
   }
   
   function spawnObstacle() {
     if(obsArr.length >= 12) return;
-    const imgs = [images.obstaculo1, images.obstaculo2, images.obstaculo3, images.obstaculo4].filter(img => img && img.complete);
-    const img = imgs.length > 0 ? imgs[Math.floor(Math.random() * imgs.length)] : null;
-    obsArr.push({ 
-      x: canvas.width, 
-      y: 50 + Math.random() * (canvas.height - 120), 
-      w: 48, h: 48, 
-      sX: 2 + difficultyLevel * 0.2,
-      img: img
-    });
+    const imgs = [images.obstaculo1, images.obstaculo2, images.obstaculo3, images.obstaculo4].filter(i => i?.complete);
+    obsArr.push({ x: canvas.width, y: 50 + Math.random() * (canvas.height - 120), w: 48, h: 48, sX: 2 + currentWave * 0.1, img: imgs[Math.floor(Math.random() * imgs.length)] });
   }
   
   function spawnGroupCDOGE() {
     if(cdogeArr.length >= 8) return;
-    for(let i = 0; i < 3; i++) {
-      cdogeArr.push({ 
-        x: canvas.width + i * 80, 
-        y: 40 + Math.random() * (canvas.height - 100), 
-        w: 28, h: 28 
-      });
-    }
+    for(let i = 0; i < 3; i++) cdogeArr.push({ x: canvas.width + i * 80, y: 40 + Math.random() * (canvas.height - 100), w: 28, h: 28 });
   }
   
   function spawnGroupBCOSMO() {
     if(bcosmoArr.length >= 8) return;
-    for(let i = 0; i < 3; i++) {
-      bcosmoArr.push({ 
-        x: canvas.width + i * 80, 
-        y: 40 + Math.random() * (canvas.height - 100), 
-        w: 28, h: 28 
-      });
-    }
-  }
-  
-  function spawnAgujeroNegro() {
-    if(agujeroNegro || boss.active) return;
-    agujeroNegro = { x: canvas.width + 100, y: canvas.height/2-40, w: 80, h: 80, vel: 1.2 };
-    toast('🌀 ¡AGUJERO NEGRO!');
+    for(let i = 0; i < 3; i++) bcosmoArr.push({ x: canvas.width + i * 80, y: 40 + Math.random() * (canvas.height - 100), w: 28, h: 28 });
   }
   
   function spawnCofreEspacial() {
@@ -608,178 +662,88 @@
     cofreEspacial = { x: canvas.width, y: Math.random()*(canvas.height-100), w: 48, h: 48, vel: 1.5, recogido: false };
   }
   
-  function spawnBoss(level) {
-    if(boss.active) return;
+  function spawnBoss() {
+    if(boss.active || currentWave < 5) return;
     boss.active = true;
     boss.x = canvas.width - 200;
     boss.y = canvas.height / 2 - 75;
-    boss.w = 150; boss.h = 150;
-    boss.maxHealth = 1000 + level * 100;
+    boss.maxHealth = 1000 + currentWave * 200;
     boss.health = boss.maxHealth;
-    boss.attackPattern = ['followers', 'spread', 'homing'][Math.floor(Math.random() * 3)];
-    boss.attackTimer = 0;
-    boss.moveTimer = 0;
-    boss.followers = [];
+    boss.attackPattern = ['followers', 'spread'][Math.floor(Math.random() * 2)];
+    boss.followers = boss.attackPattern === 'followers' ? [
+      { x: boss.x - 60, y: boss.y, w: 40, h: 40, angle: 0 },
+      { x: boss.x - 60, y: boss.y + 110, w: 40, h: 40, angle: Math.PI }
+    ] : [];
     
-    if(boss.attackPattern === 'followers') {
-      for(let i = 0; i < 4; i++) {
-        boss.followers.push({
-          x: boss.x - 50 - i * 40,
-          y: boss.y + i * 40,
-          w: 40, h: 40,
-          speed: 2,
-          angle: i * Math.PI/2
-        });
-      }
-    }
-    
+    hasGun = true;
+    ammo = Infinity;
     playMusic('boss');
-    toast(`👾 ¡COSMODRAGON NIVEL ${level}! 👾`);
+    toast(`👾 ¡${t('bossAppears') || 'COSMODRAGON APARECE'}! 👾`);
     updateBossUI();
   }
   
   // ==================== COFRES ====================
-  const cofrePremios = [
-    { nombre: '🛡️ Escudo', efecto: function() { isShieldActive = true; shieldHits = 1; toast('🛡️ ¡Escudo equipado!'); }, color: '#4488ff' },
-    { nombre: '🧲 Imán', efecto: function() { imanExpiration = Date.now() + 300000; toast('🧲 ¡Imán 5min!'); }, color: '#00ffff' },
-    { nombre: '💰 x2 Monedas', efecto: function() { coinMultiplier = 2; coinMultiplierEnd = Date.now() + 60000; toast('💰 ¡Monedas x2 por 1min!'); }, color: '#ffd700' },
-    { nombre: '⚡ Velocidad', efecto: function() { speedBoost = true; speedBoostEnd = Date.now() + 10000; toast('⚡ ¡Velocidad aumentada!'); }, color: '#00ff00' },
-    { nombre: '💎 100 CDOGE', efecto: function() { totalCDOGE += 100; toast('💎 +100 CDOGE!'); }, color: '#00ffff' },
-    { nombre: '🐕 100 BCOSMO', efecto: function() { totalBCOSMO += 100; toast('🐕 +100 BCOSMO!'); }, color: '#ffa500' }
+  const premios = [
+    { efecto: () => { isShieldActive = true; shieldHits = 1; toast('🛡️ Escudo!'); }, color: '#4488ff' },
+    { efecto: () => { imanExpiration = Date.now() + 300000; toast('🧲 Imán 5min!'); }, color: '#00ffff' },
+    { efecto: () => { coinMultiplier = 2; coinMultiplierEnd = Date.now() + 60000; toast('💰 x2 Monedas!'); }, color: '#ffd700' },
+    { efecto: () => { totalCDOGE += 100; toast('💎 +100 CDOGE!'); }, color: '#00ffff' },
+    { efecto: () => { totalBCOSMO += 100; toast('🐕 +100 BCOSMO!'); }, color: '#ffa500' }
   ];
   
   function abrirCofre() {
-    const premio = cofrePremios[Math.floor(Math.random() * cofrePremios.length)];
-    premio.efecto();
-    addParticles(cofreEspacial.x + cofreEspacial.w/2, cofreEspacial.y + cofreEspacial.h/2, premio.color, 15);
+    const p = premios[Math.floor(Math.random() * premios.length)];
+    p.efecto();
+    addParticles(cofreEspacial.x + 24, cofreEspacial.y + 24, p.color, 15);
     playSound('coin');
     updateUI();
   }
   
   // ==================== LÓGICA DEL JUEGO ====================
-  function applyMagnet(obj, objX, objY, size = 16) {
+  function applyMagnet(obj, x, y, size = 16) {
     if(Date.now() < imanExpiration) {
-      const dx = (objX + size/2) - (doge.x + doge.w/2);
-      const dy = (objY + size/2) - (doge.y + doge.h/2);
+      const dx = (x + size/2) - (doge.x + doge.w/2), dy = (y + size/2) - (doge.y + doge.h/2);
       const dist = Math.hypot(dx, dy);
-      if(dist < 250) {
-        const fuerza = (250 - dist) / 250 * 0.15;
-        obj.x -= dx * fuerza;
-        obj.y -= dy * fuerza;
-      }
+      if(dist < 250) { const f = (250 - dist) / 250 * 0.15; obj.x -= dx * f; obj.y -= dy * f; }
     }
   }
   
   function updateBoss() {
     if(!boss.active || isPaused) return;
-    
     boss.moveTimer += 0.02;
     boss.y = canvas.height/2 - 75 + Math.sin(boss.moveTimer) * 120;
-    boss.y = Math.min(Math.max(boss.y, 50), canvas.height - boss.h - 50);
-    
     boss.attackTimer++;
     
     if(boss.attackPattern === 'followers') {
-      boss.followers.forEach(f => {
-        f.angle += 0.05;
-        f.x = boss.x - 60 + Math.cos(f.angle) * 80;
-        f.y = boss.y + boss.h/2 + Math.sin(f.angle) * 80;
-        
-        if(checkCollision(doge, f)) {
-          if(!handleCollision()) gameOver();
-        }
-      });
-      
-      if(boss.attackTimer > 120) {
-        boss.attackTimer = 0;
-        for(let i = -2; i <= 2; i++) {
-          bossProjectiles.push({
-            x: boss.x, y: boss.y + boss.h/2 + i * 30,
-            w: 12, h: 12,
-            speed: 6,
-            type: 'normal'
-          });
-        }
-      }
-    } else if(boss.attackPattern === 'spread') {
-      if(boss.attackTimer > 80) {
-        boss.attackTimer = 0;
-        for(let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2;
-          bossProjectiles.push({
-            x: boss.x, y: boss.y + boss.h/2,
-            w: 10, h: 10,
-            vx: Math.cos(angle) * 5,
-            vy: Math.sin(angle) * 5,
-            type: 'spread'
-          });
-        }
-      }
-    } else if(boss.attackPattern === 'homing') {
-      if(boss.attackTimer > 100) {
-        boss.attackTimer = 0;
-        const angle = Math.atan2(doge.y + doge.h/2 - (boss.y + boss.h/2), doge.x + doge.w/2 - boss.x);
-        bossProjectiles.push({
-          x: boss.x, y: boss.y + boss.h/2,
-          w: 15, h: 15,
-          vx: Math.cos(angle) * 7,
-          vy: Math.sin(angle) * 7,
-          type: 'homing'
-        });
-      }
+      boss.followers.forEach(f => { f.angle += 0.05; f.x = boss.x - 60 + Math.cos(f.angle) * 80; f.y = boss.y + f.y + Math.sin(f.angle) * 80; if(checkCollision(doge, f) && !handleCollision()) gameOver(); });
+      if(boss.attackTimer > 120) { boss.attackTimer = 0; for(let i = -2; i <= 2; i++) bossProjectiles.push({ x: boss.x, y: boss.y + boss.h/2 + i*30, w: 12, h: 12, speed: 6 }); }
+    } else {
+      if(boss.attackTimer > 80) { boss.attackTimer = 0; for(let i = 0; i < 8; i++) { const a = (i/8)*Math.PI*2; bossProjectiles.push({ x: boss.x, y: boss.y + boss.h/2, w: 10, h: 10, vx: Math.cos(a)*5, vy: Math.sin(a)*5 }); } }
     }
     
-    if(checkCollision(doge, boss)) {
-      if(!handleCollision()) gameOver();
-    }
+    if(checkCollision(doge, boss) && !handleCollision()) gameOver();
   }
   
   function updateBossProjectiles() {
     for(let i = 0; i < bossProjectiles.length; i++) {
       let p = bossProjectiles[i];
-      
-      if(p.type === 'spread' || p.type === 'homing') {
-        p.x -= p.vx || p.speed;
-        p.y += p.vy || 0;
-      } else {
-        p.x -= p.speed;
-      }
-      
-      if(p.x < 0 || p.y < 0 || p.y > canvas.height) {
-        bossProjectiles.splice(i, 1);
-        i--;
-        continue;
-      }
-      
-      if(checkCollision(doge, p)) {
-        if(!handleCollision()) gameOver();
-        bossProjectiles.splice(i, 1);
-        i--;
-      }
+      p.x -= p.vx || p.speed || 5;
+      p.y += p.vy || 0;
+      if(p.x < 0 || p.y < 0 || p.y > canvas.height) { bossProjectiles.splice(i, 1); i--; continue; }
+      if(checkCollision(doge, p) && !handleCollision()) gameOver();
     }
   }
   
   function bossDefeated() {
     boss.active = false;
     playSound('explosion');
-    
-    const coinBonus = 5000;
-    coins += coinBonus;
-    totalCDOGE += 500;
-    totalBCOSMO += 500;
-    
+    coins += 5000; totalCDOGE += 500; totalBCOSMO += 500;
     localStorage.setItem('cdogeCoins', coins);
     localStorage.setItem('cdogeTotalCoins', totalCDOGE);
     localStorage.setItem('bcosmoTotalCoins', totalBCOSMO);
-    
-    for(let i = 0; i < 30; i++) {
-      setTimeout(() => {
-        coinsArr.push({ x: boss.x + Math.random() * boss.w, y: boss.y + Math.random() * boss.h, w: 24, h: 24, s: 2 });
-      }, i * 50);
-    }
-    
-    addParticles(boss.x + boss.w/2, boss.y + boss.h/2, '#ffaa44', 40);
-    toast(`🎉 ¡JEFE DERROTADO! +${coinBonus}🪙 +500💎 +500🐕`);
+    for(let i = 0; i < 30; i++) setTimeout(() => coinsArr.push({ x: boss.x + Math.random()*150, y: boss.y + Math.random()*150, w: 24, h: 24, s: 2 }), i*50);
+    addParticles(boss.x + 75, boss.y + 75, '#ffaa44', 40);
+    toast('🎉 ¡JEFE DERROTADO! +5000🪙 +500💎 +500🐕');
     playMusic('normal');
     updateBossUI();
   }
@@ -788,39 +752,21 @@
     if(!gameActive) return;
     stopMusic();
     gameActive = false;
-    
-    const finalScoreEl = document.getElementById('finalScoreValue');
-    const finalCoinsEl = document.getElementById('finalCoinsValue');
-    const finalCDOGEEl = document.getElementById('finalCDOGEValue');
-    const finalBCOSMOEl = document.getElementById('finalBCOSMOValue');
-    const finalComboEl = document.getElementById('finalComboValue');
-    
-    if(finalScoreEl) finalScoreEl.textContent = score;
-    if(finalCoinsEl) finalCoinsEl.textContent = coins;
-    if(finalCDOGEEl) finalCDOGEEl.textContent = totalCDOGE;
-    if(finalBCOSMOEl) finalBCOSMOEl.textContent = totalBCOSMO;
-    if(finalComboEl) finalComboEl.textContent = comboCounter;
+    document.getElementById('finalScoreValue').textContent = score;
+    document.getElementById('finalCoinsValue').textContent = coins;
+    document.getElementById('finalCDOGEValue').textContent = totalCDOGE;
+    document.getElementById('finalBCOSMOValue').textContent = totalBCOSMO;
+    document.getElementById('finalComboValue').textContent = comboCounter;
     
     if(score > highScore) {
       highScore = score;
       localStorage.setItem('cdogeFloatHighScore', highScore);
-      const userName = localStorage.getItem('cosmodogeUserName');
-      if(userName && db) {
-        try { 
-          db.collection("jugadores").doc(userName.trim()).set({ 
-            nombre: userName.trim(), 
-            puntaje: score, 
-            monedas: coins, 
-            fecha: new Date() 
-          }, { merge: true }); 
-        } catch(e) {}
-      }
-      const recordScoreEl = document.getElementById('recordScore');
-      if(recordScoreEl) recordScoreEl.innerHTML = `🚀 ${score} pts`;
+      const name = localStorage.getItem('cosmodogeUserName');
+      if(name) guardarPuntaje(name, score, coins);
+      document.getElementById('recordScore').innerHTML = `🚀 ${score} pts`;
       document.getElementById('newRecordScreen').classList.remove('hidden');
       return;
     }
-    
     document.getElementById('gameOverScreen').classList.remove('hidden');
     document.getElementById('shootBtn').style.display = 'none';
     document.getElementById('menuFloatBtn').style.display = 'none';
@@ -828,683 +774,309 @@
   }
   
   function resetGame() {
-    score = 0; comboCounter = 0; timeElapsed = 0; lastScoreTime = 0;
-    currentWave = 1; difficultyLevel = 1;
+    score = 0; comboCounter = 0; timeElapsed = 0; currentWave = 1;
     coins = parseInt(localStorage.getItem('cdogeCoins')) || 0;
     totalCDOGE = parseInt(localStorage.getItem('cdogeTotalCoins')) || 0;
     totalBCOSMO = parseInt(localStorage.getItem('bcosmoTotalCoins')) || 0;
     highScore = parseInt(localStorage.getItem('cdogeFloatHighScore')) || 0;
-    
-    const savedShield = parseInt(localStorage.getItem('shieldHitsPersistent')) || 0;
-    if(savedShield > 0) { isShieldActive = true; shieldHits = savedShield; }
-    else { isShieldActive = false; shieldHits = 0; }
-    
-    coinMultiplier = 1; coinMultiplierEnd = 0;
-    speedBoost = false; speedBoostEnd = 0;
-    imanExpiration = 0;
-    
-    doge.x = 100; doge.y = canvas.height / 2 - doge.h/2; doge.vy = 0;
-    coinsArr = []; obsArr = []; cdogeArr = []; bcosmoArr = []; 
-    agujeroNegro = null; cofreEspacial = null;
-    bossProjectiles = [];
-    boss.active = false;
-    boss.followers = [];
-    isPaused = false;
-    lastBossScore = 0;
-    
-    updateBossUI();
-    updateUI();
+    isShieldActive = (shieldHits = parseInt(localStorage.getItem('shieldHitsPersistent')) || 0) > 0;
+    coinMultiplier = 1; imanExpiration = 0; hasGun = false;
+    doge.x = 100; doge.y = canvas.height/2 - 24; doge.vy = 0;
+    coinsArr = []; obsArr = []; cdogeArr = []; bcosmoArr = []; agujeroNegro = null; cofreEspacial = null;
+    bossProjectiles = []; bullets = [];
+    boss.active = false; boss.followers = [];
+    isPaused = false; lastBossScore = 0;
+    updateBossUI(); updateUI();
   }
   
   // ==================== RENDERIZADO ====================
-  function updateParallax() { 
-    for(let layer of starLayers) {
-      for(let star of layer.stars) { 
-        star.x -= layer.speed; 
-        if(star.x < 0) star.x = canvas.width; 
-      }
-    }
-  }
-  
-  function drawParallax() { 
-    for(let i = 0; i < starLayers.length; i++) {
-      for(let star of starLayers[i].stars) { 
-        ctx.fillStyle = `rgba(255,255,255,${0.3+i*0.3})`; 
-        ctx.beginPath(); 
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI*2); 
-        ctx.fill(); 
-      }
-    }
-  }
-  
-  function drawBackground() { 
+  function drawBackground() {
     drawParallax();
-    if(images.fondo2 && images.fondo2.complete) {
-      ctx.drawImage(images.fondo2, 0, 0, canvas.width, canvas.height);
-    } else {
-      ctx.fillStyle = '#0a0a2a'; 
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(images.fondo2 || { complete: false }, 0, 0, canvas.width, canvas.height);
+    if(!images.fondo2?.complete) { ctx.fillStyle = '#0a0a2a'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+  }
+  function drawParallax() {
+    for(let layer of starLayers) {
+      for(let s of layer.stars) { s.x -= layer.speed; if(s.x < 0) s.x = canvas.width; ctx.fillStyle = `rgba(255,255,255,${0.3+layer.speed*0.3})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); }
     }
   }
-  
   function drawDoge() {
-    const img = images.doge;
-    if(img && img.complete) {
-      ctx.drawImage(img, doge.x, doge.y, doge.w, doge.h);
-    } else {
-      ctx.fillStyle = '#00ffff'; 
-      ctx.fillRect(doge.x, doge.y, doge.w, doge.h);
-    }
-    
-    if(isShieldActive) { 
-      ctx.beginPath(); 
-      ctx.arc(doge.x+doge.w/2, doge.y+doge.h/2, doge.w*0.9, 0, Math.PI*2); 
-      ctx.strokeStyle = '#4488ff'; 
-      ctx.lineWidth = 3; 
-      ctx.stroke(); 
-    }
+    if(images.doge?.complete) ctx.drawImage(images.doge, doge.x, doge.y, doge.w, doge.h);
+    else { ctx.fillStyle = '#0ff'; ctx.fillRect(doge.x, doge.y, doge.w, doge.h); }
+    if(isShieldActive) { ctx.beginPath(); ctx.arc(doge.x+24, doge.y+24, 30, 0, Math.PI*2); ctx.strokeStyle = '#48f'; ctx.lineWidth = 3; ctx.stroke(); }
   }
-  
   function drawCoins() {
     for(let i = 0; i < coinsArr.length; i++) {
-      let c = coinsArr[i];
-      applyMagnet(c, c.x, c.y, 12);
-      c.x -= c.s;
-      
-      if(images.coin && images.coin.complete) {
-        ctx.drawImage(images.coin, c.x, c.y, c.w, c.h);
-      } else {
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(c.x + c.w/2, c.y + c.h/2, c.w/2, 0, Math.PI*2);
-        ctx.fill();
-      }
-      
+      let c = coinsArr[i]; applyMagnet(c, c.x, c.y, 12); c.x -= c.s;
+      if(images.coin?.complete) ctx.drawImage(images.coin, c.x, c.y, c.w, c.h);
+      else { ctx.fillStyle = '#FD0'; ctx.beginPath(); ctx.arc(c.x+12, c.y+12, 12, 0, Math.PI*2); ctx.fill(); }
       if(checkCollision(doge, c, 0)) {
-        let ganancia = 1;
-        if(Date.now() < coinMultiplierEnd) ganancia = coinMultiplier;
-        coins += ganancia;
+        coins += (Date.now() < coinMultiplierEnd ? coinMultiplier : 1);
         localStorage.setItem('cdogeCoins', coins);
-        updateUI();
-        playSound('coin');
-        addParticles(c.x + c.w/2, c.y + c.h/2, '#FFD700', 3);
-        coinsArr.splice(i, 1);
-        i--;
+        playSound('coin'); addParticles(c.x+12, c.y+12, '#FD0', 3);
+        coinsArr.splice(i, 1); i--; updateUI();
       }
     }
-    coinsArr = coinsArr.filter(c => c.x + c.w > 0);
   }
-  
   function drawCDOGE() {
     for(let i = 0; i < cdogeArr.length; i++) {
-      let m = cdogeArr[i];
-      applyMagnet(m, m.x, m.y, 14);
-      m.x -= 3.5;
-      
-      if(images.cdoge && images.cdoge.complete) {
-        ctx.drawImage(images.cdoge, m.x, m.y, m.w, m.h);
-      } else {
-        ctx.fillStyle = '#00FFFF';
-        ctx.beginPath();
-        ctx.arc(m.x + m.w/2, m.y + m.h/2, m.w/2, 0, Math.PI*2);
-        ctx.fill();
-      }
-      
+      let m = cdogeArr[i]; applyMagnet(m, m.x, m.y, 14); m.x -= 3.5;
+      if(images.cdoge?.complete) ctx.drawImage(images.cdoge, m.x, m.y, m.w, m.h);
+      else { ctx.fillStyle = '#0FF'; ctx.beginPath(); ctx.arc(m.x+14, m.y+14, 14, 0, Math.PI*2); ctx.fill(); }
       if(checkCollision(doge, m, 0)) {
-        totalCDOGE += 50;
-        localStorage.setItem('cdogeTotalCoins', totalCDOGE);
-        updateUI();
-        playSound('cdoge');
-        addParticles(m.x + m.w/2, m.y + m.h/2, '#00FFFF', 5);
-        toast('+50 CDOGE');
-        cdogeArr.splice(i, 1);
-        i--;
+        totalCDOGE += 50; localStorage.setItem('cdogeTotalCoins', totalCDOGE);
+        playSound('cdoge'); addParticles(m.x+14, m.y+14, '#0FF', 5);
+        cdogeArr.splice(i, 1); i--; toast('+50 CDOGE'); updateUI();
       }
     }
-    cdogeArr = cdogeArr.filter(m => m.x + m.w > 0);
   }
-  
   function drawBCOSMO() {
     for(let i = 0; i < bcosmoArr.length; i++) {
-      let m = bcosmoArr[i];
-      applyMagnet(m, m.x, m.y, 14);
-      m.x -= 3.5;
-      
-      if(images.bcosmo && images.bcosmo.complete) {
-        ctx.drawImage(images.bcosmo, m.x, m.y, m.w, m.h);
-      } else {
-        ctx.fillStyle = '#FFA500';
-        ctx.beginPath();
-        ctx.arc(m.x + m.w/2, m.y + m.h/2, m.w/2, 0, Math.PI*2);
-        ctx.fill();
-      }
-      
+      let m = bcosmoArr[i]; applyMagnet(m, m.x, m.y, 14); m.x -= 3.5;
+      if(images.bcosmo?.complete) ctx.drawImage(images.bcosmo, m.x, m.y, m.w, m.h);
+      else { ctx.fillStyle = '#FA0'; ctx.beginPath(); ctx.arc(m.x+14, m.y+14, 14, 0, Math.PI*2); ctx.fill(); }
       if(checkCollision(doge, m, 0)) {
-        totalBCOSMO += 50;
-        localStorage.setItem('bcosmoTotalCoins', totalBCOSMO);
-        updateUI();
-        playSound('bcosmo');
-        addParticles(m.x + m.w/2, m.y + m.h/2, '#FFA500', 5);
-        toast('+50 BCOSMO');
-        bcosmoArr.splice(i, 1);
-        i--;
+        totalBCOSMO += 50; localStorage.setItem('bcosmoTotalCoins', totalBCOSMO);
+        playSound('bcosmo'); addParticles(m.x+14, m.y+14, '#FA0', 5);
+        bcosmoArr.splice(i, 1); i--; toast('+50 BCOSMO'); updateUI();
       }
     }
-    bcosmoArr = bcosmoArr.filter(m => m.x + m.w > 0);
   }
-  
   function drawObstacles() {
     for(let o of obsArr) {
-      if(o.img && o.img.complete) {
-        ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
-      } else {
-        ctx.fillStyle = '#ff3366'; 
-        ctx.fillRect(o.x, o.y, o.w, o.h);
-      }
+      if(o.img?.complete) ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
+      else { ctx.fillStyle = '#f36'; ctx.fillRect(o.x, o.y, o.w, o.h); }
     }
   }
-  
-  function drawAgujeroNegro() {
-    if(!agujeroNegro) return;
-    agujeroNegro.x -= agujeroNegro.vel;
-    
-    if(images.agujeroNegro && images.agujeroNegro.complete) {
-      ctx.drawImage(images.agujeroNegro, agujeroNegro.x, agujeroNegro.y, agujeroNegro.w, agujeroNegro.h);
-    } else {
-      ctx.fillStyle = '#800080'; 
-      ctx.beginPath(); 
-      ctx.arc(agujeroNegro.x+agujeroNegro.w/2, agujeroNegro.y+agujeroNegro.h/2, agujeroNegro.w/2, 0, Math.PI*2); 
-      ctx.fill();
-    }
-    
-    if(checkCollision(doge, agujeroNegro, 10)) {
-      toast('🌀 ¡Absorbido por el agujero negro!');
-      gameOver();
-    }
-    
-    if(agujeroNegro.x + agujeroNegro.w < 0) agujeroNegro = null;
-  }
-  
   function drawCofreEspacial() {
     if(!cofreEspacial) return;
     cofreEspacial.x -= cofreEspacial.vel;
-    
-    if(images.cofre && images.cofre.complete) {
-      ctx.drawImage(images.cofre, cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
-    } else {
-      ctx.fillStyle = '#ffaa44'; 
-      ctx.fillRect(cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
-    }
-    
-    if(!cofreEspacial.recogido && checkCollision(doge, cofreEspacial, 0)) {
-      cofreEspacial.recogido = true;
-      abrirCofre();
-      setTimeout(() => { cofreEspacial = null; }, 100);
-    }
-    
-    if(cofreEspacial && cofreEspacial.x + cofreEspacial.w < 0) cofreEspacial = null;
+    if(images.cofre?.complete) ctx.drawImage(images.cofre, cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h);
+    else { ctx.fillStyle = '#FA4'; ctx.fillRect(cofreEspacial.x, cofreEspacial.y, cofreEspacial.w, cofreEspacial.h); }
+    if(!cofreEspacial.recogido && checkCollision(doge, cofreEspacial, 0)) { cofreEspacial.recogido = true; abrirCofre(); setTimeout(() => cofreEspacial = null, 100); }
+    if(cofreEspacial.x + 48 < 0) cofreEspacial = null;
   }
-  
   function drawBoss() {
     if(!boss.active) return;
-    
-    if(images.boss && images.boss.complete) {
+    ctx.save();
+    ctx.shadowColor = '#f0f'; ctx.shadowBlur = 30;
+    if(images.boss?.complete) {
+      ctx.filter = 'brightness(1.3) drop-shadow(0 0 20px #f0f)';
       ctx.drawImage(images.boss, boss.x, boss.y, boss.w, boss.h);
-    } else {
-      ctx.fillStyle = '#ff00ff';
-      ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-    }
-    
-    boss.followers.forEach(f => {
-      ctx.fillStyle = '#ff6600';
-      ctx.fillRect(f.x, f.y, f.w, f.h);
-    });
-    
-    bossProjectiles.forEach(p => {
-      ctx.fillStyle = p.type === 'homing' ? '#ff0000' : '#ff6600';
-      ctx.fillRect(p.x, p.y, p.w, p.h);
-    });
+    } else { ctx.fillStyle = '#f0f'; ctx.fillRect(boss.x, boss.y, boss.w, boss.h); }
+    ctx.restore();
+    boss.followers?.forEach(f => { ctx.fillStyle = '#f60'; ctx.fillRect(f.x, f.y, f.w, f.h); });
+    bossProjectiles.forEach(p => { ctx.fillStyle = '#f00'; ctx.fillRect(p.x, p.y, p.w, p.h); });
   }
-  
+  function drawBullets() {
+    bullets.forEach(b => { ctx.fillStyle = '#ff0'; ctx.fillRect(b.x, b.y, b.w, b.h); });
+  }
   function updateParticles() {
-    for(let i = particles.length-1; i >= 0; i--) { 
-      particles[i].x += particles[i].vx; 
-      particles[i].y += particles[i].vy; 
-      particles[i].life--; 
-      if(particles[i].life <= 0) particles.splice(i, 1); 
-    }
+    for(let i = particles.length-1; i >= 0; i--) { particles[i].x += particles[i].vx; particles[i].y += particles[i].vy; particles[i].life--; if(particles[i].life <= 0) particles.splice(i, 1); }
+  }
+  function drawParticles() {
+    particles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.life/25), 0, Math.PI*2); ctx.fill(); });
   }
   
-  function drawParticles() { 
-    for(let p of particles) { 
-      ctx.fillStyle = p.color; 
-      ctx.beginPath(); 
-      ctx.arc(p.x, p.y, p.size * (p.life/25), 0, Math.PI*2); 
-      ctx.fill(); 
-    } 
-  }
-  
-  function updateMovement() {
-    if(isPaused) return;
-    
-    let speed = 5;
-    if(speedBoost && Date.now() < speedBoostEnd) speed = 8;
-    
-    if(moveLeft && doge.x > 20) doge.x -= speed;
-    if(moveRight && doge.x < canvas.width - doge.w - 20) doge.x += speed;
-    if(moveUp && doge.y > 20) doge.y -= speed;
-    if(moveDown && doge.y < canvas.height - doge.h - 20) doge.y += speed;
-  }
-  
+  // ==================== GAME LOOP ====================
   function updateGame(dt) {
     if(!gameActive || isPaused) return;
     
-    updateMovement();
+    if(moveLeft) doge.x = Math.max(20, doge.x - 5);
+    if(moveRight) doge.x = Math.min(canvas.width - 68, doge.x + 5);
+    if(moveUp) doge.y = Math.max(20, doge.y - 5);
+    if(moveDown) doge.y = Math.min(canvas.height - 68, doge.y + 5);
     
-    doge.vy += gravity * (dt / 16);
-    doge.y += doge.vy * (dt / 16);
-    if(doge.y + doge.h >= canvas.height || doge.y <= 0) { 
-      if(!handleCollision()) gameOver(); 
-      doge.y = Math.min(Math.max(doge.y, 0), canvas.height - doge.h); 
-      doge.vy = 0; 
-    }
+    doge.vy += gravity * (dt/16); doge.y += doge.vy * (dt/16);
+    if(doge.y + 48 >= canvas.height || doge.y <= 0) { if(!handleCollision()) gameOver(); doge.y = Math.min(Math.max(doge.y, 0), canvas.height - 48); doge.vy = 0; }
     
     timeElapsed += dt;
-    const sec = timeElapsed / 1000;
+    if(timeElapsed/1000 - lastScoreTime >= 2) { score += comboCounter >= 10 ? 3 : (comboCounter >= 5 ? 2 : 1); lastScoreTime = timeElapsed/1000; }
     
-    if(sec - lastScoreTime >= 2) { 
-      let addScore = comboCounter >= 10 ? 3 : (comboCounter >= 5 ? 2 : 1);
-      score += addScore; 
-      lastScoreTime = sec; 
-    }
+    if(!boss.active && score >= 500 && score > lastBossScore) { lastBossScore = score; spawnBoss(); }
     
-    if(!boss.active && score > 0 && score % 500 < 10 && score > lastBossScore) {
-      lastBossScore = score;
-      spawnBoss(Math.floor(score / 500));
-    }
-    
-    const newWave = Math.floor(score / 300) + 1;
-    if(newWave > currentWave) { 
-      currentWave = newWave; 
-      if(currentWave % 5 === 0 && !agujeroNegro && !boss.active) spawnAgujeroNegro();
-    }
-    
-    difficultyLevel = Math.min(5, Math.floor(currentWave / 2) + 1);
+    currentWave = Math.floor(score / 300) + 1;
     
     if(!boss.active) {
       if(coinsArr.length < 20 && Math.random() < 0.03) spawnCoinGroup();
       if(cdogeArr.length < 6 && Math.random() < 0.01) spawnGroupCDOGE();
       if(bcosmoArr.length < 6 && Math.random() < 0.01) spawnGroupBCOSMO();
-      
-      const obsDelay = Math.max(600, 1500 - difficultyLevel * 100);
-      if(obsArr.length < 10 && Date.now() - lastObs > obsDelay) { 
-        spawnObstacle(); 
-        lastObs = Date.now(); 
-        if(comboCounter < 20) comboCounter++;
-      }
-      
-      if(!cofreEspacial && sec > 45 && Math.random() < 0.002) spawnCofreEspacial();
+      if(obsArr.length < 10 && Date.now() - lastObs > Math.max(600, 1500 - currentWave*50)) { spawnObstacle(); lastObs = Date.now(); if(comboCounter < 20) comboCounter++; }
+      if(!cofreEspacial && timeElapsed/1000 > 45 && Math.random() < 0.002) spawnCofreEspacial();
     }
     
-    for(let i = 0; i < obsArr.length; i++) {
-      let o = obsArr[i];
-      o.x -= o.sX;
-      
-      if(checkCollision(doge, o, 5)) {
-        if(!handleCollision()) gameOver();
-        obsArr.splice(i, 1);
-        i--;
-      }
-    }
+    for(let i = 0; i < obsArr.length; i++) { obsArr[i].x -= obsArr[i].sX; if(checkCollision(doge, obsArr[i], 5) && !handleCollision()) gameOver(); }
     obsArr = obsArr.filter(o => o.x + o.w > 0);
     
+    updateBullets();
     updateBoss();
     updateBossProjectiles();
     updateParticles();
-    updateParallax();
     
     if(Date.now() > coinMultiplierEnd) coinMultiplier = 1;
-    if(Date.now() > speedBoostEnd) speedBoost = false;
-    
-    if(flashEffect > 0) {
-      const flashScreen = document.getElementById('flashScreen');
-      if(flashScreen) {
-        flashScreen.style.opacity = Math.min(0.5, flashEffect / 10);
-        flashEffect--;
-        if(flashEffect <= 0) flashScreen.style.opacity = 0;
-      }
-    }
+    if(flashEffect > 0) { document.getElementById('flashScreen').style.opacity = Math.min(0.5, flashEffect/10); flashEffect--; if(flashEffect <= 0) document.getElementById('flashScreen').style.opacity = 0; }
     
     updateUI();
   }
   
   function drawFrame() {
-    if(cameraShake > 0) { 
-      ctx.save(); 
-      ctx.translate((Math.random()-0.5)*cameraShake, (Math.random()-0.5)*cameraShake); 
-      cameraShake--; 
-    }
-    
-    drawBackground();
-    drawCoins();
-    drawCDOGE();
-    drawBCOSMO();
-    drawObstacles();
-    drawAgujeroNegro();
-    drawCofreEspacial();
-    drawBoss();
-    drawDoge();
-    drawParticles();
-    
+    if(cameraShake > 0) { ctx.save(); ctx.translate((Math.random()-0.5)*cameraShake, (Math.random()-0.5)*cameraShake); cameraShake--; }
+    drawBackground(); drawCoins(); drawCDOGE(); drawBCOSMO(); drawObstacles(); drawCofreEspacial(); drawBoss(); drawDoge(); drawBullets(); drawParticles();
     if(cameraShake > 0) ctx.restore();
   }
   
-  function gameLoop(currentTimestamp) {
+  function gameLoop(ts) {
     try {
-      if(!gameActive) { 
-        drawFrame(); 
-        animationId = requestAnimationFrame(gameLoop); 
-        return; 
-      }
-      if(lastTimestampGameLoop === 0) { 
-        lastTimestampGameLoop = currentTimestamp; 
-        animationId = requestAnimationFrame(gameLoop); 
-        return; 
-      }
-      const dt = Math.min(33, currentTimestamp - lastTimestampGameLoop);
-      if(dt > 0) updateGame(dt);
+      if(!gameActive) { drawFrame(); animationId = requestAnimationFrame(gameLoop); return; }
+      if(lastTimestampGameLoop === 0) { lastTimestampGameLoop = ts; animationId = requestAnimationFrame(gameLoop); return; }
+      updateGame(Math.min(33, ts - lastTimestampGameLoop));
       drawFrame();
-      lastTimestampGameLoop = currentTimestamp;
+      lastTimestampGameLoop = ts;
       animationId = requestAnimationFrame(gameLoop);
-    } catch(error) { 
-      console.error('Game loop error:', error); 
-      setTimeout(() => { animationId = requestAnimationFrame(gameLoop); }, 100); 
-    }
+    } catch(e) { console.error(e); setTimeout(() => animationId = requestAnimationFrame(gameLoop), 100); }
   }
   
   function togglePause() {
     if(!gameActive) return;
     isPaused = !isPaused;
-    const pauseBtn = document.getElementById('pauseBtn');
-    if(pauseBtn) pauseBtn.innerHTML = isPaused ? '▶️' : '⏸️';
-    toast(isPaused ? '⏸️ Pausa' : '▶️ Continuar');
+    document.getElementById('pauseBtn').innerHTML = isPaused ? '▶️' : '⏸️';
+    toast(t(isPaused ? 'pause' : 'resume'));
   }
   
-  function startGame() { 
-    resetGame(); 
-    gameActive = true; 
-    isPaused = false;
-    lastTimestampGameLoop = 0; 
-    lastBossScore = 0;
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
-    document.getElementById('shootBtn').style.display = 'flex'; 
+  function startGame() {
+    resetGame(); gameActive = true; isPaused = false; lastTimestampGameLoop = 0; lastBossScore = 0;
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById('shootBtn').style.display = 'flex';
     document.getElementById('menuFloatBtn').style.display = 'flex';
     document.getElementById('pauseBtn').style.display = 'flex';
     playMusic('normal');
   }
   
-  function stopGame() { 
-    gameActive = false; 
-    stopMusic();
-    document.getElementById('shootBtn').style.display = 'none'; 
+  function stopGame() {
+    gameActive = false; stopMusic();
+    document.getElementById('shootBtn').style.display = 'none';
     document.getElementById('menuFloatBtn').style.display = 'none';
     document.getElementById('pauseBtn').style.display = 'none';
   }
   
-  // ==================== JOYSTICK ====================
-  function initJoystick() {
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    if(!isMobile) return;
-    
-    const container = document.getElementById('joystickContainer');
-    const thumb = document.getElementById('joystickThumb');
-    if(!container || !thumb) return;
-    
-    canvas.addEventListener('touchstart', (e) => {
-      if(!boss.active || isPaused) return;
-      e.preventDefault();
-      const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      const touchX = touch.clientX - rect.left;
-      
-      if(touchX < canvas.width / 2) {
-        joystickActive = true;
-        container.style.display = 'block';
-        container.style.left = (touch.clientX - 60) + 'px';
-        container.style.top = (touch.clientY - 60) + 'px';
-        joystickTouchId = touch.identifier;
-      }
-    });
-    
-    canvas.addEventListener('touchmove', (e) => {
-      if(!joystickActive) return;
-      e.preventDefault();
-      
-      for(let i = 0; i < e.touches.length; i++) {
-        const touch = e.touches[i];
-        if(touch.identifier === joystickTouchId) {
-          const dx = touch.clientX - parseFloat(container.style.left) - 60;
-          const dy = touch.clientY - parseFloat(container.style.top) - 60;
-          const distance = Math.min(40, Math.hypot(dx, dy));
-          const angle = Math.atan2(dy, dx);
-          
-          thumb.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
-          
-          const moveX = Math.cos(angle) * (distance / 40) * 5;
-          const moveY = Math.sin(angle) * (distance / 40) * 5;
-          
-          doge.x = Math.min(Math.max(doge.x + moveX, 20), canvas.width - doge.w - 20);
-          doge.y = Math.min(Math.max(doge.y + moveY, 20), canvas.height - doge.h - 20);
-          break;
-        }
-      }
-    });
-    
-    canvas.addEventListener('touchend', () => {
-      joystickActive = false;
-      container.style.display = 'none';
-      thumb.style.transform = 'translate(0px, 0px)';
-    });
+  // ==================== TUTORIAL ====================
+  let tutorialStep = 1;
+  function showTutorial() {
+    tutorialStep = 1;
+    updateTutorialStep();
+    document.getElementById('tutorialScreen').classList.remove('hidden');
   }
-  
-  // ==================== WALLET ====================
-  function mostrarSelectorWallet() {
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:10000;';
-    modal.innerHTML = '<div style="background:#111;padding:20px;border-radius:30px;border:2px solid #0ff;"><h2 style="color:#0ff;">Conectar Wallet</h2><button id="mmBtn" style="margin:8px;padding:12px 20px;background:#f6851b;border:none;border-radius:25px;">🦊 MetaMask</button><button id="closeModal" style="margin:8px;padding:12px 20px;background:#333;">Cerrar</button></div>';
-    document.body.appendChild(modal);
-    document.getElementById('mmBtn').onclick = async () => {
-      if(window.ethereum) {
-        try {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          await provider.send('eth_requestAccounts', []);
-          const address = await provider.getSigner().getAddress();
-          toast(`✅ Conectado: ${address.slice(0,6)}...`);
-        } catch(e) { toast('Error al conectar'); }
-      } else {
-        toast('Instala MetaMask');
-      }
-      modal.remove();
-    };
-    document.getElementById('closeModal').onclick = () => modal.remove();
+  function updateTutorialStep() {
+    document.querySelectorAll('.tutorial-step').forEach((s, i) => s.classList.toggle('hidden', i + 1 !== tutorialStep));
+    document.querySelectorAll('.tutorial-dot').forEach((d, i) => d.classList.toggle('active', i + 1 === tutorialStep));
+    document.getElementById('tutorialPrev').disabled = tutorialStep === 1;
+    document.getElementById('tutorialNext').textContent = tutorialStep === 4 ? t('finish') || 'FINALIZAR' : t('next');
   }
   
   // ==================== INICIALIZACIÓN ====================
   async function initGame() {
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    
-    await preloadAssets();
-    initStars();
-    initJoystick();
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+    await preloadAssets(); initStars();
     
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
     document.body.addEventListener('click', unlockAudio, { once: true });
     
     const savedName = localStorage.getItem('cosmodogeUserName');
     if(savedName) {
-      const userNameDisplay = document.getElementById('userNameDisplay');
-      const userGreeting = document.getElementById('userGreeting');
-      const registerName = document.getElementById('registerName');
-      const registerBtn = document.getElementById('registerBtn');
-      
-      if(userNameDisplay) { userNameDisplay.innerHTML = `✨ ${savedName}`; userNameDisplay.style.display = 'block'; }
-      if(userGreeting) { userGreeting.innerHTML = `✨ ¡${savedName}! ✨`; userGreeting.style.display = 'block'; }
-      if(registerName) registerName.style.display = 'none';
-      if(registerBtn) registerBtn.style.display = 'none';
+      document.getElementById('userNameDisplay').innerHTML = `✨ ${savedName}`;
+      document.getElementById('userNameDisplay').style.display = 'block';
+      document.getElementById('userGreeting').innerHTML = `✨ ¡${savedName}! ✨`;
+      document.getElementById('userGreeting').style.display = 'block';
+      document.getElementById('registerName').style.display = 'none';
+      document.getElementById('registerBtn').style.display = 'none';
     }
     
     // Event listeners
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.onclick = () => { currentLang = btn.dataset.lang; updateLanguage(); });
+    updateLanguage();
+    
     document.getElementById('playBtn').onclick = startGame;
     document.getElementById('shopBtn').onclick = () => document.getElementById('shopPanel').style.display = 'block';
     document.getElementById('rewardsBtn').onclick = () => document.getElementById('rewardsPanel').style.display = 'block';
     document.getElementById('rankingBtn').onclick = async () => {
-      const container = document.getElementById('rankingList');
-      if(container) container.innerHTML = '<p>🔄 Cargando...</p>';
+      const c = document.getElementById('rankingList'); c.innerHTML = '🔄 Cargando...';
       if(db) {
         try {
-          const snapshot = await db.collection("jugadores").orderBy("puntaje", "desc").limit(10).get();
-          let html = '', i = 0;
-          snapshot.forEach(doc => { 
-            const d = doc.data(); 
-            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`; 
-            html += `<div class="ranking-item"><span>${medal} ${d.nombre}</span><span>🚀 ${d.puntaje}</span></div>`; 
-            i++; 
-          });
-          if(container) container.innerHTML = html || '<p>✨ Sin puntajes</p>';
-        } catch(e) { if(container) container.innerHTML = '<p>⚠️ Error</p>'; }
-      } else {
-        if(container) container.innerHTML = '<p>⚠️ Firebase no disponible</p>';
-      }
+          const { collection, getDocs, query, orderBy, limit } = window.Firestore;
+          const snap = await getDocs(query(collection(db, "jugadores"), orderBy("puntaje", "desc"), limit(10)));
+          let h = '', i = 0;
+          snap.forEach(d => { const m = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`; h += `<div class="ranking-item"><span>${m} ${d.data().nombre}</span><span>🚀 ${d.data().puntaje}</span></div>`; i++; });
+          c.innerHTML = h || '<p>✨ Sin puntajes</p>';
+        } catch(e) { c.innerHTML = '<p>⚠️ Error</p>'; }
+      } else c.innerHTML = '<p>⚠️ Firebase no disponible</p>';
       document.getElementById('rankingPanel').style.display = 'block';
     };
-    document.getElementById('walletBtn').onclick = mostrarSelectorWallet;
+    document.getElementById('tutorialBtn').onclick = showTutorial;
+    document.getElementById('walletBtn').onclick = () => {
+      const m = document.createElement('div'); m.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:10000;';
+      m.innerHTML = '<div style="background:#111;padding:20px;border-radius:30px;border:2px solid #0ff;"><h2 style="color:#0ff;">Conectar Wallet</h2><button id="mmBtn" style="margin:8px;padding:12px 20px;background:#f6851b;border:none;border-radius:25px;">🦊 MetaMask</button><button id="closeModal" style="margin:8px;padding:12px 20px;background:#333;">Cerrar</button></div>';
+      document.body.appendChild(m);
+      document.getElementById('mmBtn').onclick = async () => { if(window.ethereum) { try { await new ethers.providers.Web3Provider(window.ethereum).send('eth_requestAccounts', []); toast('✅ Conectado!'); } catch(e) { toast('Error'); } } else toast('Instala MetaMask'); m.remove(); };
+      document.getElementById('closeModal').onclick = () => m.remove();
+    };
+    document.getElementById('buyCDOGEBtn').onclick = () => window.open('https://pancakeswap.finance/swap?outputCurrency=0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A', '_blank');
+    document.getElementById('buyBCOSMOBtn').onclick = () => window.open('https://pump.fun/coin/2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump', '_blank');
     
     document.getElementById('closeShopBtn').onclick = () => document.getElementById('shopPanel').style.display = 'none';
     document.getElementById('closeRewardsBtn').onclick = () => document.getElementById('rewardsPanel').style.display = 'none';
     document.getElementById('closeRankingBtn').onclick = () => document.getElementById('rankingPanel').style.display = 'none';
     
     document.getElementById('restartBtn').onclick = startGame;
-    document.getElementById('menuFromGameOver').onclick = () => { 
-      document.getElementById('gameOverScreen').classList.add('hidden'); 
-      document.getElementById('mainMenu').classList.remove('hidden'); 
-      stopGame(); 
-    };
-    document.getElementById('menuFloatBtn').onclick = () => { 
-      stopGame(); 
-      document.getElementById('mainMenu').classList.remove('hidden'); 
-    };
+    document.getElementById('menuFromGameOver').onclick = () => { document.getElementById('gameOverScreen').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden'); stopGame(); };
+    document.getElementById('menuFloatBtn').onclick = () => { stopGame(); document.getElementById('mainMenu').classList.remove('hidden'); };
     document.getElementById('pauseBtn').onclick = togglePause;
+    document.getElementById('shootBtn').onclick = () => shoot();
     
-    document.getElementById('continueAfterRecord').onclick = () => { 
-      document.getElementById('newRecordScreen').classList.add('hidden'); 
-      startGame(); 
-    };
-    document.getElementById('menuAfterRecord').onclick = () => { 
-      document.getElementById('newRecordScreen').classList.add('hidden'); 
-      document.getElementById('mainMenu').classList.remove('hidden'); 
-    };
+    document.getElementById('continueAfterRecord').onclick = () => { document.getElementById('newRecordScreen').classList.add('hidden'); startGame(); };
+    document.getElementById('menuAfterRecord').onclick = () => { document.getElementById('newRecordScreen').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden'); };
     
-    document.getElementById('registerBtn').onclick = () => { 
-      const name = document.getElementById('registerName').value.trim(); 
-      if(name && name.length >= 3) { 
-        localStorage.setItem('cosmodogeUserName', name); 
-        document.getElementById('userNameDisplay').innerHTML = `✨ ${name}`; 
-        document.getElementById('userNameDisplay').style.display = 'block'; 
-        document.getElementById('userGreeting').innerHTML = `✨ ¡${name}! ✨`; 
-        document.getElementById('userGreeting').style.display = 'block'; 
-        document.getElementById('registerName').style.display = 'none'; 
-        document.getElementById('registerBtn').style.display = 'none'; 
-        toast(`✅ ¡Bienvenido ${name}!`); 
-      } else { 
-        toast('✨ Mínimo 3 caracteres'); 
-      } 
+    document.getElementById('registerBtn').onclick = () => {
+      const n = document.getElementById('registerName').value.trim();
+      if(n.length >= 3) { localStorage.setItem('cosmodogeUserName', n); document.getElementById('userNameDisplay').innerHTML = `✨ ${n}`; document.getElementById('userNameDisplay').style.display = 'block'; document.getElementById('userGreeting').innerHTML = `✨ ¡${n}! ✨`; document.getElementById('userGreeting').style.display = 'block'; document.getElementById('registerName').style.display = 'none'; document.getElementById('registerBtn').style.display = 'none'; toast(`✅ ¡Bienvenido ${n}!`); }
+      else toast('✨ Mínimo 3 caracteres');
     };
     
-    document.getElementById('buyMagnet').onclick = () => {
-      if(coins >= 1000) { 
-        coins -= 1000; 
-        imanExpiration = Date.now() + 3600000; 
-        localStorage.setItem('cdogeCoins', coins); 
-        updateUI(); 
-        toast('🧲 Imán 1h!'); 
-      } else { 
-        toast('💰 1,000 monedas'); 
-      }
-    };
-    
-    document.getElementById('buyShield').onclick = () => {
-      if(coins >= 1500) { 
-        coins -= 1500; 
-        isShieldActive = true; 
-        shieldHits = 3; 
-        localStorage.setItem('cdogeCoins', coins); 
-        localStorage.setItem('shieldHitsPersistent', shieldHits); 
-        updateUI(); 
-        toast('🛡️ Escudo +3!'); 
-      } else { 
-        toast('💰 1,500 monedas'); 
-      }
-    };
-    
-    document.getElementById('buyGun').onclick = () => {
-      if(coins >= 2000) { 
-        coins -= 2000; 
-        hasGun = true; 
-        localStorage.setItem('cdogeCoins', coins); 
-        localStorage.setItem('hasGun', 'true'); 
-        updateUI(); 
-        toast('🔫 ¡Pistola!'); 
-      } else { 
-        toast('💰 2,000 monedas'); 
-      }
-    };
-    
+    document.getElementById('buyMagnet').onclick = () => { if(coins>=1000){ coins-=1000; imanExpiration=Date.now()+3600000; localStorage.setItem('cdogeCoins',coins); updateUI(); toast('🧲 Imán 1h!'); } else toast('💰 1,000 monedas'); };
+    document.getElementById('buyShield').onclick = () => { if(coins>=1500){ coins-=1500; isShieldActive=true; shieldHits=3; localStorage.setItem('cdogeCoins',coins); localStorage.setItem('shieldHitsPersistent',shieldHits); updateUI(); toast('🛡️ Escudo +3!'); } else toast('💰 1,500 monedas'); };
+    document.getElementById('buyGun').onclick = () => { if(coins>=2000){ coins-=2000; hasGun=true; localStorage.setItem('cdogeCoins',coins); localStorage.setItem('hasGun','true'); updateUI(); toast('🔫 Pistola!'); } else toast('💰 2,000 monedas'); };
     document.getElementById('dailyRewardBtn').onclick = () => {
-      const last = localStorage.getItem('lastDaily');
-      const today = new Date().toDateString();
-      if(last === today) { 
-        toast('✨ Ya reclamaste'); 
-        return; 
-      }
-      coins += 500; 
-      totalCDOGE += 50;
-      localStorage.setItem('cdogeCoins', coins); 
-      localStorage.setItem('cdogeTotalCoins', totalCDOGE);
-      localStorage.setItem('lastDaily', today); 
-      updateUI(); 
-      toast('🎁 +500🪙 +50💎');
+      const last = localStorage.getItem('lastDaily'), today = new Date().toDateString();
+      if(last === today) { toast('✨ Ya reclamaste'); return; }
+      coins+=500; totalCDOGE+=50; localStorage.setItem('cdogeCoins',coins); localStorage.setItem('cdogeTotalCoins',totalCDOGE); localStorage.setItem('lastDaily',today); updateUI(); toast('🎁 +500🪙 +50💎');
     };
     
-    document.addEventListener('keydown', (e) => {
+    // Tutorial navigation
+    document.getElementById('tutorialPrev').onclick = () => { if(tutorialStep > 1) { tutorialStep--; updateTutorialStep(); } };
+    document.getElementById('tutorialNext').onclick = () => {
+      if(tutorialStep < 4) { tutorialStep++; updateTutorialStep(); }
+      else { document.getElementById('tutorialScreen').classList.add('hidden'); localStorage.setItem('tutorialShown', 'true'); }
+    };
+    document.getElementById('tutorialSkip').onclick = () => { document.getElementById('tutorialScreen').classList.add('hidden'); localStorage.setItem('tutorialShown', 'true'); };
+    
+    document.addEventListener('keydown', e => {
       if(e.code === 'ArrowLeft') moveLeft = true;
       if(e.code === 'ArrowRight') moveRight = true;
       if(e.code === 'ArrowUp') moveUp = true;
       if(e.code === 'ArrowDown') moveDown = true;
-      if(e.code === 'Space' && gameActive) { 
-        doge.vy = JUMP_POWER; 
-        playSound('jump'); 
-        addParticles(doge.x+doge.w/2, doge.y+doge.h, '#00ffff', 3); 
-        e.preventDefault();
-      }
+      if(e.code === 'Space' && gameActive) { e.preventDefault(); doge.vy = JUMP_POWER; playSound('jump'); addParticles(doge.x+24, doge.y+48, '#0ff', 3); }
       if(e.code === 'Escape') togglePause();
     });
-    
-    document.addEventListener('keyup', (e) => {
+    document.addEventListener('keyup', e => {
       if(e.code === 'ArrowLeft') moveLeft = false;
       if(e.code === 'ArrowRight') moveRight = false;
       if(e.code === 'ArrowUp') moveUp = false;
       if(e.code === 'ArrowDown') moveDown = false;
     });
     
-    canvas.addEventListener('touchstart', (e) => { 
-      if(gameActive && !isPaused) { 
-        doge.vy = JUMP_POWER; 
-        playSound('jump'); 
-        addParticles(doge.x+doge.w/2, doge.y+doge.h, '#00ffff', 3); 
-        e.preventDefault();
-      } 
-    });
+    canvas.addEventListener('touchstart', e => { if(gameActive && !isPaused) { e.preventDefault(); doge.vy = JUMP_POWER; playSound('jump'); addParticles(doge.x+24, doge.y+48, '#0ff', 3); } });
+    
+    // Mostrar tutorial si es primera vez
+    if(!localStorage.getItem('tutorialShown')) setTimeout(showTutorial, 500);
     
     document.getElementById('loadingScreen').classList.add('hidden');
     document.getElementById('mainMenu').classList.remove('hidden');
