@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Juego Espacial con Tokens</title>
+  <title>CosmoDoge 🚀 | Edición Definitiva</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   
@@ -235,7 +235,7 @@
 </div>
 
 <script>
-// ==================== TRADUCCIONES COMPLETAS ====================
+// ==================== TRADUCCIONES ====================
 const translations = {
   es: {
     loading: "CARGANDO COSMODOGE", subtitle: "🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟",
@@ -373,22 +373,30 @@ function initSounds() {
     musicNormal2 = new Audio('tema-cosmodoge2.wav');
     musicBoss = new Audio('tema-de-cosmodoge-jefe.wav');
     
-    if(musicNormal) { musicNormal.loop = true; musicNormal.volume = 0.3; musicNormal.load(); }
-    if(musicNormal2) { musicNormal2.loop = true; musicNormal2.volume = 0.3; musicNormal2.load(); }
-    if(musicBoss) { musicBoss.loop = true; musicBoss.volume = 0.4; musicBoss.load(); }
+    if(musicNormal) { musicNormal.loop = true; musicNormal.volume = 0.3; }
+    if(musicNormal2) { musicNormal2.loop = true; musicNormal2.volume = 0.3; }
+    if(musicBoss) { musicBoss.loop = true; musicBoss.volume = 0.4; }
   } catch(e) { console.warn("⚠️ Error cargando sonidos:", e); }
 }
 
 function playNormalMusic() {
   if(musicBoss) musicBoss.pause();
-  if(musicNormal) { musicNormal.currentTime = 0; musicNormal.play().catch(()=>{}); }
-  else if(musicNormal2) { musicNormal2.currentTime = 0; musicNormal2.play().catch(()=>{}); }
+  if(musicNormal && musicNormal.src) {
+    musicNormal.currentTime = 0;
+    musicNormal.play().catch(e => console.warn("No se pudo reproducir música normal"));
+  } else if(musicNormal2 && musicNormal2.src) {
+    musicNormal2.currentTime = 0;
+    musicNormal2.play().catch(e => console.warn("No se pudo reproducir música normal 2"));
+  }
 }
 
 function playBossMusic() {
   if(musicNormal) musicNormal.pause();
   if(musicNormal2) musicNormal2.pause();
-  if(musicBoss) { musicBoss.currentTime = 0; musicBoss.play().catch(()=>{}); }
+  if(musicBoss && musicBoss.src) {
+    musicBoss.currentTime = 0;
+    musicBoss.play().catch(e => console.warn("No se pudo reproducir música boss"));
+  }
 }
 
 function stopMusic() {
@@ -417,7 +425,7 @@ function createBeepSound(freq, dur) {
   } catch(e) {}
 }
 
-// ==================== WALLET MANAGER COMPLETO ====================
+// ==================== WALLET MANAGER ====================
 const CDOGE_ADDRESS = '0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A';
 const CDOGE_ABI = ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)'];
 
@@ -984,18 +992,43 @@ function onObstaclePassed() {
 }
 
 function spawnCoinGroup() {
-  if(coinsArr.length >= 15) return;
-  let count = Math.floor(Math.random() * 3) + 2;
-  for(let i=0; i<count; i++) coinsArr.push({ x: canvas.width + i*45, y: 40 + Math.random()*(canvas.height-100), w: 28, h: 28, s: 2 + Math.random()*1.5, collected: false });
+  if(coinsArr.length >= 20) return;
+  let count = Math.floor(Math.random() * 4) + 3;
+  for(let i=0; i<count; i++) {
+    coinsArr.push({ 
+      x: canvas.width + i * 50, 
+      y: 40 + Math.random() * (canvas.height - 100), 
+      w: 28, h: 28, 
+      s: 2 + Math.random() * 1.5,
+      collected: false 
+    });
+  }
 }
+
 function spawnGroupCDOGE() {
-  if(cdogeArr.length >= 6) return;
-  for(let i=0; i<3; i++) cdogeArr.push({ x: canvas.width + i*70, y: 40 + Math.random()*(canvas.height-100), w: 32, h: 32, collected: false });
+  if(cdogeArr.length >= 8) return;
+  for(let i=0; i<3; i++) {
+    cdogeArr.push({ 
+      x: canvas.width + i * 80, 
+      y: 40 + Math.random() * (canvas.height - 100), 
+      w: 32, h: 32, 
+      collected: false 
+    });
+  }
 }
+
 function spawnGroupBCOSMO() {
-  if(bcosmoArr.length >= 6) return;
-  for(let i=0; i<3; i++) bcosmoArr.push({ x: canvas.width + i*70, y: 40 + Math.random()*(canvas.height-100), w: 32, h: 32, collected: false });
+  if(bcosmoArr.length >= 8) return;
+  for(let i=0; i<3; i++) {
+    bcosmoArr.push({ 
+      x: canvas.width + i * 80, 
+      y: 40 + Math.random() * (canvas.height - 100), 
+      w: 32, h: 32, 
+      collected: false 
+    });
+  }
 }
+
 function spawnAgujeroNegro() { if(agujeroNegro) return; agujeroNegro = { x: canvas.width + 100, y: canvas.height/2-40, w: 80, h: 80, vel: 1.2, radio: 200 }; toast('🌀 AGUJERO NEGRO!'); }
 function spawnCofreEspacial() { if(cofreEspacial) return; cofreEspacial = { x: canvas.width, y: Math.random()*(canvas.height-100), w: 48, h: 48, vel: 1.2, recogido: false }; }
 
@@ -1243,17 +1276,22 @@ function updateGame(dt) {
   const difficultyMult = getDifficultyMultiplier();
   difficultyLevel = Math.min(5, Math.floor(difficultyMult * 2));
   
-  if(coinsArr.length < 12 && Math.random() < 0.02) spawnCoinGroup();
-  if(cdogeArr.length < 5 && Math.random() < 0.008) spawnGroupCDOGE();
-  if(bcosmoArr.length < 5 && Math.random() < 0.008) spawnGroupBCOSMO();
+  // SPAWN DE MONEDAS - AHORA CON MÁS FRECUENCIA
+  if(coinsArr.length < 15 && Math.random() < 0.03) spawnCoinGroup();
+  if(cdogeArr.length < 6 && Math.random() < 0.01) spawnGroupCDOGE();
+  if(bcosmoArr.length < 6 && Math.random() < 0.01) spawnGroupBCOSMO();
   
   if(!boss.active) {
     let obsDelay = Math.max(600, 1500 / difficultyMult);
-    if(obsArr.length < 8 && Date.now() - lastObs > obsDelay) { spawnObstacle(); lastObs = Date.now(); onObstaclePassed(); }
+    if(obsArr.length < 10 && Date.now() - lastObs > obsDelay) { 
+      spawnObstacle(); 
+      lastObs = Date.now(); 
+      onObstaclePassed(); 
+    }
   }
   
-  if(powerupsArr.length < 2 && Math.random() < 0.003 && score > 200) spawnPowerup();
-  if(!cofreEspacial && sec > 60 && Math.random() < 0.001 && !boss.active) spawnCofreEspacial();
+  if(powerupsArr.length < 3 && Math.random() < 0.005 && score > 200) spawnPowerup();
+  if(!cofreEspacial && sec > 60 && Math.random() < 0.002 && !boss.active) spawnCofreEspacial();
   
   updateObstacles();
   updateBullets();
@@ -1295,8 +1333,22 @@ function gameLoop(currentTimestamp) {
   } catch(error) { console.error(error); setTimeout(()=>{ animationId = requestAnimationFrame(gameLoop); },100); }
 }
 
-function startGame() { resetGame(); gameActive = true; lastTimestampGameLoop = 0; document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); document.getElementById('shootBtn').style.display = 'flex'; document.getElementById('menuFloatBtn').style.display = 'flex'; playNormalMusic(); }
-function stopGame() { gameActive = false; stopMusic(); document.getElementById('shootBtn').style.display = 'none'; document.getElementById('menuFloatBtn').style.display = 'none'; }
+function startGame() { 
+  resetGame(); 
+  gameActive = true; 
+  lastTimestampGameLoop = 0; 
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); 
+  document.getElementById('shootBtn').style.display = 'flex'; 
+  document.getElementById('menuFloatBtn').style.display = 'flex'; 
+  playNormalMusic(); 
+}
+
+function stopGame() { 
+  gameActive = false; 
+  stopMusic(); 
+  document.getElementById('shootBtn').style.display = 'none'; 
+  document.getElementById('menuFloatBtn').style.display = 'none'; 
+}
 
 // ==================== INICIALIZACIÓN ====================
 async function initGame() {
