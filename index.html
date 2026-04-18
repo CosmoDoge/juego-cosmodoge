@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CosmoDoge 🚀 | Edición Definitiva con Jefe Mejorado</title>
+  <title>CosmoDoge 🚀 | Edición Definitiva</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   
@@ -49,7 +49,7 @@
     .hud-combo { color: #ff0; border-color: #ff0; animation: pulse 0.5s infinite; }
     @keyframes pulse { 50% { opacity: 0.8; text-shadow: 0 0 5px #ff0; } }
     
-    .boss-health-container { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); width: 350px; z-index: 70; display: none; }
+    .boss-health-container { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); width: min(350px, 80%); z-index: 70; display: none; }
     .boss-health-bar { width: 100%; height: 25px; background: #1a0a0a; border-radius: 15px; border: 2px solid #ff0000; overflow: hidden; box-shadow: 0 0 15px rgba(255,0,0,0.5); }
     .boss-health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0000, #ff6600, #ffcc00); transition: width 0.2s; }
     .boss-health-text { text-align: center; color: #fff; font-size: 11px; font-weight: bold; margin-top: 3px; text-shadow: 0 0 5px #ff0000; }
@@ -94,6 +94,14 @@
     .flash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: red; opacity: 0; pointer-events: none; z-index: 500; transition: opacity 0.1s; }
     .warning-text { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #ff6600; text-shadow: 0 0 20px #ff0000; z-index: 80; pointer-events: none; white-space: nowrap; animation: warningPulse 0.5s ease-out; }
     @keyframes warningPulse { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
+    
+    @media (max-width: 480px) {
+      .shoot-btn-mobile { width: 55px; height: 55px; font-size: 1.2rem; bottom: 15px; right: 15px; }
+      .menu-float-btn, .pause-float-btn { width: 40px; height: 40px; font-size: 1rem; }
+      .hud-item { font-size: 8px; padding: 3px 8px; }
+      .boss-health-container { width: 90%; top: 60px; }
+      .boss-health-bar { height: 20px; }
+    }
   </style>
 </head>
 <body>
@@ -273,8 +281,6 @@
 // ==================== DETECCIÓN DE DISPOSITIVO ====================
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 const isTablet = /iPad|Android(?!.*Mobile)/i.test(navigator.userAgent);
-const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-const isAndroid = /Android/i.test(navigator.userAgent);
 
 // ==================== TRADUCCIONES ====================
 const translations = {
@@ -341,13 +347,19 @@ const imageUrls = {
   fondo3: 'fondo-cosmodoge-v3.png',
   fondo4: 'fondo-cosmodoge-v4.png',
   coin: 'moneda-cosmodoge.png',
-  cdoge: 'moneda-cosmodoge.png',
+  cdoge: 'token-cdoge-puntos.png',
   bcosmo: 'moneda-bcosmo.png',
   cofre: 'cofre-espacial.png',
+  agujeroNegro: 'obstaculo-agujero-negro.png',
   obstaculo1: 'obstaculo-estelar.png',
   obstaculo2: 'obstaculo-explosion-aire.png',
-  pipeTop: 'obstaculo1.png',
-  pipeBottom: 'obstaculo2.png',
+  obstaculo3: 'obstaculo-explosion.png',
+  pipe1: 'obstáculo1.png',
+  pipe2: 'obstáculo2.png',
+  pipe3: 'obstaculo3.png',
+  pipe4: 'obstáculo4.png',
+  pipe5: 'obstáculo5.png',
+  pipe6: 'obstaculo6.png',
   boss: 'jefe-espacial-1.jpg'
 };
 
@@ -374,7 +386,7 @@ function preloadImages() {
       img.src = url;
       images[key] = img;
     }
-    setTimeout(() => resolve(), 3000);
+    setTimeout(() => resolve(), 5000);
   });
 }
 
@@ -407,7 +419,7 @@ function initSounds() {
 function unlockAudio() {
   if(audioUnlocked) return;
   audioUnlocked = true;
-  if(musicNormal && musicNormal.src) musicNormal.play().catch(()=>{});
+  playNormalMusic();
   toast('🔊 Audio activado');
 }
 
@@ -445,6 +457,7 @@ const sndJump = new Audio('salto.mp3');
 const sndCoin = new Audio('moneda.mp3');
 const sndCdoge = new Audio('sonido-moneda-cdoge.mp3');
 const sndBcosmo = new Audio('sonido-moneda-bcosmo.mp3');
+const sndExplosion = new Audio('boom.mp3');
 
 function playSound(snd) { if(snd && snd.play && audioUnlocked) snd.play().catch(()=>{}); }
 function createBeepSound(freq, dur) {
@@ -1164,7 +1177,7 @@ function updateBossProjectiles() {
 
 function bossDefeated() {
   boss.active = false;
-  playSound(sndJump);
+  playSound(sndExplosion);
   
   if(!hadGunBeforeBoss) {
     hasGun = false;
@@ -1213,7 +1226,13 @@ function bossDefeated() {
 function drawBoss() {
   if(!boss.active) return;
   if(images.boss && images.boss.complete) ctx.drawImage(images.boss, boss.x, boss.y, boss.w, boss.h);
-  else { ctx.fillStyle = '#f0f'; ctx.fillRect(boss.x, boss.y, boss.w, boss.h); ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Orbitron'; ctx.fillText('BOSS', boss.x + 40, boss.y + 70); }
+  else { 
+    ctx.fillStyle = '#f0f'; 
+    ctx.fillRect(boss.x, boss.y, boss.w, boss.h); 
+    ctx.fillStyle = '#fff'; 
+    ctx.font = 'bold 18px Orbitron'; 
+    ctx.fillText('BOSS', boss.x + 40, boss.y + 70); 
+  }
   
   for(let f of boss.followers) {
     ctx.fillStyle = '#ff6600';
@@ -1235,20 +1254,26 @@ let gameWorld = 'space';
 
 function spawnPipe() {
   if(pipes.length >= 4 || boss.active) return;
-  const gap = 160;
+  const gap = 180;
   const pipeY = Math.random() * (canvas.height - gap - 100) + 50;
-  pipes.push({ x: canvas.width, topY: pipeY - 400, bottomY: pipeY + gap, w: 60, passed: false });
+  const pipeImgs = [images.pipe1, images.pipe2, images.pipe3, images.pipe4, images.pipe5, images.pipe6].filter(img => img && img.complete);
+  const pipeImg = pipeImgs.length > 0 ? pipeImgs[Math.floor(Math.random() * pipeImgs.length)] : null;
+  pipes.push({ x: canvas.width, topY: pipeY - 450, bottomY: pipeY + gap, w: 70, passed: false, img: pipeImg });
 }
 
 function updatePipes() {
   for(let i=0; i<pipes.length; i++) {
     let p = pipes[i];
     p.x -= 3;
-    if(images.pipeTop && images.pipeTop.complete) ctx.drawImage(images.pipeTop, p.x, p.topY, p.w, 400);
-    else { ctx.fillStyle = '#336633'; ctx.fillRect(p.x, p.topY, p.w, 400); }
-    if(images.pipeBottom && images.pipeBottom.complete) ctx.drawImage(images.pipeBottom, p.x, p.bottomY, p.w, canvas.height - p.bottomY);
-    else { ctx.fillStyle = '#336633'; ctx.fillRect(p.x, p.bottomY, p.w, canvas.height - p.bottomY); }
-    if(checkCollisionWithDoge(p.x, p.topY, p.w, 400) || checkCollisionWithDoge(p.x, p.bottomY, p.w, canvas.height - p.bottomY)) {
+    if(p.img && p.img.complete) {
+      ctx.drawImage(p.img, p.x, p.topY, p.w, 450);
+      ctx.drawImage(p.img, p.x, p.bottomY, p.w, canvas.height - p.bottomY);
+    } else {
+      ctx.fillStyle = '#336633'; 
+      ctx.fillRect(p.x, p.topY, p.w, 450);
+      ctx.fillRect(p.x, p.bottomY, p.w, canvas.height - p.bottomY);
+    }
+    if(checkCollisionWithDoge(p.x, p.topY, p.w, 450) || checkCollisionWithDoge(p.x, p.bottomY, p.w, canvas.height - p.bottomY)) {
       if(!handleCollision()) gameOver();
     }
     if(!p.passed && p.x + p.w < doge.x) { p.passed = true; score += 10; updateUI(); }
@@ -1375,7 +1400,8 @@ function spawnGroupBCOSMO() {
 
 function spawnObstacle() {
   if(obsArr.length >= 10 || boss.active) return;
-  let img = (Math.random() > 0.5) ? images.obstaculo1 : images.obstaculo2;
+  const obstacleImgs = [images.obstaculo1, images.obstaculo2, images.obstaculo3].filter(img => img && img.complete);
+  let img = obstacleImgs.length > 0 ? obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)] : null;
   obsArr.push({ x: canvas.width, y: 50 + Math.random() * (canvas.height - 120), w: 48, h: 48, sX: 2 + difficultyLevel * 0.1, img: img, type: 'normal' });
 }
 
@@ -1475,7 +1501,7 @@ function drawCDOGE() {
     applyBlackHoleAttraction(m, m.x, m.y, 16);
     m.x -= 3.5;
     if(images.cdoge && images.cdoge.complete) ctx.drawImage(images.cdoge, m.x, m.y, m.w, m.h);
-    else { ctx.fillStyle = '#0ff'; ctx.fillRect(m.x, m.y, m.w, m.h); }
+    else { ctx.fillStyle = '#0ff'; ctx.fillRect(m.x, m.y, m.w, m.h); ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Orbitron'; ctx.fillText('C', m.x+10, m.y+20); }
     if(checkCollisionWithDoge(m.x, m.y, m.w, m.h)) {
       m.collected = true;
       totalCDOGE = (totalCDOGE || 0) + 50;
@@ -1500,7 +1526,7 @@ function drawBCOSMO() {
     applyBlackHoleAttraction(m, m.x, m.y, 16);
     m.x -= 3.5;
     if(images.bcosmo && images.bcosmo.complete) ctx.drawImage(images.bcosmo, m.x, m.y, m.w, m.h);
-    else { ctx.fillStyle = '#ffaa44'; ctx.fillRect(m.x, m.y, m.w, m.h); }
+    else { ctx.fillStyle = '#ffaa44'; ctx.fillRect(m.x, m.y, m.w, m.h); ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Orbitron'; ctx.fillText('B', m.x+10, m.y+20); }
     if(checkCollisionWithDoge(m.x, m.y, m.w, m.h)) {
       m.collected = true;
       totalBCOSMO = (totalBCOSMO || 0) + 50;
@@ -1524,7 +1550,7 @@ function drawCoins() {
     applyBlackHoleAttraction(c, c.x, c.y, 13);
     c.x -= c.s;
     if(images.coin && images.coin.complete) ctx.drawImage(images.coin, c.x, c.y, c.w, c.h);
-    else { ctx.fillStyle = '#ffaa44'; ctx.fillRect(c.x, c.y, c.w, c.h); }
+    else { ctx.fillStyle = '#ffd700'; ctx.fillRect(c.x, c.y, c.w, c.h); }
     if(checkCollisionWithDoge(c.x, c.y, c.w, c.h)) {
       c.collected = true;
       let ganancia = 1;
@@ -1533,7 +1559,7 @@ function drawCoins() {
       localStorage.setItem('cdogeCoins', coins);
       updateUI();
       playSound(sndCoin);
-      addParticles(c.x + c.w/2, c.y + c.h/2, '#ffaa44', 2);
+      addParticles(c.x + c.w/2, c.y + c.h/2, '#ffd700', 2);
       updateAchievementProgress('coins', coins);
       coinsArr.splice(i, 1);
       i--;
@@ -1559,15 +1585,19 @@ function drawAgujeroNegro() {
   let dist = Math.hypot(dx, dy);
   if(dist < agujeroNegro.radio && dist > 30) { let fuerza = (agujeroNegro.radio - dist) / agujeroNegro.radio * 0.08; doge.x += dx * fuerza; doge.y += dy * fuerza; }
   
-  const grad = ctx.createRadialGradient(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, 5, agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2);
-  grad.addColorStop(0, '#fff');
-  grad.addColorStop(0.2, '#f0f');
-  grad.addColorStop(0.5, '#800080');
-  grad.addColorStop(1, '#000');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2, 0, Math.PI*2);
-  ctx.fill();
+  if(images.agujeroNegro && images.agujeroNegro.complete) {
+    ctx.drawImage(images.agujeroNegro, agujeroNegro.x, agujeroNegro.y, agujeroNegro.w, agujeroNegro.h);
+  } else {
+    const grad = ctx.createRadialGradient(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, 5, agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2);
+    grad.addColorStop(0, '#fff');
+    grad.addColorStop(0.2, '#f0f');
+    grad.addColorStop(0.5, '#800080');
+    grad.addColorStop(1, '#000');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(agujeroNegro.x + agujeroNegro.w/2, agujeroNegro.y + agujeroNegro.h/2, agujeroNegro.w/2, 0, Math.PI*2);
+    ctx.fill();
+  }
   
   if(dist < agujeroNegro.w/2) { toast('🌀 Has sido absorbido por el agujero negro!'); gameOver(); }
   if(agujeroNegro.x + agujeroNegro.w < 0) agujeroNegro = null;
