@@ -126,16 +126,17 @@
       fondo2: 'fondo-cosmodoge-v2.png',
       fondo3: 'fondo-cosmodoge-v3.png',
       fondo4: 'fondo-cosmodoge-v4.png',
-      fondoEspacial: 'fondo-espacial-juego.png',
       coin: 'coin-cosmodoge.png',
-      cdoge: 'token-cdoge-puntos.png',
+      cdoge: 'moneda-cosmodoge.png',      // token CDOGE
       bcosmo: 'moneda-bcosmo.png',
       cofre: 'cofre-espacial.png',
       agujeroNegro: 'obstaculo-agujero-negro.png',
       obstaculo1: 'obstaculo-estelar.png',
       obstaculo2: 'obstaculo-explosion-aire.png',
+      obstaculo3: 'obstaculo-explosion.png',
       boss: 'boss-espacial-1.jpg',
-      inicioLogo: 'pantalla-inicio-juego.png'
+      inicioLogo: 'pantalla-inicio-juego.png',
+      fondoInicio: 'fondo-cosmodoge-inicio.png'
     },
     sounds: {
       jump: 'jump.mp3',
@@ -146,12 +147,14 @@
       record: 'record.mp3'
     },
     music: {
-      bg: 'cosmodoge-theme.mp3',
+      bg1: 'cosmodoge-theme.mp3',
+      bg2: 'cosmodoge-theme2.wav',
+      bg3: 'music-cosmodoge-theme.mp3',
       boss: 'cosmodoge-theme-jefe.wav'
     }
   };
 
-  // ---------- FUNCIONES DE CARGA DE RECURSOS ----------
+  // ---------- CARGA DE RECURSOS CON PROGRESO ----------
   let loaded = 0, total = Object.keys(ASSETS.images).length + Object.keys(ASSETS.sounds).length + Object.keys(ASSETS.music).length;
   const resources = { images: {}, sounds: {}, music: {} };
   function updateLoadProgress() {
@@ -161,6 +164,9 @@
     if(loaded === total) setTimeout(() => {
       document.getElementById('loadingScreen').classList.add('hidden');
       document.getElementById('mainMenu').classList.remove('hidden');
+      // aplicar fondo de inicio
+      const fondoInicio = resources.images.fondoInicio;
+      if(fondoInicio) document.querySelector('.menu-container').style.backgroundImage = `url(${fondoInicio.src})`;
     }, 500);
   }
   function loadImage(key, src) {
@@ -186,35 +192,54 @@
   for(let [k,v] of Object.entries(ASSETS.sounds)) loadSound(k, v);
   for(let [k,v] of Object.entries(ASSETS.music)) loadMusic(k, v);
 
-  // ---------- SISTEMA DE AUDIO CON MÚSICA ----------
+  // ---------- SISTEMA DE AUDIO CON MÚSICA ROTATIVA ----------
   let audioUnlocked = false;
   let currentMusic = null;
+  let musicIndex = 0;
+  const bgMusicList = ['bg1', 'bg2', 'bg3'];
   function playSound(sndKey) {
     if(!audioUnlocked) return;
     const snd = resources.sounds[sndKey];
     if(snd) snd.cloneNode().play().catch(e=>console.log);
   }
-  function playMusic(key, loop=true) {
+  function playNextBgMusic() {
     if(!audioUnlocked) return;
-    if(currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; }
+    const key = bgMusicList[musicIndex % bgMusicList.length];
     const music = resources.music[key];
     if(music) {
-      music.loop = loop;
+      if(currentMusic) currentMusic.pause();
+      music.currentTime = 0;
       music.play().catch(e=>console.log);
       currentMusic = music;
+      music.onended = () => { musicIndex++; playNextBgMusic(); };
+    }
+    musicIndex++;
+  }
+  function playMusic(type) {
+    if(!audioUnlocked) return;
+    if(currentMusic) currentMusic.pause();
+    let music = null;
+    if(type === 'boss') music = resources.music.boss;
+    else music = resources.music[bgMusicList[musicIndex % bgMusicList.length]];
+    if(music) {
+      music.currentTime = 0;
+      music.play().catch(e=>console.log);
+      currentMusic = music;
+      if(type !== 'boss') music.onended = () => { musicIndex++; playNextBgMusic(); };
     }
   }
   function stopMusic() {
-    if(currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; currentMusic = null; }
+    if(currentMusic) { currentMusic.pause(); currentMusic = null; }
   }
-  // Botón para desbloquear audio (por políticas del navegador)
+  // Botón para desbloquear audio
   const unlockBtn = document.createElement('button');
   unlockBtn.textContent = '🔊 ACTIVAR SONIDO';
   unlockBtn.style.cssText = 'position:fixed;bottom:20px;left:20px;z-index:10000;background:#0ff;border:none;padding:8px 15px;border-radius:25px;font-family:Orbitron;cursor:pointer;';
   unlockBtn.onclick = () => {
     audioUnlocked = true;
     unlockBtn.remove();
-    playMusic('bg');
+    musicIndex = 0;
+    playNextBgMusic();
     toast('Audio activado');
   };
   document.body.appendChild(unlockBtn);
@@ -253,14 +278,14 @@
   let activePowerups = { turbo: { active: false, endTime: 0 }, freeze: { active: false, endTime: 0 }, bomb: false, totalShield: { active: false, endTime: 0 }, star: { active: false, endTime: 0, multiplier: 5 } };
   let powerupsArr = [], coinsArr = [], obsArr = [], cdogeArr = [], bcosmoArr = [];
   let bullets = [], bossProjectiles = [];
-  let particles = []; // pool de partículas (simplificado)
+  let particles = [];
   let agujeroNegro = null, cofreEspacial = null;
-  let boss = { active: false, x:0, y:0, w:130, h:130, health:0, maxHealth:0, level:0, phase:1, attackPattern:'rays', attackTimer:0, moveTimer:0 };
+  let boss = { active: false, x:0, y:0, w:130, h:130, health:0, maxHealth:0, level:0, phase:1, attackPattern:'rays', attackTimer:0, moveTimer:0, enraged:false };
   let lastBossScore = 0, hadGunBeforeBoss = false;
   let trialWeapon = null, trialEndTime = 0;
   let starLayers = [];
   let fondoActual = 'fondo2';
-  let playerLevel = 1, playerXP = 0, playerSkillPoints = 0; // simplificado
+  let playerLevel = 1, playerXP = 0;
 
   // ---------- FUNCIONES DE INICIALIZACIÓN ----------
   function resizeCanvas() {
@@ -342,7 +367,6 @@
     const ug = gunUpgrades[gunLevel];
     if(now - lastShootTime < ug.cooldown) return;
     lastShootTime = now;
-    // beep
     if(audioUnlocked) {
       const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctxAudio.createOscillator();
@@ -388,18 +412,16 @@
     }
   }
 
-  // JEFE
+  // JEFE CON ENFURECIMIENTO
   function epicBossEntrance(level) {
     hadGunBeforeBoss = hasGun;
     if(!hasGun) { hasGun = true; toast('🔫 ARMA TEMPORAL PARA EL COMBATE'); }
     obsArr = [];
     showWarning('⚠️ ¡ALGO SE ACERCA! ⚠️', 2000);
     playSound('explosion');
-    // cambiar música
     stopMusic();
-    playMusic('boss', true);
+    playMusic('boss');
     setTimeout(() => { spawnBoss(level); showWarning(`👾 COSMODRAGÓN NIVEL ${level} HA LLEGADO! 👾`, 2000); }, 2500);
-    // aparición de cofre de ayuda (opcional)
     setTimeout(() => { if(boss.active && !cofreEspacial) spawnCofreEspacial(true); }, 3000);
   }
   function getBossStats(level) { return { health: 600 + (level-1)*120, damage:15+Math.floor(level/2)*5, speed:1.5+(level-1)*0.2 }; }
@@ -413,6 +435,7 @@
     const stats = getBossStats(level);
     boss.maxHealth = stats.health;
     boss.health = boss.maxHealth;
+    boss.enraged = false;
     const patterns = ['rays','fireballs','spirals'];
     boss.attackPattern = patterns[Math.floor(Math.random()*patterns.length)];
     boss.attackTimer = 0;
@@ -426,27 +449,38 @@
       const percent = (boss.health/boss.maxHealth)*100;
       document.getElementById('bossHealthFill').style.width = percent+'%';
       document.getElementById('bossHealthText').innerHTML = `❤️ ${Math.floor(boss.health)}/${boss.maxHealth}`;
-      document.getElementById('bossName').innerHTML = `👾 COSMODRAGON ${boss.attackPattern.toUpperCase()}`;
+      document.getElementById('bossName').innerHTML = `👾 COSMODRAGON ${boss.attackPattern.toUpperCase()}${boss.enraged ? ' (ENFURECIDO)' : ''}`;
       container.style.display = 'block';
     } else container.style.display = 'none';
   }
   function updateBoss() {
     if(!boss.active || isPaused) return;
-    boss.moveTimer += 0.02;
+    // Enfurecimiento al 50% de vida
+    if(!boss.enraged && boss.health <= boss.maxHealth/2) {
+      boss.enraged = true;
+      boss.attackTimer = 0; // reinicia patrón
+      showWarning('🔥 ¡COSMODRAGÓN SE ENFURECE! 🔥', 1500);
+      toast('⚠️ El jefe ataca más rápido!');
+    }
+    boss.moveTimer += (boss.enraged ? 0.04 : 0.02);
     boss.y = canvas.height/2 - 65 + Math.sin(boss.moveTimer)*80;
     boss.y = Math.min(Math.max(boss.y, 50), canvas.height - boss.h - 50);
     boss.attackTimer++;
-    if(boss.attackPattern === 'rays' && boss.attackTimer>60) {
+    let attackSpeed = boss.enraged ? 0.7 : 1;
+    if(boss.attackPattern === 'rays' && boss.attackTimer > 60*attackSpeed) {
       boss.attackTimer=0;
-      for(let i=-2;i<=2;i++) bossProjectiles.push({ x:boss.x, y:boss.y+boss.h/2+i*25, w:12, h:5, speed:7, type:'ray' });
+      let count = boss.enraged ? 5 : 3;
+      for(let i=-Math.floor(count/2); i<=Math.floor(count/2); i++) bossProjectiles.push({ x:boss.x, y:boss.y+boss.h/2+i*25, w:12, h:5, speed:7, type:'ray' });
       showWarning('⚡ RAYO MORTAL ⚡',500);
-    } else if(boss.attackPattern === 'fireballs' && boss.attackTimer>70) {
+    } else if(boss.attackPattern === 'fireballs' && boss.attackTimer > 70*attackSpeed) {
       boss.attackTimer=0;
-      for(let i=0;i<5;i++) bossProjectiles.push({ x:boss.x, y:boss.y+Math.random()*boss.h, w:12, h:12, speed:5, type:'fireball', targetY:doge.y+doge.h/2 });
+      let count = boss.enraged ? 8 : 5;
+      for(let i=0;i<count;i++) bossProjectiles.push({ x:boss.x, y:boss.y+Math.random()*boss.h, w:12, h:12, speed:5, type:'fireball', targetY:doge.y+doge.h/2 });
       showWarning('🔥 BOLAS DE FUEGO 🔥',500);
-    } else if(boss.attackPattern === 'spirals' && boss.attackTimer>80) {
+    } else if(boss.attackPattern === 'spirals' && boss.attackTimer > 80*attackSpeed) {
       boss.attackTimer=0;
-      for(let i=0;i<8;i++) bossProjectiles.push({ x:boss.x, y:boss.y+boss.h/2, w:10, h:10, speed:4, type:'spiral', angle:(i/8)*Math.PI*2 });
+      let count = boss.enraged ? 12 : 8;
+      for(let i=0;i<count;i++) bossProjectiles.push({ x:boss.x, y:boss.y+boss.h/2, w:10, h:10, speed:4, type:'spiral', angle:(i/count)*Math.PI*2 });
       showWarning('🌀 ESPIRAL CÓSMICA 🌀',500);
     }
     if(doge.x < boss.x+boss.w && doge.x+doge.w > boss.x && doge.y < boss.y+boss.h && doge.y+doge.h > boss.y) {
@@ -484,21 +518,31 @@
     localStorage.setItem('cdogeCoins', coins);
     localStorage.setItem('cdogeTotalCoins', totalCDOGE);
     localStorage.setItem('bcosmoTotalCoins', totalBCOSMO);
-    for(let i=0;i<40;i++) setTimeout(()=> coinsArr.push({ x:boss.x+Math.random()*boss.w, y:boss.y+Math.random()*boss.h, w:26, h:26, s:2+Math.random()*2 }), i*25);
+    for(let i=0;i<40;i++) setTimeout(()=> coinsArr.push({ x:boss.x+Math.random()*boss.w, y:boss.y+Math.random()*boss.h, w:28, h:28, s:2+Math.random()*2 }), i*25);
     addParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#ffaa44', 40);
     toast(`🎉 JEFE NIVEL ${boss.level} DERROTADO! +${coinBonus}🪙 +${cdogeBonus}💎 +${bcosmoBonus}🐕`);
     updateBossUI();
-    // volver a música normal
     stopMusic();
-    playMusic('bg', true);
-    // spawn cofre épico
+    playNextBgMusic();
     spawnCofreEspacial(false);
   }
   function drawBoss() {
     if(!boss.active) return;
     const img = resources.images.boss;
-    if(img) ctx.drawImage(img, boss.x, boss.y, boss.w, boss.h);
-    else { ctx.fillStyle = '#f0f'; ctx.fillRect(boss.x, boss.y, boss.w, boss.h); ctx.fillStyle='#fff'; ctx.font='bold 18px Orbitron'; ctx.fillText('BOSS', boss.x+40, boss.y+70); }
+    if(img) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(boss.x+boss.w/2, boss.y+boss.h/2, boss.w/2, 0, Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(img, boss.x, boss.y, boss.w, boss.h);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = '#f0f';
+      ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+      ctx.fillStyle='#fff';
+      ctx.font='bold 18px Orbitron';
+      ctx.fillText('BOSS', boss.x+40, boss.y+70);
+    }
     for(let p of bossProjectiles) {
       ctx.fillStyle = p.type==='ray'?'#f00':(p.type==='fireball'?'#ff6600':'#0ff');
       ctx.fillRect(p.x, p.y, p.w, p.h);
@@ -545,30 +589,31 @@
   }
   function spawnObstacle() {
     if(obsArr.length>=10 || boss.active) return;
-    let imgKey = Math.random()>0.5 ? 'obstaculo1' : 'obstaculo2';
+    let r = Math.random();
+    let imgKey = r<0.33 ? 'obstaculo1' : (r<0.66 ? 'obstaculo2' : 'obstaculo3');
     obsArr.push({ x:canvas.width, y:50+Math.random()*(canvas.height-120), w:48, h:48, sX:2+difficultyLevel*0.1, imgKey, type:'normal' });
   }
+  const patterns = {
+    wall: (canvas, dogeY) => {
+      showWarning('⚠️ MURO AÉREO ⚠️',800);
+      return [{ x:canvas.width, y:dogeY-80, type:'normal' }, { x:canvas.width, y:dogeY, type:'normal' }, { x:canvas.width, y:dogeY+80, type:'normal' }];
+    },
+    wave: (canvas, dogeY) => {
+      showWarning('🌊 ONDA DE CHOQUE 🌊',800);
+      return [{ x:canvas.width, y:dogeY-50, type:'zigzag', startY:dogeY-50 }, { x:canvas.width+50, y:dogeY, type:'zigzag', startY:dogeY }, { x:canvas.width+100, y:dogeY+50, type:'zigzag', startY:dogeY+50 }];
+    },
+    meteorShower: (canvas) => {
+      showWarning('💥 LLUVIA DE METEOROS 💥',800);
+      return [{ x:canvas.width, y:50, type:'meteor' }, { x:canvas.width+30, y:150, type:'meteor' }, { x:canvas.width+60, y:250, type:'meteor' }, { x:canvas.width+90, y:350, type:'meteor' }];
+    },
+    hunterPack: (canvas, dogeY) => {
+      showWarning('🎯 CAZADORES 🎯',800);
+      return [{ x:canvas.width, y:dogeY-60, type:'homing' }, { x:canvas.width, y:dogeY+60, type:'homing' }, { x:canvas.width+40, y:dogeY, type:'chaser' }];
+    }
+  };
   function trySpawnPattern() {
     if(obsArr.length>=10 || boss.active) return false;
     if(Math.random()>0.12) return false;
-    const patterns = {
-      wall: (canvas, dogeY) => {
-        showWarning('⚠️ MURO AÉREO ⚠️',800);
-        return [{ x:canvas.width, y:dogeY-80, type:'normal' }, { x:canvas.width, y:dogeY, type:'normal' }, { x:canvas.width, y:dogeY+80, type:'normal' }];
-      },
-      wave: (canvas, dogeY) => {
-        showWarning('🌊 ONDA DE CHOQUE 🌊',800);
-        return [{ x:canvas.width, y:dogeY-50, type:'zigzag', startY:dogeY-50 }, { x:canvas.width+50, y:dogeY, type:'zigzag', startY:dogeY }, { x:canvas.width+100, y:dogeY+50, type:'zigzag', startY:dogeY+50 }];
-      },
-      meteorShower: (canvas) => {
-        showWarning('💥 LLUVIA DE METEOROS 💥',800);
-        return [{ x:canvas.width, y:50, type:'meteor' }, { x:canvas.width+30, y:150, type:'meteor' }, { x:canvas.width+60, y:250, type:'meteor' }, { x:canvas.width+90, y:350, type:'meteor' }];
-      },
-      hunterPack: (canvas, dogeY) => {
-        showWarning('🎯 CAZADORES 🎯',800);
-        return [{ x:canvas.width, y:dogeY-60, type:'homing' }, { x:canvas.width, y:dogeY+60, type:'homing' }, { x:canvas.width+40, y:dogeY, type:'chaser' }];
-      }
-    };
     const patternNames = ['wall','wave','meteorShower','hunterPack'];
     const pName = patternNames[Math.floor(Math.random()*patternNames.length)];
     const obsList = patterns[pName](canvas, doge.y+doge.h/2);
@@ -646,7 +691,7 @@
     powerupsArr = powerupsArr.filter(p => p.x+p.w>0);
   }
 
-  // IMÁN Y AGUJERO NEGRO
+  // IMÁN Y AGUJERO NEGRO (con fuerza de atracción)
   function applyMagnet(obj, objX, objY, size=16) {
     if(Date.now() < imanExpiration) {
       let dx = (objX+size/2) - (doge.x+doge.w/2);
@@ -829,9 +874,9 @@
       if(currentWave>=3 && !agujeroNegro && !boss.active) spawnAgujeroNegro();
     }
     difficultyLevel = Math.min(5, Math.floor(currentWave/2)+1);
-    // Cambio de fondo (rotación)
+    // Cambio de fondo rotativo
     if(sec - lastFondoChange >= 30) {
-      const fondos = ['fondo2','fondo3','fondo4','fondoEspacial'];
+      const fondos = ['fondo2','fondo3','fondo4'];
       let idx = Math.floor(Math.random()*fondos.length);
       fondoActual = fondos[idx];
       lastFondoChange = sec;
@@ -867,7 +912,7 @@
 
   function drawBackground() {
     drawParallax();
-    const fondo = resources.images[fondoActual] || resources.images.fondo2;
+    const fondo = resources.images[fondoActual];
     if(fondo) ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
     else { ctx.fillStyle = '#0a0a2a'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   }
@@ -951,9 +996,8 @@
     doge.x = 100; doge.y = canvas.height/2 - doge.h/2; doge.vy = 0;
     coinsArr = []; obsArr = []; cdogeArr = []; bcosmoArr = []; agujeroNegro = null; cofreEspacial = null;
     updateBossUI(); updateUI();
-    // restaurar música de fondo
     stopMusic();
-    if(audioUnlocked) playMusic('bg', true);
+    if(audioUnlocked) playNextBgMusic();
   }
   function startGame() {
     resetGame();
@@ -980,7 +1024,6 @@
       localStorage.setItem('cdogeFloatHighScore', highScore);
       playSound('record');
       const userName = localStorage.getItem('cosmodogeUserName');
-      // guardar en Firebase si está disponible (simulado)
       document.getElementById('recordScore').innerHTML = `🚀 ${score} pts`;
       document.getElementById('newRecordScreen').classList.remove('hidden');
     } else {
@@ -1000,19 +1043,52 @@
     isPaused = !isPaused;
     document.getElementById('pauseBtn').innerHTML = isPaused ? '▶️' : '⏸️';
     toast(isPaused ? '⏸️ Pausado' : '▶️ Reanudado');
-    if(!isPaused && audioUnlocked && !currentMusic) playMusic('bg', true);
+    if(!isPaused && audioUnlocked && !currentMusic) playNextBgMusic();
   }
 
-  // INICIALIZACIÓN DE UI Y EVENTOS
+  // INICIALIZACIÓN DE UI Y EVENTOS (con integración de wallet real)
+  const CDOGE_ADDRESS = '0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A';
+  const BCOSMO_ADDRESS = '2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump';
+  let walletType = null, walletAddress = null;
+  async function connectWallet(type) {
+    if(type === 'metamask') {
+      if(!window.ethereum) { toast('Instala MetaMask'); return; }
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []);
+        const signer = provider.getSigner();
+        walletAddress = await signer.getAddress();
+        walletType = 'metamask';
+        toast(`Conectado: ${walletAddress.slice(0,6)}...`);
+        document.getElementById('walletStatus').innerHTML = `✅ ${walletAddress.slice(0,6)}... (BSC)`;
+        // Verificar red BSC
+        const network = await provider.getNetwork();
+        if(network.chainId !== 56) toast('Cambia a BSC Mainnet para usar CDOGE');
+      } catch(e) { toast('Error al conectar'); }
+    } else if(type === 'phantom') {
+      if(!window.solana?.isPhantom) { toast('Instala Phantom'); return; }
+      try {
+        const resp = await window.solana.connect();
+        walletAddress = resp.publicKey.toString();
+        walletType = 'phantom';
+        toast(`Conectado: ${walletAddress.slice(0,6)}...`);
+        document.getElementById('walletStatus').innerHTML = `✅ ${walletAddress.slice(0,6)}... (Solana)`;
+      } catch(e) { toast('Error al conectar'); }
+    }
+  }
   function initUI() {
     document.getElementById('playBtn').onclick = startGame;
     document.getElementById('shopBtn').onclick = () => document.getElementById('shopPanel').style.display = 'block';
     document.getElementById('rewardsBtn').onclick = () => document.getElementById('rewardsPanel').style.display = 'block';
     document.getElementById('rankingBtn').onclick = () => { document.getElementById('rankingList').innerHTML = '<p>🏆 Ranking no disponible offline</p>'; document.getElementById('rankingPanel').style.display = 'block'; };
     document.getElementById('statsBtn').onclick = () => toast('Estadísticas próximamente');
-    document.getElementById('walletBtn').onclick = () => toast('Wallet: simulado');
-    document.getElementById('buyCDOGEBtn').onclick = () => window.open('https://pancakeswap.finance','_blank');
-    document.getElementById('buyBCOSMOBtn').onclick = () => window.open('https://pump.fun','_blank');
+    document.getElementById('walletBtn').onclick = () => {
+      const opt = confirm('Conectar MetaMask (BSC) para CDOGE o Phantom (Solana) para BCOSMO?');
+      if(opt) connectWallet('metamask');
+      else connectWallet('phantom');
+    };
+    document.getElementById('buyCDOGEBtn').onclick = () => window.open(`https://pancakeswap.finance/swap?outputCurrency=${CDOGE_ADDRESS}`, '_blank');
+    document.getElementById('buyBCOSMOBtn').onclick = () => window.open(`https://pump.fun/coin/${BCOSMO_ADDRESS}`, '_blank');
     document.getElementById('closeShopBtn').onclick = () => document.getElementById('shopPanel').style.display = 'none';
     document.getElementById('closeRewardsBtn').onclick = () => document.getElementById('rewardsPanel').style.display = 'none';
     document.getElementById('closeRankingBtn').onclick = () => document.getElementById('rankingPanel').style.display = 'none';
@@ -1037,9 +1113,9 @@
         toast(`✅ Bienvenido ${name}`);
       } else toast('✨ Mínimo 3 caracteres');
     };
-    // Botones de tienda (simulados)
+    // Compras con monedas normales (pruebas)
     document.getElementById('buyMagnetFree').onclick = () => { if(coins>=1000) { coins-=1000; imanExpiration=Date.now()+3600000; toast('🧲 Imán comprado!'); updateUI(); } else toast('Monedas insuficientes'); };
-    document.getElementById('buyMagnetVIP').onclick = () => toast('Versión VIP requiere wallet');
+    document.getElementById('buyMagnetVIP').onclick = () => toast('Versión VIP requiere wallet y CDOGE (simulado)');
     document.getElementById('buyShieldFree').onclick = () => { if(coins>=1000) { coins-=1000; isShieldActive=true; shieldHits+=3; saveShieldPersistent(); toast('🛡️ Escudo comprado!'); updateUI(); } else toast('Monedas insuficientes'); };
     document.getElementById('buyShieldVIP').onclick = () => toast('VIP requiere wallet');
     document.getElementById('buyTurboFree').onclick = () => { if(coins>=800) { coins-=800; activePowerups.turbo={ active:true, endTime:Date.now()+30000 }; toast('⚡ Turbo!'); updateUI(); } else toast('Monedas insuficientes'); };
@@ -1058,7 +1134,6 @@
     document.getElementById('upgradeGun4VIP').onclick = () => toast('VIP requiere wallet');
     document.getElementById('tryGunBtn').onclick = () => { if(!hasGun || gunLevel<1) { trialWeapon={ originalGunLevel:gunLevel, originalHasGun:hasGun }; gunLevel=1; hasGun=true; trialEndTime=Date.now()+30000; toast('🔫 Prueba de pistola básica 30s'); } };
     document.getElementById('tryGun2Btn').onclick = () => { trialWeapon={ originalGunLevel:gunLevel, originalHasGun:hasGun }; gunLevel=2; hasGun=true; trialEndTime=Date.now()+30000; toast('🔫 Prueba de doble disparo 30s'); };
-    // skins
     document.getElementById('buySkinFree').onclick = () => { if(coins>=3500) { coins-=3500; skinActivo='astronauta'; localStorage.setItem('skinActivo','astronauta'); toast('👨‍🚀 Skin Astronauta!'); updateUI(); } else toast('Monedas insuficientes'); };
     document.getElementById('buyGoldSkinFree').onclick = () => { if(coins>=8000) { coins-=8000; skinActivo='dorado'; localStorage.setItem('skinActivo','dorado'); toast('⚡ Cohete Dorado!'); updateUI(); } else toast('Monedas insuficientes'); };
     document.getElementById('buyEliteSkinFree').onclick = () => { if(coins>=15000) { coins-=15000; skinActivo='elite'; dogeSpeed=5.5; localStorage.setItem('skinActivo','elite'); toast('👑 Skin Élite! Velocidad +10%'); updateUI(); } else toast('Monedas insuficientes'); };
@@ -1066,7 +1141,7 @@
     document.getElementById('buyReviveFree').onclick = () => { if(coins>=500 && !gameActive) { coins-=500; startGame(); toast('💖 Revivido!'); } else toast('Solo usable en game over'); };
     document.getElementById('buyXpFree').onclick = () => { if(coins>=1000) { coins-=1000; playerXP+=100; toast('⭐ +100 XP'); updateUI(); } else toast('Monedas insuficientes'); };
     document.getElementById('dailyRewardBtn').onclick = () => { const last = localStorage.getItem('lastDaily'); const today = new Date().toDateString(); if(last===today) toast('Ya reclamaste hoy'); else { coins+=500; totalCDOGE+=50; localStorage.setItem('cdogeCoins',coins); localStorage.setItem('cdogeTotalCoins',totalCDOGE); localStorage.setItem('lastDaily',today); toast('🎁 +500🪙 +50💎'); updateUI(); } };
-    document.getElementById('claimTokensBtn').onclick = () => toast('Canje simulado (requiere wallet)');
+    document.getElementById('claimTokensBtn').onclick = () => { if(totalCDOGE>=100000) { totalCDOGE-=100000; localStorage.setItem('cdogeTotalCoins',totalCDOGE); toast('✅ Canje simulado: recibirás tokens reales pronto'); updateUI(); } else if(totalBCOSMO>=100000) { totalBCOSMO-=100000; localStorage.setItem('bcosmoTotalCoins',totalBCOSMO); toast('✅ Canje simulado: recibirás tokens reales pronto'); updateUI(); } else toast('Necesitas 100,000 CDOGE o BCOSMO'); };
     document.getElementById('claimLevelBonusBtn').onclick = () => { const nivel = Math.floor(score/1000); const reclamado = parseInt(localStorage.getItem('levelBonus'))||0; if(nivel>reclamado) { let bonus = (nivel-reclamado)*200; coins+=bonus; localStorage.setItem('cdogeCoins',coins); localStorage.setItem('levelBonus',nivel); toast(`🎯 +${bonus}🪙`); updateUI(); } else toast('Sigue jugando para más niveles'); };
     document.getElementById('showMissionsBtn').onclick = () => toast('Misiones próximamente');
     document.getElementById('showAchievementsBtn').onclick = () => toast('Logros próximamente');
@@ -1128,13 +1203,22 @@
       e.preventDefault();
     });
   }
+  // Traducción
+  const translations = { es:{ loading:'CARGANDO COSMODOGE', play:'🎮 JUGAR', shop:'🛒 TIENDA', rewards:'🎁 RECOMPENSAS', ranking:'🏆 RANKING', connectWallet:'🔗 CONECTAR WALLET', register:'📝 REGISTRARSE', subtitle:'🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟' }, en:{ loading:'LOADING COSMODOGE', play:'🎮 PLAY', shop:'🛒 SHOP', rewards:'🎁 REWARDS', ranking:'🏆 RANKING', connectWallet:'🔗 CONNECT WALLET', register:'📝 REGISTER', subtitle:'🚀 TAP TO FLY | DODGE AND COLLECT 🌟' } };
+  let currentLang = 'es';
+  function updateLanguage() {
+    document.querySelectorAll('[data-key]').forEach(el=>{ const key=el.getAttribute('data-key'); if(translations[currentLang][key]) el.textContent=translations[currentLang][key]; });
+    document.querySelectorAll('.lang-btn').forEach(btn=>{ if(btn.getAttribute('data-lang')===currentLang) btn.classList.add('active'); else btn.classList.remove('active'); });
+  }
+  document.querySelectorAll('.lang-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ currentLang=btn.getAttribute('data-lang'); updateLanguage(); }); });
+  updateLanguage();
+
   // Inicialización
   function init() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     initStars();
     initUI();
-    // esperar carga de recursos
     const checkLoad = setInterval(() => {
       if(loaded === total) {
         clearInterval(checkLoad);
