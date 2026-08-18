@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>CosmoDoge 🚀 | Edición Definitiva</title>
+  <title>CosmoDoge 🚀 | Edición Definitiva Fusionada</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.41.0/lib/index.iife.min.js"></script>
@@ -23,7 +23,7 @@
     .menu-container::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(0,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; animation: starField 20s linear infinite; opacity: 0.3; pointer-events: none; }
     @keyframes starField { from { transform: translate(0, 0); } to { transform: translate(50px, 50px); } }
     
-    .logo { width: 100px; height: 100px; margin: 0 auto 15px; background: url('https://github.com/CosmoDoge/juego-cosmodoge/raw/main/cosmodoge-cohete-juego.png') center/contain no-repeat; animation: floatLogo 3s ease-in-out infinite; filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.8)); background-size: contain; }
+    .logo { width: 100px; height: 100px; margin: 0 auto 15px; background: url('cosmodoge-cohete-juego.png') center/contain no-repeat; animation: floatLogo 3s ease-in-out infinite; filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.8)); background-size: contain; }
     @keyframes floatLogo { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-15px) rotate(5deg); } 100% { transform: translateY(0px) rotate(0deg); } }
     
     .game-title { font-size: 2.2rem; font-weight: 900; background: linear-gradient(135deg, #0ff, #f0f, #ff0); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -48,7 +48,7 @@
     .shoot-btn-mobile:active { transform: scale(0.95); }
     .menu-float-btn, .pause-float-btn, .wallet-float-btn { position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); border: 1px solid #0ff; color: #0ff; font-size: 1.2rem; cursor: pointer; z-index: 150; display: none; align-items: center; justify-content: center; transition: transform 0.05s; }
     .pause-float-btn { top: 80px; }
-    .wallet-float-btn { top: 140px; font-size: 0.8rem; }
+    .wallet-float-btn { top: 140px; font-size: 0.9rem; }
     .menu-float-btn:active, .pause-float-btn:active, .wallet-float-btn:active { transform: scale(0.95); }
     
     .boss-health-container { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); width: min(350px, 80%); z-index: 70; display: none; }
@@ -59,9 +59,6 @@
     
     .floating-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; max-height: 80vh; background: linear-gradient(135deg, #0a0a2a, #000); border: 2px solid #0ff; border-radius: 30px; padding: 20px; z-index: 200; overflow-y: auto; display: none; }
     .shop-item { background: rgba(0, 255, 255, 0.1); margin: 10px 0; padding: 12px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .shop-item button { background: #0ff; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 10px; color: #000; font-family: 'Orbitron', monospace; }
-    .shop-item button:active { transform: scale(0.95); }
-    
     .toast-msg { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #0ff, #0aa); color: #000; padding: 8px 20px; border-radius: 40px; font-weight: bold; z-index: 300; animation: toastFade 2s ease forwards; font-size: 12px; white-space: nowrap; }
     @keyframes toastFade { 0%{opacity:0;transform:translateX(-50%) translateY(20px)}15%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-20px)}}
     .warning-text { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #ff6600; text-shadow: 0 0 20px #ff0000; z-index: 80; pointer-events: none; white-space: nowrap; animation: warningPulse 0.5s ease-out; }
@@ -81,13 +78,7 @@
     .gameover-buttons { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
     .score-stats { background: rgba(0,0,0,0.6); border-radius: 30px; padding: 15px; margin: 15px 0; }
     .ranking-list { max-height: 350px; overflow-y: auto; margin: 15px 0; }
-    .ranking-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid rgba(0,255,255,0.2); font-size: 11px; background: rgba(0,0,0,0.3); margin: 4px 0; border-radius: 8px; }
-    .powerup-indicator { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ffaa44, #ff6600); border-radius: 30px; padding: 6px 16px; font-size: 12px; font-weight: bold; color: #000; z-index: 55; animation: powerupGlow 0.5s infinite alternate; white-space: nowrap; pointer-events: none; display: none; }
-    @keyframes powerupGlow { from { box-shadow: 0 0 5px #ffaa44; } to { box-shadow: 0 0 20px #ffaa44; } }
-    
-    .joystick-container { position: fixed; display: none; z-index: 200; pointer-events: none; }
-    .joystick-base { width: 120px; height: 120px; border-radius: 60px; background: rgba(0, 255, 255, 0.2); backdrop-filter: blur(8px); border: 2px solid rgba(0, 255, 255, 0.5); position: relative; pointer-events: none; }
-    .joystick-thumb { width: 50px; height: 50px; border-radius: 25px; background: rgba(0, 255, 255, 0.9); position: absolute; top: 35px; left: 35px; pointer-events: none; box-shadow: 0 0 15px #0ff; transition: transform 0.05s linear; }
+    .ranking-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #0ff33; font-size: 11px; background: rgba(0,0,0,0.3); margin: 4px 0; border-radius: 8px; }
     
     @media (max-width: 480px) { .shoot-btn-mobile { width: 55px; height: 55px; font-size: 1.2rem; } .menu-float-btn, .pause-float-btn, .wallet-float-btn { width: 40px; height: 40px; } .hud-item { font-size: 8px; padding: 3px 8px; } }
   </style>
@@ -95,10 +86,10 @@
 <body>
 
 <canvas id="gameCanvas"></canvas>
-<div class="credits">🚀 CosmoDoge - Creado con ❤️ | 🔗 Conecta tu Wallet</div>
+<div class="credits">🚀 CosmoDoge - Creado con ❤️ | 🔗 Wallets Conectadas</div>
 
 <div id="loadingScreen" class="screen">
-  <div class="loading-container"><div class="logo"></div><h2 style="color:#0ff;">CARGANDO COSMODOGE</h2><div class="loading-bar"><div id="loadingProgress" class="loading-progress"></div></div><p id="loadingText" style="color:#0ff;">Iniciando...</p></div>
+  <div class="loading-container"><div class="logo"></div><h2 style="color:#0ff;" data-key="loading">CARGANDO COSMODOGE</h2><div class="loading-bar"><div id="loadingProgress" class="loading-progress"></div></div><p id="loadingText" style="color:#0ff;">Iniciando...</p></div>
 </div>
 
 <div class="lang-selector"><button class="lang-btn active" data-lang="es">🇪🇸 ES</button><button class="lang-btn" data-lang="en">🇺🇸 EN</button></div>
@@ -115,8 +106,6 @@
   <div class="hud-item" id="waveDisplay" style="display:none;"><span>🌊</span><span id="waveValueDisplay">1</span></div>
   <div class="hud-item" id="gunDisplay" style="display:none;"><span>🔫</span><span id="gunNameDisplay"></span></div>
 </div>
-
-<div id="powerupDisplay" class="powerup-indicator"></div>
 
 <div id="userNameDisplay" class="hud-item" style="position:fixed; top:10px; right:10px; left:auto; background:#000000aa; display:none;"></div>
 
@@ -164,7 +153,6 @@
   <h3>🔫 ARMAS (🪙)</h3>
   <div class="shop-item"><div><strong>🔫 BÁSICA</strong></div><button id="buyGun">1,000 🪙</button></div>
   <div class="shop-item"><div><strong>🔫🔫 DOBLE</strong></div><button id="upgradeGun">2,000 🪙</button></div>
-  <div class="shop-item"><div><strong>⚡ LÁSER</strong></div><button id="upgradeGun2">5,000 🪙</button></div>
   <h3>🎨 SKINS (🪙)</h3>
   <div class="shop-item"><div><strong>👨‍🚀 ASTRONAUTA</strong></div><button id="buySkin">3,500 🪙</button></div>
   <h3>💎 VIP (CDOGE)</h3>
@@ -174,26 +162,23 @@
 </div>
 
 <div id="rewardsPanel" class="floating-panel">
-  <h2 style="color:#ffaa44;">🎁 RECOMPENSAS</h2>
+  <h2>🎁 RECOMPENSAS</h2>
   <div class="shop-item"><div><strong>📅 RECOMPENSA DIARIA</strong><br><small>+500 🪙 +50 CDOGE</small></div><button id="dailyRewardBtn">RECLAMAR</button></div>
   <div class="shop-item"><div><strong>🏆 CANJE DE TOKENS</strong><br><small>50,000 → 10,000 Tokens Reales</small></div><button id="claimTokensBtn">CANJEAR</button></div>
   <div class="shop-item"><div><strong>🎯 BONUS POR NIVEL</strong><br><small>Cada 1000 pts</small></div><button id="claimLevelBonusBtn">RECLAMAR</button></div>
-  <button id="closeRewardsBtn" class="menu-btn" style="margin-top:15px;">✖️ CERRAR</button>
+  <button id="closeRewardsBtn" class="menu-btn">✖️ CERRAR</button>
 </div>
 
-<div id="rankingPanel" class="floating-panel"><h2 style="color:#0ff;">🏆 TOP 10</h2><div id="rankingList" class="ranking-list">🔄 Cargando...</div><button id="closeRankingBtn" class="menu-btn" style="margin-top:15px;">✖️ CERRAR</button></div>
-
-<div id="statsPanel" class="floating-panel"><h2 style="color:#0ff;">📊 ESTADÍSTICAS</h2><div id="statsList"></div><button id="closeStatsBtn" class="menu-btn" style="margin-top:15px;">✖️ CERRAR</button></div>
+<div id="rankingPanel" class="floating-panel"><h2>🏆 TOP 10</h2><div id="rankingList" class="ranking-list">🔄 Cargando...</div><button id="closeRankingBtn" class="menu-btn">✖️ CERRAR</button></div>
+<div id="statsPanel" class="floating-panel"><h2>📊 ESTADÍSTICAS</h2><div id="statsList"></div><button id="closeStatsBtn" class="menu-btn">✖️ CERRAR</button></div>
 
 <div id="gameOverScreen" class="screen hidden">
   <div class="gameover-container"><div class="logo"></div><h1 class="gameover-title">💀 GAME OVER 💀</h1><div class="score-stats"><div class="stat-row"><span>🚀 PUNTAJE FINAL</span><span class="score-number" id="finalScoreValue">0</span></div><div class="stat-row"><span>💰 MONEDAS</span><span id="finalCoinsValue">0</span></div><div class="stat-row"><span>💎 CDOGE</span><span id="finalCDOGEValue">0</span></div><div class="stat-row"><span>🐕 BCOSMO</span><span id="finalBCOSMOValue">0</span></div><div class="stat-row"><span>🌊 OLEADA</span><span id="finalWaveValue">0</span></div></div><div class="gameover-buttons"><button id="restartBtn" class="gameover-btn">🔄 JUGAR DE NUEVO</button><button id="menuFromGameOver" class="gameover-btn secondary">🏠 MENÚ</button></div></div></div>
 
-<div id="newRecordScreen" class="screen hidden">
-  <div class="menu-container" style="border-color:#ffaa44;"><h1 style="color:#ffaa44;">🌟 NUEVO RÉCORD!</h1><div id="recordScore" style="margin:10px; font-size:18px;"></div><button id="continueAfterRecord" class="menu-btn">🔄 CONTINUAR</button><button id="menuAfterRecord" class="menu-btn secondary">🏠 MENÚ</button></div>
-</div>
+<div id="newRecordScreen" class="screen hidden"><div class="menu-container" style="border-color:#ffaa44;"><h1 style="color:#ffaa44;">🌟 NUEVO RÉCORD!</h1><div id="recordScore" style="margin:10px; font-size:18px;"></div><button id="continueAfterRecord" class="menu-btn">🔄 CONTINUAR</button><button id="menuAfterRecord" class="menu-btn secondary">🏠 MENÚ</button></div></div>
 
 <script>
-// ==================== COSMODOGE - VERSIÓN DEFINITIVA COMPLETA ====================
+// ==================== COSMODOGE - VERSIÓN FUSIONADA COMPLETA ====================
 (function(){
   // ---------- CONFIGURACIÓN DE WALLETS ----------
   const CDOGE_ADDRESS = '0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A';
@@ -203,50 +188,48 @@
   const ERC20_ABI = ['function balanceOf(address) view returns(uint256)','function decimals() view returns(uint8)','function transfer(address,uint256) returns(bool)'];
 
   // ---------- CARGA DE RECURSOS ----------
-  const BASE_URL = 'https://github.com/CosmoDoge/juego-cosmodoge/raw/main/';
   const images = {};
   const sounds = {};
-  let loaded = 0, totalResources = 0;
+  let loaded = 0, totalImages = 0;
   
   const imageUrls = {
-    doge: BASE_URL + 'cosmodoge-cohete-juego.png',
-    astronauta: BASE_URL + 'cosmodoge-skin-astronauta.png',
-    fondo2: BASE_URL + 'fondo-cosmodoge-v2.png',
-    fondo3: BASE_URL + 'fondo-cosmodoge-v3.png',
-    fondo4: BASE_URL + 'fondo-cosmodoge-v4.png',
-    coin: BASE_URL + 'coin-cosmodoge.png',
-    cdoge: BASE_URL + 'moneda-cosmodoge.png',
-    bcosmo: BASE_URL + 'moneda-bcosmo.png',
-    cofre: BASE_URL + 'cofre-espacial.png',
-    agujeroNegro: BASE_URL + 'obstaculo-agujero-negro.png',
-    obstaculo1: BASE_URL + 'obstaculo-estelar.png',
-    obstaculo2: BASE_URL + 'obstaculo-explosion.png',
-    obstaculo3: BASE_URL + 'obstaculo-explosion-aire.png',
-    boss: BASE_URL + 'boss-espacial-1.jpg'
+    doge: 'cosmodoge-cohete-juego.png',
+    astronauta: 'cosmodoge-skin-astronauta.png',
+    fondo2: 'fondo-cosmodoge-v2.png',
+    fondo3: 'fondo-cosmodoge-v3.png',
+    fondo4: 'fondo-cosmodoge-v4.png',
+    coin: 'coin-cosmodoge.png',
+    cdoge: 'moneda-cosmodoge.png',
+    bcosmo: 'moneda-bcosmo.png',
+    cofre: 'cofre-espacial.png',
+    agujeroNegro: 'obstaculo-agujero-negro.png',
+    obstaculo1: 'obstaculo-estelar.png',
+    obstaculo2: 'obstaculo-explosion.png',
+    obstaculo3: 'obstaculo-explosion-aire.png',
+    boss: 'boss-espacial-1.jpg'
   };
   
   const soundUrls = {
-    jump: BASE_URL + 'jump.mp3',
-    coin: BASE_URL + 'coin.mp3',
-    cdoge: BASE_URL + 'sonido-moneda-cdoge.mp3',
-    bcosmo: BASE_URL + 'sonido-moneda-bcosmo.mp3',
-    explosion: BASE_URL + 'boom.mp3',
-    record: BASE_URL + 'record.mp3'
+    jump: 'jump.mp3',
+    coin: 'coin.mp3',
+    cdoge: 'sonido-moneda-cdoge.mp3',
+    bcosmo: 'sonido-moneda-bcosmo.mp3',
+    explosion: 'boom.mp3',
+    record: 'record.mp3'
   };
   
   const musicUrls = [
-    BASE_URL + 'cosmodoge-theme.mp3',
-    BASE_URL + 'cosmodoge-theme2.wav',
-    BASE_URL + 'music-cosmodoge-theme.mp3',
-    BASE_URL + 'music.mp3'
+    'cosmodoge-theme.mp3',
+    'cosmodoge-theme2.wav',
+    'music-cosmodoge-theme.mp3',
+    'music.mp3'
   ];
   
   function loadResources() {
-    totalResources = Object.keys(imageUrls).length + Object.keys(soundUrls).length + musicUrls.length;
+    totalImages = Object.keys(imageUrls).length + Object.keys(soundUrls).length + musicUrls.length;
     
     for(const [key, url] of Object.entries(imageUrls)) {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       img.onload = () => { images[key] = img; loaded++; updateLoad(); };
       img.onerror = () => { loaded++; updateLoad(); };
       img.src = url;
@@ -268,10 +251,10 @@
   }
   
   function updateLoad() {
-    const percent = Math.min(100, (loaded / totalResources) * 100);
+    const percent = Math.min(100, (loaded / totalImages) * 100);
     const bar = document.getElementById('loadingProgress');
     if(bar) bar.style.width = percent + '%';
-    if(loaded === totalResources) {
+    if(loaded === totalImages) {
       setTimeout(() => {
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('mainMenu').classList.remove('hidden');
@@ -390,7 +373,7 @@
   const gunUpgrades = {
     1: { name:'Básica', cooldown:500, damage:1, bullets:1, spread:0, speed:8, size:8 },
     2: { name:'Doble', cooldown:450, damage:1, bullets:2, spread:15, speed:8, size:8 },
-    3: { name:'Láser', cooldown:300, damage:2, bullets:1, spread:0, speed:12, size:10 }
+    3: { name:'Láser', cooldown:300, damage:1, bullets:1, spread:0, speed:12, size:10 }
   };
   
   function shoot() {
@@ -413,6 +396,7 @@
       b.y += Math.sin(b.angle)*b.speed;
       b.life--;
       
+      // Colisión con obstáculos
       for(let j=obsArr.length-1; j>=0; j--) {
         let o = obsArr[j];
         if(b.x < o.x+o.w && b.x+b.w > o.x && b.y < o.y+o.h && b.y+b.h > o.y) {
@@ -422,6 +406,7 @@
         }
       }
       
+      // Colisión con jefe
       if(boss.active && b.x < boss.x+boss.w && b.x+b.w > boss.x && b.y < boss.y+boss.h && b.y+b.h > boss.y) {
         boss.health -= b.damage;
         bullets.splice(i,1);
@@ -480,6 +465,7 @@
   function updateBoss() {
     if(!boss.active || isPaused) return;
     
+    // Enfurecimiento al 50% de vida
     if(!boss.enraged && boss.health <= boss.maxHealth/2) {
       boss.enraged = true;
       boss.attackTimer = 0;
@@ -516,6 +502,7 @@
       showWarning('🌀 ESPIRAL CÓSMICA 🌀', 500);
     }
     
+    // Colisión con el jugador
     if(doge.x < boss.x+boss.w && doge.x+doge.w > boss.x && doge.y < boss.y+boss.h && doge.y+doge.h > boss.y) {
       if(!handleCollision()) gameOver();
     }
@@ -579,7 +566,6 @@
         ctx.arc(boss.x+boss.w*0.35, boss.y+boss.h*0.4, 12, 0, Math.PI*2);
         ctx.arc(boss.x+boss.w*0.65, boss.y+boss.h*0.4, 12, 0, Math.PI*2);
         ctx.fill();
-        addParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#ff0000', 2);
       }
       ctx.restore();
     }
@@ -738,6 +724,7 @@
     if(img) ctx.drawImage(img, doge.x, doge.y, doge.w, doge.h);
     else { ctx.fillStyle = '#0ff'; ctx.fillRect(doge.x, doge.y, doge.w, doge.h); }
     
+    // Aura de imán
     if(Date.now() < imanExpiration) {
       ctx.beginPath();
       ctx.arc(doge.x+doge.w/2, doge.y+doge.h/2, doge.w*0.9, 0, Math.PI*2);
@@ -746,6 +733,7 @@
       ctx.stroke();
     }
     
+    // Escudo
     if(isShieldActive) {
       ctx.beginPath();
       ctx.arc(doge.x+doge.w/2, doge.y+doge.h/2, doge.w*1.1, 0, Math.PI*2);
@@ -754,15 +742,6 @@
       ctx.setLineDash([5, 10]);
       ctx.stroke();
       ctx.setLineDash([]);
-      for(let i=0; i<6; i++) {
-        let angle = Date.now()/500 + i * Math.PI/3;
-        let x = doge.x+doge.w/2 + Math.cos(angle) * doge.w*0.8;
-        let y = doge.y+doge.h/2 + Math.sin(angle) * doge.h*0.8;
-        ctx.fillStyle = `rgba(255,170,68,${0.5+Math.sin(Date.now()/200)*0.3})`;
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI*2);
-        ctx.fill();
-      }
     }
   }
   
@@ -856,6 +835,7 @@
     let sec = timeElapsed/1000;
     gravity = sec > 75 ? 0.82 : sec > 45 ? 0.72 : sec > 30 ? 0.62 : 0.48;
     
+    // Puntuación cada 5 segundos
     if(sec - lastScoreTime >= 5) {
       let add = comboCounter >= 10 ? 3 : comboCounter >= 5 ? 2 : 1;
       score += add;
@@ -863,12 +843,14 @@
       updateUI();
     }
     
+    // Jefe cada 30 puntos
     let bossThreshold = Math.floor(score / 30);
     if(!boss.active && bossThreshold > lastBossScore && bossThreshold > 0) {
       lastBossScore = bossThreshold;
       spawnBoss(bossThreshold);
     }
     
+    // Oleadas
     const newWave = Math.floor(score / 2000) + 1;
     if(newWave > currentWave) {
       currentWave = newWave;
@@ -877,12 +859,14 @@
       if(currentWave % 2 === 0) spawnPowerup();
     }
     
+    // Cambio de fondo
     if(sec - lastFondoChange >= 30) {
       const fondos = ['fondo2', 'fondo3', 'fondo4'];
       fondoActual = fondos[Math.floor(Math.random() * fondos.length)];
       lastFondoChange = sec;
     }
     
+    // Spawn de objetos
     if(!boss.active) {
       if(coinsArr.length < 15 && Math.random() < 0.015) spawnCoinGroup();
       if(cdogeArr.length < 3 && Math.random() < 0.008) spawnCDOGE();
@@ -901,6 +885,7 @@
       }
     }
     
+    // Actualizar elementos
     updateBullets();
     updateBoss();
     updateBossProjectiles();
@@ -974,6 +959,7 @@
   }
 
   // ---------- TOAST Y WARNINGS ----------
+  let toastTimeout;
   function toast(msg) {
     const div = document.createElement('div');
     div.className = 'toast-msg';
@@ -993,7 +979,6 @@
   // ---------- AUDIO ----------
   let audioUnlocked = false;
   let currentMusic = null;
-  let musicIndex = 0;
   
   function playSound(key) {
     if(!audioUnlocked) return;
@@ -1003,12 +988,14 @@
   
   function playMusic() {
     if(!audioUnlocked) return;
-    const music = new Audio(musicUrls[musicIndex % musicUrls.length]);
+    const musicFiles = musicUrls;
+    const idx = Math.floor(Math.random() * musicFiles.length);
+    const music = new Audio(musicFiles[idx]);
     music.loop = true;
     music.volume = 0.3;
     music.play().catch(e => console.log);
     currentMusic = music;
-    music.onended = () => { musicIndex++; playMusic(); };
+    music.onended = () => { if(gameActive) playMusic(); };
   }
   
   function stopMusic() {
@@ -1086,7 +1073,7 @@
     stopMusic();
   }
 
-  // ---------- WALLETS ----------
+  // ---------- WALLETS (de la versión flotante) ----------
   async function conectarMetaMask() {
     if(!window.ethereum) {
       if(/Mobi|Android/i.test(navigator.userAgent)) {
@@ -1164,7 +1151,7 @@
     }
   }
 
-  // ---------- COMPRAS VIP ----------
+  // ---------- COMPRAS VIP (de la versión flotante) ----------
   async function comprarImanVIP() {
     if(!walletAddress || walletType !== 'metamask') { toast('🔗 Conecta MetaMask primero'); return; }
     if(cdojeBalance < 1500) { toast('💎 Saldo insuficiente'); return; }
@@ -1234,10 +1221,7 @@
     document.getElementById('playBtn').onclick = startGame;
     document.getElementById('shopBtn').onclick = () => document.getElementById('shopPanel').style.display = 'block';
     document.getElementById('rewardsBtn').onclick = () => document.getElementById('rewardsPanel').style.display = 'block';
-    document.getElementById('rankingBtn').onclick = () => {
-      document.getElementById('rankingList').innerHTML = '🔄 Cargando ranking...';
-      document.getElementById('rankingPanel').style.display = 'block';
-    };
+    document.getElementById('rankingBtn').onclick = () => document.getElementById('rankingPanel').style.display = 'block';
     document.getElementById('statsBtn').onclick = () => {
       document.getElementById('statsList').innerHTML = `
         <div class="shop-item"><div><strong>🎮 Partidas:</strong></div><div>${localStorage.getItem('gamesPlayed')||0}</div></div>
@@ -1282,6 +1266,7 @@
       document.getElementById('mainMenu').classList.remove('hidden');
     };
     
+    // Registro
     document.getElementById('registerBtn').onclick = () => {
       const name = document.getElementById('registerName').value.trim();
       if(name.length >= 3) {
@@ -1322,19 +1307,16 @@
       else if(gunLevel >= 3) toast('⚡ Ya tienes el máximo nivel');
       else toast('💰 Monedas insuficientes');
     };
-    document.getElementById('upgradeGun2').onclick = () => {
-      if(coins >= 5000 && gunLevel < 3) { coins -= 5000; gunLevel = 3; localStorage.setItem('gunLevel', '3'); toast('⚡ Láser comprado!'); updateUI(); }
-      else if(gunLevel >= 3) toast('⚡ Ya tienes el máximo nivel');
-      else toast('💰 Monedas insuficientes');
-    };
     document.getElementById('buySkin').onclick = () => {
       if(coins >= 3500) { coins -= 3500; skinAstronautaActivo = true; localStorage.setItem('skinAstronauta', 'true'); toast('👨‍🚀 Skin Astronauta!'); updateUI(); }
       else toast('💰 Monedas insuficientes');
     };
     
+    // Compras VIP
     document.getElementById('buyMagnetVIP').onclick = comprarImanVIP;
     document.getElementById('buyShieldVIP').onclick = comprarEscudoVIP;
     
+    // Recompensas
     document.getElementById('dailyRewardBtn').onclick = () => {
       const last = localStorage.getItem('lastDaily');
       const today = new Date().toDateString();
@@ -1390,6 +1372,7 @@
       if(e.code === 'ArrowDown') moveDown = false;
     });
     
+    // Toque en canvas
     canvas.addEventListener('touchstart', (e) => {
       if(!gameActive || isPaused) return;
       doge.vy = jumpPower;
@@ -1475,6 +1458,7 @@
     initUI();
     initJoystick();
     
+    // Desbloquear audio
     document.body.addEventListener('click', () => {
       if(!audioUnlocked) {
         audioUnlocked = true;
@@ -1485,6 +1469,7 @@
       }
     }, { once: true });
     
+    // Cargar datos guardados
     const savedName = localStorage.getItem('cosmodogeUserName');
     if(savedName) {
       document.getElementById('userNameDisplay').textContent = `✨ ${savedName}`;
@@ -1495,6 +1480,7 @@
       document.getElementById('registerBtn').style.display = 'none';
     }
     
+    // Iniciar loop
     animationId = requestAnimationFrame(gameLoop);
   }
   
