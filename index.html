@@ -1770,7 +1770,15 @@
   }
   
   async function connectMetaMask() {
-    if(!window.ethereum) { toast('🦊 No se detectó MetaMask — instálala o ábrela'); return; }
+    if(!window.ethereum) {
+      // ===== FIX MÓVIL: MetaMask no inyecta window.ethereum fuera de su navegador integrado =====
+      if(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        toast('🦊 Abriendo en MetaMask...');
+        window.location.href = `https://metamask.app.link/dapp/${encodeURIComponent(location.href)}`;
+        return;
+      }
+      toast('🦊 No se detectó MetaMask — instálala o ábrela'); return;
+    }
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send('eth_requestAccounts', []);
@@ -1794,7 +1802,15 @@
   }
   
   async function connectPhantom() {
-    if(!window.solana?.isPhantom) { toast('👻 No se detectó Phantom — instálala o ábrela'); return; }
+    if(!window.solana?.isPhantom) {
+      // ===== FIX MÓVIL: Phantom no inyecta window.solana fuera de su navegador integrado =====
+      if(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        toast('👻 Abriendo en Phantom...');
+        window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(location.href)}?ref=${encodeURIComponent(location.origin)}`;
+        return;
+      }
+      toast('👻 No se detectó Phantom — instálala o ábrela'); return;
+    }
     try {
       const resp = await window.solana.connect();
       solWallet.address = resp.publicKey.toString();
@@ -2021,7 +2037,9 @@
       document.getElementById('achievementsPanel').style.display = 'block';
     };
     
-    if(/Android|iPhone|iPad/i.test(navigator.userAgent)) initJoystick();
+    // ===== FIX CONTROLES MÓVIL: se quita el joystick porque competía con el salto por toque =====
+    // (ambos sistemas escuchaban 'touchstart' en el canvas y se movían al mismo tiempo, sintiéndose mal).
+    // Control único: tocar la pantalla = impulso hacia arriba (como el mecanismo original del juego).
     
     document.addEventListener('keydown', e => {
       if(e.code === 'ArrowLeft') moveLeft=true;
