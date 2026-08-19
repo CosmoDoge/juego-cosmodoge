@@ -8,9 +8,41 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.41.0/lib/index.iife.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.3.5/lib/index.iife.min.js"></script>
+  <!-- ===== BLOQUE 5b: Firebase para progreso ligado a wallet y solicitudes de canje ===== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaM9HtMtTlJXc-V4HfsZ7bbC__ZPe9zIk",
+      authDomain: "cosmodogelive.firebaseapp.com",
+      projectId: "cosmodogelive",
+      storageBucket: "cosmodogelive.appspot.com",
+      messagingSenderId: "648227069914",
+      appId: "1:648227069914:web:3ef7ac8da4ab52c30deae3"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.guardarProgresoWallet = async (wallet, data) => {
+      try { await setDoc(doc(db, "progresoJugadores", wallet), { ...data, actualizado: serverTimestamp() }, { merge: true }); }
+      catch(e) { console.error('Error guardando progreso:', e); }
+    };
+    window.cargarProgresoWallet = async (wallet) => {
+      try { const snap = await getDoc(doc(db, "progresoJugadores", wallet)); return snap.exists() ? snap.data() : null; }
+      catch(e) { console.error('Error cargando progreso:', e); return null; }
+    };
+    window.solicitarCanjeToken = async (wallet, tokenType, cantidad) => {
+      try {
+        await addDoc(collection(db, "solicitudesCanje"), { wallet, tokenType, cantidad, estado: 'pendiente', fecha: serverTimestamp() });
+        return true;
+      } catch(e) { console.error('Error registrando solicitud:', e); return false; }
+    };
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Orbitron', monospace; overflow: hidden; background: #000; width: 100%; height: 100%; position: fixed; top: 0; left: 0; }
+    body { font-family: 'Orbitron', monospace; overflow: hidden; background: #000; width: 100%; height: 100%; position: fixed; top: 0; left: 0; color: #fff; }
+    /* ===== FIX: texto oscuro invisible en paneles (tienda/stats/logros/ranking) ===== */
+    .shop-item strong, .shop-item small, .shop-item div, .floating-panel h3, .floating-panel p, .ranking-item { color: #fff; }
+    .shop-item small { color: #bbb; }
     canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; object-fit: cover; background: #000; }
     
     .screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease, transform 0.3s ease; opacity: 1; transform: scale(1); background: radial-gradient(circle at center, #0a0a2a, #000000); }
@@ -757,9 +789,14 @@
     boss.minionTimer++;
     let minionInterval = boss.enraged ? 130 : 200;
     if(boss.minionTimer > minionInterval) { boss.minionTimer = 0; spawnBossMinion(); }
+    // ===== FIX: más cofres durante la pelea del jefe (uno cada ~15s si no hay ninguno activo) =====
+    boss.chestTimer = (boss.chestTimer||0) + 1;
+    if(boss.chestTimer > 900 && !cofreEspacial) { boss.chestTimer = 0; spawnCofreEspacial(true); }
     if(doge.x < boss.x+boss.w && doge.x+doge.w > boss.x && doge.y < boss.y+boss.h && doge.y+doge.h > boss.y) {
       damageDoge(1);
     }
+    // ===== FIX: refrescar la barra de vida del jefe cada frame (antes solo se actualizaba al aparecer/morir) =====
+    updateBossUI();
   }
   
   function updateBossProjectiles() {
@@ -1370,6 +1407,7 @@
     
     updateUI();
     if(autoSaveInterval && Math.floor(sec) % 30 === 0 && sec > 0) saveGameState();
+    if(autoSaveInterval && Math.floor(sec) % 60 === 0 && sec > 0) guardarProgresoNube(); // ===== BLOQUE 5: progreso en la nube cada ~60s si hay wallet conectada =====
   }
 
   function drawBackground() {
@@ -1538,6 +1576,7 @@
     gameActive = false;
     updateStats();
     localStorage.removeItem('cosmodogeAutoSave');
+    guardarProgresoNube(); // ===== BLOQUE 5: asegurar progreso guardado en la nube al terminar la partida =====
     if(score > highScore) {
       highScore = score;
       localStorage.setItem('cdogeFloatHighScore', highScore);
@@ -1565,49 +1604,102 @@
     if(!isPaused && audioUnlocked && !currentMusic) playNextBgMusic();
   }
 
-  // ===== BLOQUE 5: WALLET REAL - CONEXIÓN, LECTURA DE BALANCE Y COMPRAS CON TOKENS REALES =====
-  let walletType = null, walletAddress = null;
+  // ===== BLOQUE 5: WALLET REAL DUAL - CONEXIÓN INDEPENDIENTE BNB(CDOGE) + SOLANA(BCOSMO), SALDO, PROGRESO Y COMPRAS =====
+  let bnbWallet = { connected:false, address:null, balanceCDOGE:0 };
+  let solWallet = { connected:false, address:null, balanceBCOSMO:0 };
   const CDOGE_CONTRACT = '0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A';
   const CDOGE_RECEIVER = '0x1980dCdDA07071970dEAa69c975F590976Ee667D';
   const ERC20_ABI = ['function balanceOf(address) view returns(uint256)','function decimals() view returns(uint8)','function transfer(address,uint256) returns(bool)'];
   const BCOSMO_MINT = '2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump';
   const BCOSMO_RECEIVER = 'A6dnVgGaS1scC2m6hmPdK15D5gs5vDsHS8PEq3xtJKNx';
+  const CDOGE_BUY_URL = 'https://pancakeswap.finance/swap?outputCurrency=0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A';
+  const BCOSMO_BUY_URL = 'https://pump.fun/coin/2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump';
+  
+  function activeWalletAddress() { return bnbWallet.connected ? bnbWallet.address : (solWallet.connected ? solWallet.address : null); }
+  
+  function updateWalletStatusUI() {
+    const el = document.getElementById('walletStatus');
+    if(!el) return;
+    let parts = [];
+    parts.push(bnbWallet.connected
+      ? `✅ BSC: ${bnbWallet.address.slice(0,6)}...${bnbWallet.address.slice(-4)} — 💎 ${bnbWallet.balanceCDOGE.toLocaleString()} CDOGE`
+      : `⭕ BSC/MetaMask no conectada`);
+    parts.push(solWallet.connected
+      ? `✅ Solana: ${solWallet.address.slice(0,6)}...${solWallet.address.slice(-4)} — 🐕 ${solWallet.balanceBCOSMO.toLocaleString()} BCOSMO`
+      : `⭕ Solana/Phantom no conectada`);
+    el.innerHTML = parts.join('<br>');
+  }
+  
+  // ===== Progreso ligado a wallet: al conectar, se ofrece cargar el progreso guardado en la nube =====
+  async function sincronizarProgresoAlConectar() {
+    const wallet = activeWalletAddress();
+    if(!wallet || typeof window.cargarProgresoWallet !== 'function') return;
+    const remoto = await window.cargarProgresoWallet(wallet);
+    if(remoto && (remoto.highScore > (parseInt(localStorage.getItem('cdogeFloatHighScore'))||0) || remoto.coins > coins)) {
+      if(confirm(`🌐 Encontramos progreso guardado para esta wallet:\nRécord: ${remoto.highScore||0} | Monedas: ${remoto.coins||0} | CDOGE: ${remoto.totalCDOGE||0} | BCOSMO: ${remoto.totalBCOSMO||0}\n¿Cargarlo ahora? (reemplaza tu progreso local)`)) {
+        coins = remoto.coins||coins; totalCDOGE = remoto.totalCDOGE||totalCDOGE; totalBCOSMO = remoto.totalBCOSMO||totalBCOSMO;
+        highScore = Math.max(highScore, remoto.highScore||0);
+        localStorage.setItem('cdogeCoins', coins);
+        localStorage.setItem('cdogeTotalCoins', totalCDOGE);
+        localStorage.setItem('bcosmoTotalCoins', totalBCOSMO);
+        localStorage.setItem('cdogeFloatHighScore', highScore);
+        updateUI();
+        toast('✅ Progreso cargado desde la nube');
+      }
+    }
+  }
+  function guardarProgresoNube() {
+    const wallet = activeWalletAddress();
+    if(!wallet || typeof window.guardarProgresoWallet !== 'function') return;
+    window.guardarProgresoWallet(wallet, { coins, totalCDOGE, totalBCOSMO, highScore, gunLevel, skinActivo });
+  }
   
   async function connectMetaMask() {
-    if(!window.ethereum) { toast('🦊 Instala MetaMask'); return; }
+    if(!window.ethereum) { toast('🦊 No se detectó MetaMask — instálala o ábrela'); return; }
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send('eth_requestAccounts', []);
       const signer = provider.getSigner();
-      walletAddress = await signer.getAddress();
-      walletType = 'metamask';
-      localStorage.setItem('walletAddress', walletAddress);
+      bnbWallet.address = await signer.getAddress();
+      bnbWallet.connected = true;
       const contract = new ethers.Contract(CDOGE_CONTRACT, ERC20_ABI, provider);
-      const raw = await contract.balanceOf(walletAddress);
+      const raw = await contract.balanceOf(bnbWallet.address);
       const dec = await contract.decimals();
-      const formatted = Number(raw/10**dec).toLocaleString();
-      document.getElementById('walletStatus').innerHTML = `✅ ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)} (BSC) — 💎 ${formatted} CDOGE`;
-      toast(`Conectado: ${walletAddress.slice(0,6)}...`);
+      bnbWallet.balanceCDOGE = Number(raw/10**dec);
+      updateWalletStatusUI();
+      toast(`✅ MetaMask conectada: ${bnbWallet.address.slice(0,6)}...`);
+      await sincronizarProgresoAlConectar();
+      guardarProgresoNube();
     } catch(e) { console.error(e); toast('❌ Error al conectar MetaMask'); }
+  }
+  function disconnectMetaMask() {
+    bnbWallet = { connected:false, address:null, balanceCDOGE:0 };
+    updateWalletStatusUI();
+    toast('🔌 MetaMask desconectada');
   }
   
   async function connectPhantom() {
-    if(!window.solana?.isPhantom) { toast('👻 Instala Phantom'); return; }
+    if(!window.solana?.isPhantom) { toast('👻 No se detectó Phantom — instálala o ábrela'); return; }
     try {
       const resp = await window.solana.connect();
-      walletAddress = resp.publicKey.toString();
-      walletType = 'phantom';
-      localStorage.setItem('walletAddress', walletAddress);
+      solWallet.address = resp.publicKey.toString();
+      solWallet.connected = true;
       const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
       const parsed = await conn.getParsedTokenAccountsByOwner(resp.publicKey, {programId: solanaWeb3.TOKEN_PROGRAM_ID});
       let balance = 0;
-      parsed.value.forEach(({account}) => {
-        const info = account.data.parsed.info;
-        if(info.mint === BCOSMO_MINT) balance = info.tokenAmount.uiAmount;
-      });
-      document.getElementById('walletStatus').innerHTML = `✅ ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)} (Solana) — 🐕 ${balance||0} BCOSMO`;
-      toast(`Conectado: ${walletAddress.slice(0,6)}...`);
+      parsed.value.forEach(({account}) => { const info = account.data.parsed.info; if(info.mint === BCOSMO_MINT) balance = info.tokenAmount.uiAmount; });
+      solWallet.balanceBCOSMO = balance || 0;
+      updateWalletStatusUI();
+      toast(`✅ Phantom conectada: ${solWallet.address.slice(0,6)}...`);
+      await sincronizarProgresoAlConectar();
+      guardarProgresoNube();
     } catch(e) { console.error(e); toast('❌ Error al conectar Phantom'); }
+  }
+  function disconnectPhantom() {
+    if(window.solana && window.solana.disconnect) window.solana.disconnect().catch(()=>{});
+    solWallet = { connected:false, address:null, balanceBCOSMO:0 };
+    updateWalletStatusUI();
+    toast('🔌 Phantom desconectada');
   }
   
   async function connectWallet(type) {
@@ -1615,9 +1707,14 @@
     else if(type === 'phantom') await connectPhantom();
   }
   
-  // Compra genérica con CDOGE real (BSC)
+  // ===== Compra con CDOGE real (BSC): verifica saldo primero; si no alcanza, redirige a comprar =====
   async function comprarConCDOGE(cantidad, onExito) {
-    if(!window.ethereum) { toast('🦊 Conecta MetaMask primero'); return; }
+    if(!bnbWallet.connected) { toast('🦊 Conecta MetaMask primero'); return; }
+    if(bnbWallet.balanceCDOGE < cantidad) {
+      toast(`⚠️ Necesitas ${cantidad.toLocaleString()} CDOGE (tienes ${bnbWallet.balanceCDOGE.toLocaleString()}). Abriendo página de compra...`);
+      window.open(CDOGE_BUY_URL, '_blank');
+      return;
+    }
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
@@ -1627,15 +1724,23 @@
       toast('⏳ Confirma la transacción en tu wallet...');
       const tx = await contract.transfer(CDOGE_RECEIVER, amount);
       await tx.wait();
+      bnbWallet.balanceCDOGE -= cantidad;
+      updateWalletStatusUI();
       onExito();
+      guardarProgresoNube();
       toast('✅ Compra confirmada');
     } catch(e) { console.error(e); toast('❌ Compra fallida o cancelada'); }
   }
   
-  // Compra genérica con BCOSMO real (Solana)
+  // ===== Compra con BCOSMO real (Solana): verifica saldo primero; si no alcanza, redirige a comprar =====
   async function comprarConBCOSMO(cantidad, onExito) {
+    if(!solWallet.connected) { toast('👻 Conecta Phantom primero'); return; }
+    if(solWallet.balanceBCOSMO < cantidad) {
+      toast(`⚠️ Necesitas ${cantidad.toLocaleString()} BCOSMO (tienes ${solWallet.balanceBCOSMO.toLocaleString()}). Abriendo página de compra...`);
+      window.open(BCOSMO_BUY_URL, '_blank');
+      return;
+    }
     const p = window.solana;
-    if(!p || !p.isPhantom) { toast('👻 Conecta Phantom primero'); return; }
     try {
       const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
       const mintPub = new solanaWeb3.PublicKey(BCOSMO_MINT);
@@ -1653,7 +1758,10 @@
       const signed = await p.signTransaction(tx);
       const sig = await conn.sendRawTransaction(signed.serialize());
       await conn.confirmTransaction(sig);
+      solWallet.balanceBCOSMO -= cantidad;
+      updateWalletStatusUI();
       onExito();
+      guardarProgresoNube();
       toast('✅ Compra confirmada');
     } catch(e) { console.error(e); toast('❌ Compra fallida o cancelada'); }
   }
@@ -1682,9 +1790,11 @@
       document.getElementById('statsPanel').style.display = 'block';
     };
     document.getElementById('walletBtn').onclick = () => {
-      const opt = confirm('Conectar MetaMask (BSC) para CDOGE\nAceptar = MetaMask, Cancelar = Phantom (Solana/BCOSMO)');
-      if(opt) connectWallet('metamask');
-      else connectWallet('phantom');
+      const opt = prompt('WALLETS:\n1 = Conectar MetaMask (CDOGE/BSC)\n2 = Conectar Phantom (BCOSMO/Solana)\n3 = Desconectar MetaMask\n4 = Desconectar Phantom\n\nEscribe el número:');
+      if(opt === '1') connectWallet('metamask');
+      else if(opt === '2') connectWallet('phantom');
+      else if(opt === '3') disconnectMetaMask();
+      else if(opt === '4') disconnectPhantom();
     };
     document.getElementById('buyCDOGEBtn').onclick = () => window.open('https://pancakeswap.finance/swap?outputCurrency=0x5dE25281305992d3552a45A3D8ccA7BdfB4AcD3A', '_blank');
     document.getElementById('buyBCOSMOBtn').onclick = () => window.open('https://pump.fun/coin/2etLM91LBaxbQ1y3jnzQw8EXKNHAKcXJsHMJJ69opump', '_blank');
@@ -1754,7 +1864,20 @@
     document.getElementById('buyXpVIP').onclick = () => walletDecision(esCdoge => { const fn = esCdoge?comprarConCDOGE:comprarConBCOSMO; fn(500, () => { playerXP+=100; toast('⭐ +100 XP VIP'); updateUI(); }); });
     
     document.getElementById('dailyRewardBtn').onclick = () => { const last = localStorage.getItem('lastDaily'); const today = new Date().toDateString(); if(last===today) toast('Ya reclamaste hoy'); else { coins+=500; totalCDOGE+=50; localStorage.setItem('cdogeCoins',coins); localStorage.setItem('cdogeTotalCoins',totalCDOGE); localStorage.setItem('lastDaily',today); toast('🎁 +500🪙 +50💎'); updateUI(); } };
-    document.getElementById('claimTokensBtn').onclick = () => { if(totalCDOGE>=100000) { totalCDOGE-=100000; localStorage.setItem('cdogeTotalCoins',totalCDOGE); toast('✅ Canje simulado: recibirás tokens reales pronto'); updateUI(); } else if(totalBCOSMO>=100000) { totalBCOSMO-=100000; localStorage.setItem('bcosmoTotalCoins',totalBCOSMO); toast('✅ Canje simulado: recibirás tokens reales pronto'); updateUI(); } else toast('Necesitas 100,000 CDOGE o BCOSMO'); };
+    document.getElementById('claimTokensBtn').onclick = async () => {
+      const wallet = activeWalletAddress();
+      if(!wallet) { toast('🔗 Conecta una wallet primero para solicitar el canje'); return; }
+      let tokenType = null, cantidad = 100000;
+      if(totalCDOGE>=100000) tokenType = 'CDOGE';
+      else if(totalBCOSMO>=100000) tokenType = 'BCOSMO';
+      else { toast('Necesitas 100,000 CDOGE o BCOSMO acumulados en el juego'); return; }
+      if(tokenType==='CDOGE') { totalCDOGE-=100000; localStorage.setItem('cdogeTotalCoins',totalCDOGE); }
+      else { totalBCOSMO-=100000; localStorage.setItem('bcosmoTotalCoins',totalBCOSMO); }
+      updateUI();
+      const ok = typeof window.solicitarCanjeToken === 'function' ? await window.solicitarCanjeToken(wallet, tokenType, cantidad) : false;
+      if(ok) toast(`✅ Solicitud de canje registrada (${tokenType}). Será revisada manualmente.`);
+      else toast('⚠️ No se pudo registrar la solicitud, intenta más tarde.');
+    };
     document.getElementById('claimLevelBonusBtn').onclick = () => { const nivel = Math.floor(score/1000); const reclamado = parseInt(localStorage.getItem('levelBonus'))||0; if(nivel>reclamado) { let bonus = (nivel-reclamado)*200; coins+=bonus; localStorage.setItem('cdogeCoins',coins); localStorage.setItem('levelBonus',nivel); toast(`🎯 +${bonus}🪙`); updateUI(); } else toast('Sigue jugando para más niveles'); };
     document.getElementById('showMissionsBtn').onclick = () => toast('Misiones próximamente');
     document.getElementById('showAchievementsBtn').onclick = () => {
@@ -1863,6 +1986,7 @@
     loadStats();
     loadAchievements();
     updateDogeHealthUI();
+    updateWalletStatusUI();
     const savedDiff = localStorage.getItem('gameDifficulty') || 'normal';
     setDifficulty(savedDiff);
     initUI();
