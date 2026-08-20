@@ -191,21 +191,21 @@
     <h1 class="game-title">COSMODOGE</h1>
     <p style="color:#0ff; font-size:10px;" data-key="subtitle">🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟</p>
     <div class="difficulty-selector">
-      <button class="difficulty-btn" data-diff="easy">🌙 FÁCIL</button>
-      <button class="difficulty-btn active" data-diff="normal">⭐ NORMAL</button>
-      <button class="difficulty-btn" data-diff="hard">⚡ DIFÍCIL</button>
+      <button class="difficulty-btn" data-diff="easy" data-key="easy">🌙 FÁCIL</button>
+      <button class="difficulty-btn active" data-diff="normal" data-key="normal">⭐ NORMAL</button>
+      <button class="difficulty-btn" data-diff="hard" data-key="hard">⚡ DIFÍCIL</button>
     </div>
     <div class="menu-buttons">
       <button id="playBtn" class="menu-btn" data-key="play">🎮 JUGAR</button>
       <button id="shopBtn" class="menu-btn secondary" data-key="shop">🛒 TIENDA</button>
       <button id="rewardsBtn" class="menu-btn secondary" data-key="rewards">🎁 RECOMPENSAS</button>
       <button id="rankingBtn" class="menu-btn secondary" data-key="ranking">🏆 RANKING</button>
-      <button id="statsBtn" class="menu-btn secondary">📊 ESTADÍSTICAS</button>
+      <button id="statsBtn" class="menu-btn secondary" data-key="stats">📊 ESTADÍSTICAS</button>
       <button id="walletBtn" class="menu-btn secondary" data-key="connectWallet" style="display:none;">🔗 CONECTAR WALLET</button>
       <button id="buyCDOGEBtn" class="menu-btn" style="display:none;">💎 COMPRAR CDOGE</button>
       <button id="buyBCOSMOBtn" class="menu-btn" style="display:none;">🐕 COMPRAR BCOSMO</button>
     </div>
-    <p id="freeToPlayHint" style="color:#0ff; font-size:9px; margin-top:8px; opacity:0.8;">🎮 Juega gratis con monedas del juego — conecta tu wallet cuando quieras jugar con tokens reales</p>
+    <p id="freeToPlayHint" style="color:#0ff; font-size:9px; margin-top:8px; opacity:0.8;" data-key="freeToPlay">🎮 Juega gratis con monedas del juego — conecta tu wallet cuando quieras jugar con tokens reales</p>
     <div class="register-section">
       <input type="text" id="registerName" placeholder="✨ NOMBRE GALÁCTICO" maxlength="20">
       <button id="registerBtn" class="menu-btn" style="padding:8px; font-size:0.8rem;" data-key="register">📝 REGISTRARSE</button>
@@ -230,7 +230,7 @@
 <div id="achievementsPanel" class="floating-panel"><h2>🏆 LOGROS</h2><div id="achievementsList"></div><button id="closeAchievementsBtn" class="menu-btn">✖️ CERRAR</button></div>
 <div id="statsPanel" class="floating-panel"><h2>📊 ESTADÍSTICAS</h2><div id="statsList"></div><button id="closeStatsBtn" class="menu-btn">✖️ CERRAR</button></div>
 
-<div id="gameOverScreen" class="screen hidden"><div class="gameover-container"><div class="logo"></div><h1 class="gameover-title">💀 GAME OVER 💀</h1><div class="score-stats"><div class="stat-row"><span>🚀 PUNTAJE FINAL</span><span class="score-number" id="finalScoreValue">0</span></div><div class="stat-row"><span>💰 MONEDAS</span><span id="finalCoinsValue">0</span></div><div class="stat-row"><span>💎 CDOGE</span><span id="finalCDOGEValue">0</span></div><div class="stat-row"><span>🐕 BCOSMO</span><span id="finalBCOSMOValue">0</span></div><div class="stat-row"><span>🔥 MÁXIMO COMBO</span><span id="finalComboValue">0</span></div><div class="stat-row"><span>🌊 OLEADA</span><span id="finalWaveValue">0</span></div><div class="stat-row"><span>⭐ NIVEL</span><span id="finalLevelValue">1</span></div></div><div class="gameover-buttons"><button id="restartBtn" class="gameover-btn">🔄 JUGAR DE NUEVO</button><button id="menuFromGameOver" class="gameover-btn secondary">🏠 MENÚ</button></div></div></div>
+<div id="gameOverScreen" class="screen hidden"><div class="gameover-container"><div class="logo"></div><h1 class="gameover-title" data-key="gameOver">💀 GAME OVER 💀</h1><div class="score-stats"><div class="stat-row"><span>🚀 PUNTAJE FINAL</span><span class="score-number" id="finalScoreValue">0</span></div><div class="stat-row"><span>💰 MONEDAS</span><span id="finalCoinsValue">0</span></div><div class="stat-row"><span>💎 CDOGE</span><span id="finalCDOGEValue">0</span></div><div class="stat-row"><span>🐕 BCOSMO</span><span id="finalBCOSMOValue">0</span></div><div class="stat-row"><span>🔥 MÁXIMO COMBO</span><span id="finalComboValue">0</span></div><div class="stat-row"><span>🌊 OLEADA</span><span id="finalWaveValue">0</span></div><div class="stat-row"><span>⭐ NIVEL</span><span id="finalLevelValue">1</span></div></div><div class="gameover-buttons"><button id="restartBtn" class="gameover-btn" data-key="playAgain">🔄 JUGAR DE NUEVO</button><button id="menuFromGameOver" class="gameover-btn secondary" data-key="menu">🏠 MENÚ</button></div></div></div>
 
 <div id="newRecordScreen" class="screen hidden"><div class="menu-container" style="border-color:#ffaa44;"><h1 style="color:#ffaa44;">🌟 NUEVO RÉCORD!</h1><div id="recordScore" style="margin:10px; font-size:18px;"></div><button id="continueAfterRecord" class="menu-btn">🔄 CONTINUAR</button><button id="menuAfterRecord" class="menu-btn secondary">🏠 MENÚ</button></div></div>
 
@@ -1769,8 +1769,26 @@
     window.guardarProgresoWallet(wallet, { coins, totalCDOGE, totalBCOSMO, highScore, gunLevel, skinActivo });
   }
   
+  // ===== EIP-6963: detección moderna de wallets, evita conflicto cuando hay varias extensiones instaladas =====
+  // (ej: Phantom también inyecta soporte EVM y puede pisar window.ethereum de MetaMask)
+  let discoveredProviders = [];
+  window.addEventListener('eip6963:announceProvider', (event) => { discoveredProviders.push(event.detail); });
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+  function getMetaMaskProvider() {
+    const found = discoveredProviders.find(p => p.info?.rdns === 'io.metamask' || p.provider?.isMetaMask);
+    if(found) return found.provider;
+    if(window.ethereum?.providers?.length) return window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum.providers[0];
+    if(window.ethereum) return window.ethereum;
+    return null;
+  }
+  
+  // ===== RPC de Solana: el endpoint público oficial limita/bloquea uso desde apps (causa común de error en Phantom) =====
+  // Reemplaza esta URL por un endpoint propio gratuito de Helius, QuickNode o Alchemy para eliminar los errores intermitentes.
+  const SOLANA_RPC_URL = 'https://api.mainnet-beta.solana.com';
+  
   async function connectMetaMask() {
-    if(!window.ethereum) {
+    const mmRawProvider = getMetaMaskProvider();
+    if(!mmRawProvider) {
       // ===== FIX MÓVIL: MetaMask no inyecta window.ethereum fuera de su navegador integrado =====
       if(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
         toast('🦊 Abriendo en MetaMask...');
@@ -1780,7 +1798,7 @@
       toast('🦊 No se detectó MetaMask — instálala o ábrela'); return;
     }
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const provider = new ethers.providers.Web3Provider(mmRawProvider);
       await provider.send('eth_requestAccounts', []);
       const signer = provider.getSigner();
       bnbWallet.address = await signer.getAddress();
@@ -1815,7 +1833,7 @@
       const resp = await window.solana.connect();
       solWallet.address = resp.publicKey.toString();
       solWallet.connected = true;
-      const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+      const conn = new solanaWeb3.Connection(SOLANA_RPC_URL, 'confirmed');
       const parsed = await conn.getParsedTokenAccountsByOwner(resp.publicKey, {programId: solanaWeb3.TOKEN_PROGRAM_ID});
       let balance = 0;
       parsed.value.forEach(({account}) => { const info = account.data.parsed.info; if(info.mint === BCOSMO_MINT) balance = info.tokenAmount.uiAmount; });
@@ -1847,7 +1865,9 @@
       return;
     }
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const mmRawProvider = getMetaMaskProvider();
+      if(!mmRawProvider) { toast('🦊 No se detectó MetaMask'); return; }
+      const provider = new ethers.providers.Web3Provider(mmRawProvider);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(CDOGE_CONTRACT, ERC20_ABI, signer);
       const dec = await contract.decimals();
@@ -1873,7 +1893,7 @@
     }
     const p = window.solana;
     try {
-      const conn = new solanaWeb3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+      const conn = new solanaWeb3.Connection(SOLANA_RPC_URL, 'confirmed');
       const mintPub = new solanaWeb3.PublicKey(BCOSMO_MINT);
       const recPub = new solanaWeb3.PublicKey(BCOSMO_RECEIVER);
       const mi = await conn.getParsedAccountInfo(mintPub);
@@ -2064,7 +2084,9 @@
         return;
       }
       lastTap = now;
-      if(gameActive && !boss.active && !isPaused) { 
+      // ===== FIX: antes el salto por toque se desactivaba durante la pelea del jefe (igual que en la versión original) =====
+      // ===== Esto dejaba al jugador sin forma de moverse en móvil una vez removido el joystick. Ahora el salto funciona siempre. =====
+      if(gameActive && !isPaused) { 
         doge.vy = -9.2; 
         playSound('jump'); 
         addParticles(doge.x+doge.w/2, doge.y+doge.h, '#0ff',3); 
@@ -2118,8 +2140,8 @@
 
   // TRADUCCIÓN
   const translations = {
-    es: { loading:'CARGANDO COSMODOGE', play:'🎮 JUGAR', shop:'🛒 TIENDA', rewards:'🎁 RECOMPENSAS', ranking:'🏆 RANKING', connectWallet:'🔗 CONECTAR WALLET', register:'📝 REGISTRARSE', subtitle:'🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟' },
-    en: { loading:'LOADING COSMODOGE', play:'🎮 PLAY', shop:'🛒 SHOP', rewards:'🎁 REWARDS', ranking:'🏆 RANKING', connectWallet:'🔗 CONNECT WALLET', register:'📝 REGISTER', subtitle:'🚀 TAP TO FLY | DODGE AND COLLECT 🌟' }
+    es: { loading:'CARGANDO COSMODOGE', play:'🎮 JUGAR', shop:'🛒 TIENDA', rewards:'🎁 RECOMPENSAS', ranking:'🏆 RANKING', connectWallet:'🔗 CONECTAR WALLET', register:'📝 REGISTRARSE', subtitle:'🚀 TOCA PARA VOLAR | ESQUIVA Y RECOLECTA 🌟', stats:'📊 ESTADÍSTICAS', freeToPlay:'🎮 Juega gratis con monedas del juego — conecta tu wallet cuando quieras jugar con tokens reales', gameOver:'💀 GAME OVER 💀', playAgain:'🔄 JUGAR DE NUEVO', menu:'🏠 MENÚ', easy:'🌙 FÁCIL', normal:'⭐ NORMAL', hard:'⚡ DIFÍCIL' },
+    en: { loading:'LOADING COSMODOGE', play:'🎮 PLAY', shop:'🛒 SHOP', rewards:'🎁 REWARDS', ranking:'🏆 RANKING', connectWallet:'🔗 CONNECT WALLET', register:'📝 REGISTER', subtitle:'🚀 TAP TO FLY | DODGE AND COLLECT 🌟', stats:'📊 STATS', freeToPlay:'🎮 Play free with in-game coins — connect your wallet whenever you want to play with real tokens', gameOver:'💀 GAME OVER 💀', playAgain:'🔄 PLAY AGAIN', menu:'🏠 MENU', easy:'🌙 EASY', normal:'⭐ NORMAL', hard:'⚡ HARD' }
   };
   let currentLang = 'es';
   function updateLanguage() {
