@@ -1802,13 +1802,40 @@
       await provider.send('eth_requestAccounts', []);
       const signer = provider.getSigner();
       bnbWallet.address = await signer.getAddress();
-      bnbWallet.connected = true;
-      const contract = new ethers.Contract(CDOGE_CONTRACT, ERC20_ABI, provider);
-      const raw = await contract.balanceOf(bnbWallet.address);
-      const dec = await contract.decimals();
-      bnbWallet.balanceCDOGE = Number(raw/10**dec);
+      bnbWallet.connected = true; // ===== FIX: la conexión queda confirmada aquí — nada de lo que sigue puede tumbarla =====
       updateWalletStatusUI();
       toast(`✅ MetaMask conectada: ${bnbWallet.address.slice(0,6)}...`);
+      // ===== Cambiar/agregar la red BNB Smart Chain: intento aparte, "best effort" — si falla o el usuario lo rechaza, =====
+      // ===== solo se avisa, la conexión ya aprobada NO se cancela por esto =====
+      try {
+        await mmRawProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
+      } catch(switchError) {
+        if(switchError && switchError.code === 4902) {
+          try {
+            await mmRawProvider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x38',
+                chainName: 'BNB Smart Chain',
+                nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                blockExplorerUrls: ['https://bscscan.com']
+              }]
+            });
+          } catch(addError) { console.error('No se pudo agregar la red BSC:', addError); toast('⚠️ Agrega manualmente la red BNB Smart Chain en MetaMask para ver tu balance de CDOGE'); }
+        } else {
+          console.error('No se pudo cambiar de red:', switchError);
+          toast('⚠️ Cambia manualmente a la red BNB Smart Chain en MetaMask para ver tu balance de CDOGE');
+        }
+      }
+      // ===== La lectura de balance tampoco puede tumbar la conexión si falla (ej. red incorrecta, RPC caído) =====
+      try {
+        const contract = new ethers.Contract(CDOGE_CONTRACT, ERC20_ABI, provider);
+        const raw = await contract.balanceOf(bnbWallet.address);
+        const dec = await contract.decimals();
+        bnbWallet.balanceCDOGE = Number(raw/10**dec);
+        updateWalletStatusUI();
+      } catch(balErr) { console.error('Error leyendo balance CDOGE:', balErr); toast('⚠️ Conectado, pero no se pudo leer el balance de CDOGE'); }
       await sincronizarProgresoAlConectar();
       guardarProgresoNube();
     } catch(e) { console.error(e); toast('❌ Error al conectar MetaMask'); }
@@ -1832,14 +1859,18 @@
     try {
       const resp = await window.solana.connect();
       solWallet.address = resp.publicKey.toString();
-      solWallet.connected = true;
-      const conn = new solanaWeb3.Connection(SOLANA_RPC_URL, 'confirmed');
-      const parsed = await conn.getParsedTokenAccountsByOwner(resp.publicKey, {programId: solanaWeb3.TOKEN_PROGRAM_ID});
-      let balance = 0;
-      parsed.value.forEach(({account}) => { const info = account.data.parsed.info; if(info.mint === BCOSMO_MINT) balance = info.tokenAmount.uiAmount; });
-      solWallet.balanceBCOSMO = balance || 0;
+      solWallet.connected = true; // ===== la conexión ya es válida aquí, aunque falle la lectura del balance debajo =====
       updateWalletStatusUI();
       toast(`✅ Phantom conectada: ${solWallet.address.slice(0,6)}...`);
+      // ===== FIX: la lectura de balance ya no puede tumbar la conexión si falla (ej. RPC público limitado) =====
+      try {
+        const conn = new solanaWeb3.Connection(SOLANA_RPC_URL, 'confirmed');
+        const parsed = await conn.getParsedTokenAccountsByOwner(resp.publicKey, {programId: solanaWeb3.TOKEN_PROGRAM_ID});
+        let balance = 0;
+        parsed.value.forEach(({account}) => { const info = account.data.parsed.info; if(info.mint === BCOSMO_MINT) balance = info.tokenAmount.uiAmount; });
+        solWallet.balanceBCOSMO = balance || 0;
+        updateWalletStatusUI();
+      } catch(balErr) { console.error('Error leyendo balance BCOSMO:', balErr); toast('⚠️ Conectado, pero no se pudo leer el balance de BCOSMO (RPC saturado)'); }
       await sincronizarProgresoAlConectar();
       guardarProgresoNube();
     } catch(e) { console.error(e); toast('❌ Error al conectar Phantom'); }
